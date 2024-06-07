@@ -8,4 +8,8 @@ This repository can be used to run the EPInformer model and get the EPInformer p
 
 We also provide information and instructions for how to train the EPInformer deep learning sequence model.
 
-Jiecong Lin, Ruibang Laurent Luo, Luca Pinello
+### Requirements
+
+EPInformer requires Python 3.6+ and Python packages PyTorch (>=2.0). You can follow PyTorch installation steps [here](https://pytorch.org/get-started/locally/).
+
+### Setup
