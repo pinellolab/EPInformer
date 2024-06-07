@@ -6,7 +6,7 @@ Welcome to the EPInformer framework repository! EPInformer is a scalable deep le
 
 This repository can be used to run the EPInformer model and get gene expression predictions and prioritize enhancer-gene interactions for input sequences and epigenomic signals.
 
-We also provide information and instructions for how to train different versions of EPInformer given diffenet inputs including DNA sequence, epigemoic signals and chomatine conate
+We also provide information and instructions for how to train different versions of EPInformer given diffenet inputs including DNA sequence, epigemoic signals and chomatine contacts.
 
 ### Requirements
 
