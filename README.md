@@ -1,4 +1,4 @@
-![image](https://github.com/JasonLinjc/EPInformer/assets/43600523/7454f7fc-6fe1-4bf3-ab25-fd70a98d3e6c)<p align="center">
+<p align="center">
   <img height="500" src="images/EPInformer.png">
 </p>
 
