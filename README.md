@@ -21,4 +21,4 @@ EPInformer requires ABC enhancer-gene data for training and predicting gene expr
 
 ### Enhancer-gene links prediction
 
-### Motif discovery in enhancer sequences
+### TF Motif prediction from sequences
