@@ -13,3 +13,10 @@ We also provide information and instructions for how to train different versions
 EPInformer requires Python 3.6+ and Python packages PyTorch (>=2.0). You can follow PyTorch installation steps [here](https://pytorch.org/get-started/locally/).
 
 ### Setup
+
+EPInformer requires ABC enhancer-gene data for training and prediting gene expression. Please download the ABC data from ENCODE [here](https://www.encodeproject.org/search/?type=Annotation&annotation_type=element+gene+regulatory+interaction+predictions&software_used.software.name=abc-enhancer-gene-prediction-encode_v1) or using the code of their github [here](https://github.com/broadinstitute/ABC-Enhancer-Gene-Prediction)
+
+
+
+### Gene expression prediction
+
