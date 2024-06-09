@@ -1,0 +1,7 @@
+biosample	DHS	ATAC	H3K27ac	default_accessibility_feature	HiC_file	HiC_type	HiC_resolution	alt_TSS	alt_genes
+GM12878	https://www.encodeproject.org/files/ENCFF467CXY/@@download/ENCFF467CXY.bam		https://www.encodeproject.org/files/ENCFF645BAL/@@download/ENCFF645BAL.bam 		https://www.encodeproject.org/files/ENCFF318GOM/@@download/ENCFF318GOM.hic	hic	5000		
+HUVEC	https://www.encodeproject.org/files/ENCFF309JXB/@@download/ENCFF309JXB.bam		https://www.encodeproject.org/files/ENCFF735TGN/@@download/ENCFF735TGN.bam		https://data.4dnucleome.org/files-processed/4DNFIAWVDQ8C/@@download/4DNFIAWVDQ8C.hic	hic	5000		
+HepG2	https://www.encodeproject.org/files/ENCFF878RGP/@@download/ENCFF878RGP.bam		https://www.encodeproject.org/files/ENCFF490KFG/@@download/ENCFF490KFG.bam		https://data.4dnucleome.org/files-processed/4DNFICSTCJQZ/@@download/4DNFICSTCJQZ.hic	hic	5000		
+NHEK	https://www.encodeproject.org/files/ENCFF474YKG/@@download/ENCFF474YKG.bam		https://www.encodeproject.org/files/ENCFF660FOQ/@@download/ENCFF660FOQ.bam		https://data.4dnucleome.org/files-processed/4DNFIL9M97T2/@@download/4DNFIL9M97T2.hic	hic	5000		
+A549	https://www.encodeproject.org/files/ENCFF553VCG/@@download/ENCFF553VCG.bam		https://www.encodeproject.org/files/ENCFF971VUD/@@download/ENCFF971VUD.bam		https://data.4dnucleome.org/files-processed/4DNFID68JQY9/@@download/4DNFID68JQY9.hic	hic	5000		
+K562									
