@@ -2,7 +2,7 @@
   <img height="560" src="images/EPInformer.png">
 </p>
 
-Welcome to the EPInformer framework repository! EPInformer is a scalable deep learning framework for gene expression prediction by integrating promoter-enhancer sequences with epigenomic signals. EPInformer is designed for three key applications: 1) Accurately predicting gene expression levels using promoter-enhancer sequences, epigenomic signals, and chromatin contacts; 2) Efficiently identifying cell-type-specific enhancer-gene interactions, validated by CRISPR perturbation experiments; 3) Precisely predicting enhancer activity and identifying transcription factor binding motifs from sequences.
+Welcome to the EPInformer framework repository! EPInformer is a scalable deep learning framework for gene expression prediction by integrating promoter-enhancer sequences with epigenomic signals. EPInformer is designed for three key applications: 1) Predict gene expression levels using promoter-enhancer sequences, epigenomic signals, and chromatin contacts; 2) Identify cell-type-specific enhancer-gene interactions, validated by CRISPR perturbation experiments; 3) Predict enhancer activity fromr sequence and recapitulate transcription factor binding motifs from sequences.
 
 This repository can be used to run the EPInformer model and get gene expression predictions and prioritize enhancer-gene interactions for input sequences and epigenomic signals.
 
@@ -17,7 +17,6 @@ EPInformer requires Python 3.6+ and Python packages PyTorch (>=2.1). You can fol
 EPInformer requires ABC enhancer-gene data for training and predicting gene expression. You can obtain the ABC data from [ENCODE](https://www.encodeproject.org/search/?type=Annotation&annotation_type=element+gene+regulatory+interaction+predictions&software_used.software.name=abc-enhancer-gene-prediction-encode_v1) or by running the ABC pipeline available on their [GitHub](https://github.com/broadinstitute/ABC-Enhancer-Gene-Prediction) acquire cell-type-specific gene-enhancer links. We provide a script [here](https://github.com/JasonLinjc/EPInformer/tree/main/data) for downloading ABC enhancer-gene links from ENCODE for K562 and GM12878 cells.
 
 ### Gene expression prediction
-
 
 ### Enhancer-gene links prediction
 
