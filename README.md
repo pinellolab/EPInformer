@@ -20,10 +20,10 @@ EPInformer requires ABC enhancer-gene data for training and predicting gene expr
 To predict the developmental and housekeeping enhancer activity in *Drosophila melanogaster* S2 cells for new DNA sequences, please run:
 ```
 # Clone this repository
-git clone https://github.com/bernardo-de-almeida/DeepSTARR.git
-cd DeepSTARR/DeepSTARR
+git clone https://github.com/JasonLinjc/EPInformer.git
+cd EPInformer
 
-# download the trained DeepSTARR model from zenodo (https://doi.org/10.5281/zenodo.5502060)
+# download the trained EPInformer model from zenodo ()
 
 # create 'EPInformer_env' conda environment by running the following:
 conda create --name EPInformer_env python=3.8 torch pandas scipy scikit-learn
