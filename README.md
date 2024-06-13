@@ -17,6 +17,19 @@ EPInformer requires Python 3.6+ and Python packages PyTorch (>=2.1). You can fol
 EPInformer requires ABC enhancer-gene data for training and predicting gene expression. You can obtain the ABC data from [ENCODE](https://www.encodeproject.org/search/?type=Annotation&annotation_type=element+gene+regulatory+interaction+predictions&software_used.software.name=abc-enhancer-gene-prediction-encode_v1) or by running the ABC pipeline available on their [GitHub](https://github.com/broadinstitute/ABC-Enhancer-Gene-Prediction) acquire cell-type-specific gene-enhancer links. We provide a script [here](https://github.com/JasonLinjc/EPInformer/tree/main/data) for downloading ABC enhancer-gene links from ENCODE for K562 and GM12878 cells.
 
 ### Gene expression prediction
+To predict the developmental and housekeeping enhancer activity in *Drosophila melanogaster* S2 cells for new DNA sequences, please run:
+```
+# Clone this repository
+git clone https://github.com/bernardo-de-almeida/DeepSTARR.git
+cd DeepSTARR/DeepSTARR
+
+# download the trained DeepSTARR model from zenodo (https://doi.org/10.5281/zenodo.5502060)
+
+# create 'EPInformer_env' conda environment by running the following:
+conda create --name EPInformer_env python=3.8 torch pandas scipy scikit-learn
+source activate EPInformer_env
+pip install pyranges pyfaidx kipoiseq
+```
 
 ### Enhancer-gene links prediction
 
