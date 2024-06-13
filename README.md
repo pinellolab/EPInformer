@@ -30,7 +30,7 @@ conda create --name EPInformer_env python=3.8 torch pandas scipy scikit-learn
 source activate EPInformer_env
 pip install pyranges pyfaidx kipoiseq
 ```
-An end-to-end example to predict gene expression from promoter-enhabcer links is [here](https://github.com/JasonLinjc/EPInformer/blob/main/predict_gene_expression.ipynb). You can run this notebook yourself to experiment with different EPInformers.
+An end-to-end example to predict gene expression from promoter-enhancer links is [here](https://github.com/JasonLinjc/EPInformer/blob/main/predict_gene_expression.ipynb). You can run this notebook yourself to experiment with different EPInformers.
 
 ### Enhancer-gene links prediction
 
