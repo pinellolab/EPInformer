@@ -54,9 +54,9 @@ class seq_256bp_encoder(nn.Module):
             x_enhancer = self.conv_tower[i+1](x_enhancer) + x_enhancer
         return x_enhancer
 
-class enhancer_predicor_256bp(nn.Module):
+class enhancer_predictor_256bp(nn.Module):
     def __init__(self):
-        super(enhancer_predicor_256bp, self).__init__()
+        super(enhancer_predictor_256bp, self).__init__()
         self.encoder = seq_256bp_encoder()
         self.embedToAct = nn.Sequential(
             nn.Flatten(start_dim=1),
