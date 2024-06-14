@@ -35,7 +35,7 @@ conda install pytorch pytorch-cuda=12.1 -c pytorch -c nvidia
 conda install pytorch cpuonly -c pytorch
 
 # Other pacakges
-pip install pyranges pyfaidx kipoiseq
+pip install pyranges pyfaidx kipoiseq openpyxl
 ```
 An end-to-end example to predict gene expression from promoter-enhancer links is in [1_predict_gene_expression.ipynb](https://github.com/JasonLinjc/EPInformer/blob/main/1_predict_gene_expression.ipynb). You can run this notebook yourself to experiment with different EPInformers.
 
