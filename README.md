@@ -28,10 +28,12 @@ cd EPInformer
 # create 'EPInformer_env' conda environment by running the following:
 conda create --name EPInformer_env python=3.8 pandas scipy scikit-learn jupyter
 source activate EPInformer_env
+
 # GPU version putorch
 conda install pytorch pytorch-cuda=12.1 -c pytorch -c nvidia
 # CPU version pytorch
 conda install pytorch cpuonly -c pytorch
+
 # Other pacakges
 pip install pyranges pyfaidx kipoiseq
 ```
