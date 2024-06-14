@@ -23,7 +23,7 @@ To predict the gene expression measured by CAGE-seq or RNA-seq in *K562* and *GM
 git clone https://github.com/JasonLinjc/EPInformer.git
 cd EPInformer
 
-# download the trained EPInformer model from zenodo (coming soon)
+# download the pre-trained EPInformer models from zenodo (coming soon)
 
 # create 'EPInformer_env' conda environment by running the following:
 conda create --name EPInformer_env python=3.8 pandas scipy scikit-learn jupyter
