@@ -26,8 +26,9 @@ cd EPInformer
 # download the trained EPInformer model from zenodo ()
 
 # create 'EPInformer_env' conda environment by running the following:
-conda create --name EPInformer_env python=3.8 torch pandas scipy scikit-learn
+conda create --name EPInformer_env python=3.8 pandas scipy scikit-learn jupyter
 source activate EPInformer_env
+conda install torch
 pip install pyranges pyfaidx kipoiseq
 ```
 An end-to-end example to predict gene expression from promoter-enhancer links is in [1_predict_gene_expression.ipynb](https://github.com/JasonLinjc/EPInformer/blob/main/1_predict_gene_expression.ipynb). You can run this notebook yourself to experiment with different EPInformers.
