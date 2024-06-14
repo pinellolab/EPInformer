@@ -47,8 +47,11 @@ def encode_promoter_enhancer_links(gene_enhancer_df, fasta_path = '../hg38.fa', 
     gene_name = row_0['TargetGene']
     gene_tss = row_0['TargetGeneTSS']
     chrom = row_0['#chr']
+    if row_0['TargetGeneTSS'] != row_0['TargetGeneTSS']:
+        gene_tss = row_0['tss']
+        gene_name = row_0['name_gene']
+        chrom = row_0['chr']
     target_interval = kipoiseq.Interval(chrom, int(gene_tss-max_seq_len/2), int(gene_tss+max_seq_len/2))
-
     promoter_seq = fasta_extractor.extract(target_interval)
     promoter_code = one_hot_encode(promoter_seq)
     enhancers_code = np.zeros((max_n_enhancer, max_seq_len, 4))
@@ -60,6 +63,8 @@ def encode_promoter_enhancer_links(gene_enhancer_df, fasta_path = '../hg38.fa', 
     e_i = 0
     gene_element_pair = []
     for idx, row in gene_pe.iterrows():
+        if row['TargetGene'] != row['TargetGene']:
+            break
         if pd.isna(row['start']):
             continue
         if e_i >= max_n_enhancer:
@@ -106,7 +111,7 @@ def prepare_input(gene_enhancer_table, gene_list, num_features = 3):
     mRNA_promoter_list = []
     PE_links_list = []
     for gene in tqdm(gene_list):
-        gene_df = gene_enhancer_table[gene_enhancer_table['TargetGene'] == gene]
+        gene_df = gene_enhancer_table[gene_enhancer_table['name_gene'] == gene]
         PE_code, activity_list, distance_list, contact_list, gene_name, PE_links = encode_promoter_enhancer_links(gene_df, max_seq_len=2000, max_n_enhancer=60, max_distanceToTSS=100_000, add_flanking=False)
         contact_list = np.concatenate([[0], contact_list*100])
         distance_list = np.concatenate([[0], distance_list/1000])
