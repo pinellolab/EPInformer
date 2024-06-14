@@ -17,17 +17,24 @@ EPInformer requires Python 3.6+ and Python packages PyTorch (>=2.1). You can fol
 EPInformer requires ABC enhancer-gene data for training and predicting gene expression. You can obtain the ABC data from [ENCODE](https://www.encodeproject.org/search/?type=Annotation&annotation_type=element+gene+regulatory+interaction+predictions&software_used.software.name=abc-enhancer-gene-prediction-encode_v1) or by running the ABC pipeline available on their [GitHub](https://github.com/broadinstitute/ABC-Enhancer-Gene-Prediction) acquire cell-type-specific gene-enhancer links. We provide a script [here](https://github.com/JasonLinjc/EPInformer/tree/main/data) for downloading ABC enhancer-gene links from ENCODE for *K562* and *GM12878* cells.
 
 ### Gene expression prediction
-To predict the gene expression measured by CAGE-seq or RNA-seq in *K562* and *GM12878* cells with EPInformer, please first run:
+To predict the gene expression measured by CAGE-seq or RNA-seq in *K562* and *GM12878* cells with EPInformer, please first run the folloing command to setup the environment:
 ```
 # Clone this repository
 git clone https://github.com/JasonLinjc/EPInformer.git
 cd EPInformer
 
-# download the trained EPInformer model from zenodo ()
+# download the pre-trained EPInformer models from zenodo (coming soon)
 
 # create 'EPInformer_env' conda environment by running the following:
-conda create --name EPInformer_env python=3.8 torch pandas scipy scikit-learn
+conda create --name EPInformer_env python=3.8 pandas scipy scikit-learn jupyter
 source activate EPInformer_env
+
+# GPU version putorch
+conda install pytorch pytorch-cuda=12.1 -c pytorch -c nvidia
+# CPU version pytorch
+conda install pytorch cpuonly -c pytorch
+
+# Other pacakges
 pip install pyranges pyfaidx kipoiseq
 ```
 An end-to-end example to predict gene expression from promoter-enhancer links is in [1_predict_gene_expression.ipynb](https://github.com/JasonLinjc/EPInformer/blob/main/1_predict_gene_expression.ipynb). You can run this notebook yourself to experiment with different EPInformers.
