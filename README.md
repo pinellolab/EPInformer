@@ -43,7 +43,7 @@ An end-to-end example to predict gene expression from promoter-enhancer links is
 To prioritize the enhancer-gene links tested by [CRISPRi-FlowFISH](https://www.nature.com/articles/s41588-019-0538-0) in *K562*, we obtain the original data from their [supplementray table](https://static-content.springer.com/esm/art%3A10.1038%2Fs41588-019-0538-0/MediaObjects/41588_2019_538_MOESM3_ESM.xlsx). We provide a jupyter notebook [(2_prioritize_enhancer_gene_links.ipynb)](https://github.com/JasonLinjc/EPInformer/blob/main/2_prioritize_enhancer_gene_links.ipynb) for pre-processing CRISPRi-FlowFISH data and scoring enhancer-gene links using EPInformer-derived attention scores and the Attention-ABC score. The notebook includes an end-to-end example of performing in-silico perturbations on each candidate element within 100kb of KLF1 and predicting their effects.
 
 <p align="center">
-  <img height="800" src="images/KLF1_insilico_perturbation.png">
+  <img height="850" src="images/KLF1_insilico_perturbation.png">
 </p>
 
 ### Enhancer activity prediction and TF motif discovery
