@@ -42,6 +42,6 @@ An end-to-end example to predict gene expression from promoter-enhancer links is
 ### Enhancer-gene links prediction
 To prioritise the enhancer-gene links tested by [CRISPRi-FlowFISH](https://www.nature.com/articles/s41588-019-0538-0), we obtained the orignal data from 
 <p align="center">
-  <img height="560" src="images/KLF1_insilico_perturbation.png">
+  <img height="800" src="images/KLF1_insilico_perturbation.png">
 </p>
 ### Enhancer activity prediction and TF motif discovery
