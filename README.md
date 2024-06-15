@@ -26,7 +26,7 @@ cd EPInformer
 # download the pre-trained EPInformer models from zenodo (coming soon)
 
 # create 'EPInformer_env' conda environment by running the following:
-conda create --name EPInformer_env python=3.8 pandas scipy scikit-learn jupyter
+conda create --name EPInformer_env python=3.8 pandas scipy scikit-learn jupyter seaborn
 source activate EPInformer_env
 
 # GPU version putorch

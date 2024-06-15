@@ -6,6 +6,7 @@ import pandas as pd
 import pyranges as pr
 # from Bio.Seq import Seq
 from tqdm import tqdm
+import os
 
 def df_to_pyranges(df, start_col='start', end_col='end', chr_col='chr', start_slop=0, end_slop=0):
     df['Chromosome'] = df[chr_col]
@@ -135,3 +136,69 @@ def prepare_input(gene_enhancer_table, gene_list, num_features = 3):
     PE_feat_list = np.array(PE_feat_list)
     mRNA_promoter_list = np.array(mRNA_promoter_list)
     return PE_code_list, PE_feat_list, mRNA_promoter_list, PE_links_df
+
+def encoder_promoter_enhancer_CRISPRi(pe_df, hg19_fasta_path = '../hg19.fa'):
+    if not os.path.exists(hg19_fasta_path):
+        print('Downloading hg19 reference genome...')
+        import urllib.request
+        urllib.request.urlretrieve("https://hgdownload.cse.ucsc.edu/goldenpath/hg19/bigZips/hg19.fa.gz", "./data/hg19.fa.gz")
+        os.system('gunzip ./data/hg19.fa.gz')
+        hg19_fasta_path = './data/hg19.fa.gz'
+    hg19_fasta_extractor = FastaStringExtractor(hg19_fasta_path)
+    RNA_feats = pd.read_csv('./data/GM12878_K562_18377_gene_expr_fromXpresso.csv', index_col='Gene stable ID')[['UTR5LEN_log10zscore','CDSLEN_log10zscore','INTRONLEN_log10zscore','UTR3LEN_log10zscore','UTR5GC','CDSGC','UTR3GC', 'ORFEXONDENSITY_log10zscore']]
+    promoter_df = pd.read_csv('./data/CRISPRi-FlowFISH_Fulco2019/DNase_ENCFF257HEE_Neighborhoods/GeneList.txt', sep='\t', index_col='symbol')
+    promoter_df['PromoterActivity'] = np.sqrt(promoter_df['H3K27ac.RPM.TSS1Kb']*promoter_df['DHS.RPM.TSS1Kb'])
+    max_n_promoter = len(promoter_df)
+    max_n_enhancer = len(pe_df)
+    max_seq_len = 2000
+    enhancer_distance = np.zeros(max_n_enhancer)
+    enhancer_activity = np.zeros(max_n_enhancer)
+    enhancer_hic = np.zeros(max_n_enhancer)
+    enhancers_code = np.zeros((max_n_enhancer, max_seq_len, 4))
+    e_i = 0
+    ensid = pe_df.iloc[0]['Gene stable ID']
+    singleGene_promoter_activity = promoter_df.loc[ensid, 'PromoterActivity']
+
+    gene_tss = pe_df.iloc[0]['Gene TSS']
+    gene_name = pe_df.iloc[0]['Gene name']
+
+    chrom = pe_df.iloc[0]['chr']
+    target_interval = kipoiseq.Interval(chrom, int(gene_tss-max_seq_len/2), int(gene_tss+max_seq_len/2))
+    print(ensid, gene_name, chrom)
+    promoter_seq = hg19_fasta_extractor.extract(target_interval)
+    promoter_code = one_hot_encode(str(promoter_seq))
+    for idx, row in tqdm(pe_df.iterrows()):
+        chrom = row['chr']
+        enhancer_start = int(row['start'])
+        enhancer_end = int(row['end'])
+        enhancer_center = int((enhancer_start + enhancer_end)/2)
+        enhancer_len = enhancer_end - enhancer_start
+        if enhancer_len > 2000:
+            enhancer_start = enhancer_center-1000
+            enhancer_end = enhancer_center+1000
+            enhancer_len = 2000
+        # print(enhancer_len)
+        code_start = int(max_seq_len/2)-int(enhancer_len/2)
+        enhancer_target_interval = kipoiseq.Interval(chrom, enhancer_start, enhancer_end)
+        enhancers_code[e_i][code_start:code_start+enhancer_len] = one_hot_encode(hg19_fasta_extractor.extract(enhancer_target_interval))
+        enhancer_activity[e_i] = row['Activity']
+        enhancer_distance[e_i] = row['Distance']
+        enhancer_hic[e_i] = row['Normalized HiC Contacts']
+        e_i += 1
+        rna_ts = np.array(list(RNA_feats.loc[ensid].values)  + [singleGene_promoter_activity])[np.newaxis,:]
+
+    # print(rna_ts)
+    pe_code = np.concatenate([promoter_code[np.newaxis], enhancers_code], axis=0)
+    pe_activity = np.concatenate([[0], enhancer_activity]).flatten()
+    pe_hic = np.concatenate([[0], enhancer_hic]).flatten()
+    pe_activity = np.log10(0.1+pe_activity)
+    pe_distance = np.concatenate([[0], enhancer_distance/1000]).flatten()
+
+    pe_feat = np.concatenate([pe_distance[:,np.newaxis], pe_activity[:,np.newaxis], pe_hic[:,np.newaxis]],axis=-1)
+    # seq_ts = torch.from_numpy(pe_code)
+    # feat_ts = torch.from_numpy(pe_feat)
+    # rna_ts = torch.from_numpy(rna_ts)
+    # seq_ts = seq_ts.unsqueeze(0).float().to(device)
+    # rna_ts = rna_ts.float().to(device)
+    # feat_ts = feat_ts.unsqueeze(0).float().to(device)
+    return pe_code, pe_feat, rna_ts
