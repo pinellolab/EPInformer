@@ -40,5 +40,8 @@ pip install pyranges pyfaidx kipoiseq openpyxl
 An end-to-end example to predict gene expression from promoter-enhancer links is in [1_predict_gene_expression.ipynb](https://github.com/JasonLinjc/EPInformer/blob/main/1_predict_gene_expression.ipynb). You can run this notebook yourself to experiment with different EPInformers.
 
 ### Enhancer-gene links prediction
-
+To prioritise the enhancer-gene links tested by [CRISPRi-FlowFISH](https://www.nature.com/articles/s41588-019-0538-0), we obtained the orignal data from 
+<p align="center">
+  <img height="560" src="images/KLF1_insilico_perturbation.png">
+</p>
 ### Enhancer activity prediction and TF motif discovery
