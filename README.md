@@ -52,4 +52,4 @@ To predict cell-type-specific enhancer activity, we provide sequence-based predi
 </p>
 
 ## Help 
-Please post in the Github issues or e-mail Jiecong Lin (jieconglin@outlook.com) with any questions about the repository, requests for more data, etc. 
+Please post in the Github issues or e-mail Jiecong Lin (jieconglin@outlook.com) with any question about the repository, requests for more data, etc. 
