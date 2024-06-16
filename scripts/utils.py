@@ -138,7 +138,7 @@ def prepare_input(gene_enhancer_table, gene_list, num_features = 3):
     mRNA_promoter_list = np.array(mRNA_promoter_list)
     return PE_code_list, PE_feat_list, mRNA_promoter_list, PE_links_df
 
-def encoder_promoter_enhancer_CRISPRi(pe_df, hg19_fasta_path = '../hg19.fa', verbose=True):
+def encoder_promoter_enhancer_CRISPRi(pe_df, hg19_fasta_path = '../hg19.fa', verbose=True, HiC_norm=False):
     pe_df = pe_df.sort_values(by='Distance')
     if 'level_0' in pe_df.columns:
         pe_df.drop(columns=['level_0'], inplace=True)
@@ -196,12 +196,12 @@ def encoder_promoter_enhancer_CRISPRi(pe_df, hg19_fasta_path = '../hg19.fa', ver
     # print(rna_ts)
     pe_activity = np.concatenate([[0], enhancer_activity]).flatten()
     pe_hic = np.concatenate([[0], enhancer_hic]).flatten()
+    if HiC_norm:
+        pe_hic = np.log10(0.1+pe_hic*10)
     pe_activity = np.log10(0.1+pe_activity)
     rna_ts = np.array(list(RNA_feats.loc[eid].values) + [singleGene_promoter_activity])[np.newaxis,:]
     pe_feat = np.concatenate([pe_distance[:,np.newaxis], pe_activity[:,np.newaxis], pe_hic[:,np.newaxis]],axis=-1)
-
     return pe_code, pe_feat, rna_ts
-
 
 def compute_enhancer_gene_attention(model, pe_df, use_hic=False, device='cpu'):
     if 'level_0' in pe_df.columns:
@@ -209,18 +209,17 @@ def compute_enhancer_gene_attention(model, pe_df, use_hic=False, device='cpu'):
     pe_df = pe_df.sort_values(by='Distance').reset_index()
     model.eval()
     with torch.no_grad():
-      seq_input, feat_input, rna_input = encoder_promoter_enhancer_CRISPRi(pe_df, hg19_fasta_path='../hg19.fa', verbose=False)
+      seq_input, feat_input, rna_input = encoder_promoter_enhancer_CRISPRi(pe_df, hg19_fasta_path='../hg19.fa', verbose=False, HiC_norm=True)
       seq_input = torch.from_numpy(seq_input).unsqueeze(0).float().to(device)
       feat_input = torch.from_numpy(feat_input).unsqueeze(0).float().to(device)
       rna_input = torch.from_numpy(rna_input).float().to(device)
       if not use_hic:
           feat_input = feat_input[:, :, :2] # exclude HiC
       else:
-          feat_input = torch.cat([feat_input[:,:,:1], np.log10(0.1+feat_input[:,:,2:]*10), feat_input[:,:,1:2]], dim=-1)
+          feat_input = torch.cat([feat_input[:,:,:1], feat_input[:,:,2:], feat_input[:,:,1:2]], dim=-1)
       # print(feat_input.shape)
       all_expr, attn_list = model(seq_input, rna_input, feat_input)
       attn_list = attn_list.permute((1, 0, 2, 3))+1e-5
-      # attn_firstLayer = attn_list[:,0,:][:,0].cpu().detach().numpy()[0]
       attn_meanLayer = attn_list.mean(1)[:,0].cpu().detach().numpy()[0]
       all_expr = all_expr.cpu().detach().numpy()[0][0]
     attention_mean = attn_meanLayer[1:]
