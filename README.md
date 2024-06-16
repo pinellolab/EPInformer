@@ -9,7 +9,7 @@ This repository can be used to run the EPInformer model to predit gene expressio
 We also provide information and instructions for how to train different versions of EPInformer given diffenet inputs including DNA sequence, epigemoic signals and chromatine contacts.
 
 <p align="center">
-  <img height="560" src="images/EPInformer.png">
+  <img height="580" src="images/EPInformer.png">
 </p>
 
 ### Requirements
