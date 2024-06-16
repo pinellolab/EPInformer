@@ -50,3 +50,6 @@ To predict cell-type-specific enhancer activity, we provide sequence-based predi
 <p align="center">
   <img height="450" src="images/KLF1_enhancer_motifs.png">
 </p>
+
+## Help 
+Please post in the Github issues or e-mail Jiecong Lin (jieconglin@outlook.com) with any questions about the repository, requests for more data, etc. 
