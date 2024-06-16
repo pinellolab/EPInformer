@@ -48,5 +48,5 @@ To prioritize the enhancer-gene links tested by [CRISPRi-FlowFISH](https://www.n
 ### 3. Enhancer activity prediction and TF motif discovery
 To predict cell-type-specific enhancer activity, we provide sequence-based predictors trained on H3K27ac and DNase signals in *K562* and *GM12878* cell lines separately. Enhancer activity was calculated using the [ABC score](https://github.com/broadinstitute/ABC-Enhancer-Gene-Prediction). Additionally, [Tangermeme]([https://github.com/ilyes495/tangermeme/tree/main](https://github.com/jmschrei/tangermeme)) was used to perform in-silico saturation mutagenesis (ISM) on the enhancer sequence to identify key motifs contributing to the predicted activity. The notebook ([3_predict_enhancer_activity.ipynb](https://github.com/JasonLinjc/EPInformer/blob/main/3_predict_enhancer_activity.ipynb)) is available for experimenting with enhancer activity prediction and transcription factor motif discovery.
 <p align="center">
-  <img height="850" src="images/KLF1_enhancer_motifs.png">
+  <img height="450" src="images/KLF1_enhancer_motifs.png">
 </p>
