@@ -35,7 +35,7 @@ conda install pytorch pytorch-cuda=12.1 -c pytorch -c nvidia
 conda install pytorch cpuonly -c pytorch
 
 # Other pacakges
-pip install pyranges pyfaidx kipoiseq openpyxl
+pip install pyranges pyfaidx kipoiseq openpyxl tangermeme
 ```
 An end-to-end example to predict gene expression from promoter-enhancer links is in [1_predict_gene_expression.ipynb](https://github.com/JasonLinjc/EPInformer/blob/main/1_predict_gene_expression.ipynb). You can run this notebook yourself to experiment with different EPInformers.
 
@@ -46,4 +46,4 @@ To prioritize the enhancer-gene links tested by [CRISPRi-FlowFISH](https://www.n
 </p>
 
 ### 3. Enhancer activity prediction and TF motif discovery
-To predict the cell-type-specific enhancer activity, we provide sequence-based enhancer predictors that was trained on the H3K27ac and DNase signals in *K562* and *GM12878* cell lines seperately. The enhancer activity was caluated by [ABC score](https://github.com/broadinstitute/ABC-Enhancer-Gene-Prediction). We also apply [tangermeme]([https://github.com/ilyes495/tangermeme/tree/main](https://github.com/jmschrei/tangermeme)) to perform ISM (In-silico Saturation Mutagenesis) on the enhancer squence to discovery key motifs that contributes to the predicted activity. You can run this notebook yourself [(2_prioritize_enhancer_gene_links.ipynb)](https://github.com/JasonLinjc/EPInformer/blob/main/2_prioritize_enhancer_gene_links.ipynb) to experiment with enhancer activity prediction and TF motif discovery.
+To predict cell-type-specific enhancer activity, we provide sequence-based predictors trained on H3K27ac and DNase signals in *K562* and *GM12878* cell lines separately. Enhancer activity was calculated using the [ABC score](https://github.com/broadinstitute/ABC-Enhancer-Gene-Prediction). Additionally, [Tangermeme]([https://github.com/ilyes495/tangermeme/tree/main](https://github.com/jmschrei/tangermeme)) was used to perform in-silico saturation mutagenesis (ISM) on the enhancer sequence to identify key motifs contributing to the predicted activity. The notebook [2_prioritize_enhancer_gene_links.ipynb](https://github.com/JasonLinjc/EPInformer/blob/main/2_prioritize_enhancer_gene_links.ipynb) is available for experimenting with enhancer activity prediction and transcription factor motif discovery.
