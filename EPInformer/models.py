@@ -46,7 +46,10 @@ class seq_256bp_encoder(nn.Module):
             ))
         
     def forward(self, enhancers_input):
-        x_enhancer = enhancers_input.permute(0, 3, 1, 2).contiguous()  # batch_size x 4 x 78 x 12566
+        if enhancers_input.shape[2] == 1:
+            x_enhancer = enhancers_input
+        else:
+            x_enhancer = enhancers_input.permute(0, 3, 1, 2).contiguous()  # batch_size x 4 x 78 x 12566
         x_enhancer = self.stem_conv(x_enhancer)
 #         print(x_enhancer.shape)
         for i in range(0, len(self.conv_tower), 2):
@@ -71,6 +74,8 @@ class enhancer_predictor_256bp(nn.Module):
             nn.Linear(256, 1),
         )  
     def forward(self, enhancer_seq):
+        if len(enhancer_seq.shape) < 4:
+            enhancer_seq = enhancer_seq.unsqueeze(2)
         seq_embed = self.encoder(enhancer_seq)
         epi_out = self.embedToAct(seq_embed)
         return epi_out.squeeze(-1)

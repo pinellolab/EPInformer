@@ -224,3 +224,37 @@ def compute_enhancer_gene_attention(model, pe_df, use_hic=False, device='cpu'):
       all_expr = all_expr.cpu().detach().numpy()[0][0]
     attention_mean = attn_meanLayer[1:]
     return attention_mean, all_expr
+
+
+def predict_enhancer_activity(enhancer_model, chrom, position, window_size=1024, stride=128, device='cuda'):
+    hg19_fasta_path = '../hg19.fa'
+    if not os.path.exists(hg19_fasta_path):
+        print('Downloading hg19 reference genome...')
+        import urllib.request
+        urllib.request.urlretrieve("https://hgdownload.cse.ucsc.edu/goldenpath/hg19/bigZips/hg19.fa.gz", "./data/hg19.fa.gz")
+        os.system('gunzip ./data/hg19.fa.gz')
+        hg19_fasta_path = './data/hg19.fa'
+    hg19_fasta_extractor = FastaStringExtractor(hg19_fasta_path)
+    center = position
+    print('The extened enhancer region: {}:{}-{}'.format(chrom, center-window_size, center+window_size))
+    pred_list = []
+    x_list = []
+    # window_size = 3000
+    # stride = 200
+    info_list = []
+    for i in range(center-window_size, center+window_size, stride):
+        x_list.append(i+stride)
+        target_interval = kipoiseq.Interval(chrom, i, i+256)
+        seq = hg19_fasta_extractor.extract(target_interval)
+        seq_code = one_hot_encode(seq)
+        seq_code = seq_code[np.newaxis,np.newaxis,:]
+        seq_code_tensor = torch.Tensor(seq_code).to(device)
+        enhancer_model.eval()
+        with torch.no_grad():
+            pred = enhancer_model(seq_code_tensor).cpu().detach().numpy()[0]
+            pred_ori = 2**pred-0.1
+            pred_list.append(pred_ori)
+        info_list.append([chrom, i, i+256, seq, center, pred_ori])
+
+    info_df = pd.DataFrame(info_list, columns=['chrom', 'start', 'end', 'seq', 'enhancer_mid', 'pred'])
+    return info_df
