@@ -9,8 +9,9 @@ This repository can be used to run the EPInformer model to predit gene expressio
 We also provide information and instructions for how to train different versions of EPInformer given diffenet inputs including DNA sequence, epigemoic signals and chromatine contacts.
 
 <p align="center">
-  <img height="500" src="images/EPInformer.png">
+  <img height="650" src="images/EPInformer.png">
 </p>
+
 ### Requirements
 
 EPInformer requires Python 3.6+ and Python packages PyTorch (>=2.1). You can follow PyTorch installation steps [here](https://pytorch.org/get-started/locally/).
