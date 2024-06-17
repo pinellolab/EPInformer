@@ -2,7 +2,7 @@
   <img width="750" src="images/EPInformer_logo2.svg">
 </p>
 
-Welcome to the EPInformer framework repository! EPInformer is a scalable deep learning framework for gene expression prediction by integrating promoter-enhancer sequences with epigenomic signals. EPInformer is designed for three key applications: 1) predict gene expression levels using promoter-enhancer sequences, epigenomic signals, and chromatin contacts; 2) identify cell-type-specific enhancer-gene interactions, validated by CRISPR perturbation experiments; 3) predict enhancer activity and recapitulate transcription factor binding motifs from sequences.
+Welcome to the EPInformer framework repository! EPInformer is a scalable deep learning framework for gene expression prediction by integrating promoter-enhancer sequences with epigenomic signals. EPInformer is designed for three key applications: 1) predict gene expression levels using promoter-enhancer sequences, epigenomic signals, and chromatin contacts; 2) identify cell-type-specific enhancer-gene interactions and conduct in-silico perturbation; 3) predict enhancer activity and recapitulate transcription factor binding motifs from sequences.
 
 This repository can be used to run the EPInformer model to predit gene expression and prioritize enhancer-gene interactions for input DNA sequences and epigenomic signals (e.g. DNase, H3K27ac and Hi-C).
 
@@ -27,8 +27,6 @@ To predict the gene expression measured by CAGE-seq or RNA-seq in *K562* and *GM
 git clone https://github.com/JasonLinjc/EPInformer.git
 cd EPInformer
 
-# download the pre-trained EPInformer models from zenodo (coming soon)
-
 # create 'EPInformer_env' conda environment by running the following:
 conda create --name EPInformer_env python=3.8 pandas scipy scikit-learn jupyter seaborn
 source activate EPInformer_env
@@ -44,7 +42,7 @@ pip install pyranges pyfaidx kipoiseq openpyxl tangermeme
 An end-to-end example to predict gene expression from promoter-enhancer links is in [1_predict_gene_expression.ipynb](https://github.com/JasonLinjc/EPInformer/blob/main/1_predict_gene_expression.ipynb). You can run this notebook yourself to experiment with different EPInformers.
 
 ### 2. Enhancer-gene links prediction
-To prioritize the enhancer-gene links tested by [CRISPRi-FlowFISH](https://www.nature.com/articles/s41588-019-0538-0) in *K562*, we obtain the original data from their [supplementary table](https://static-content.springer.com/esm/art%3A10.1038%2Fs41588-019-0538-0/MediaObjects/41588_2019_538_MOESM3_ESM.xlsx). We provide a jupyter notebook ([2_prioritize_enhancer_gene_links.ipynb](https://github.com/JasonLinjc/EPInformer/blob/main/2_prioritize_enhancer_gene_links.ipynb)) for pre-processing CRISPRi-FlowFISH data and scoring enhancer-gene links using EPInformer-derived attention scores and the Attention-ABC score. The notebook provides a end-to-end example of in-silico perturbations on candidate elements within 100kb of *KLF1* and predicting their effects, with *KLF1* excluded from the training data to prevent overfitting.
+To prioritize the enhancer-gene links tested by [CRISPRi-FlowFISH](https://www.nature.com/articles/s41588-019-0538-0) in *K562*, we obtain the original data from their [supplementary table](https://static-content.springer.com/esm/art%3A10.1038%2Fs41588-019-0538-0/MediaObjects/41588_2019_538_MOESM3_ESM.xlsx). We provide a jupyter notebook ([2_prioritize_enhancer_gene_links.ipynb](https://github.com/JasonLinjc/EPInformer/blob/main/2_prioritize_enhancer_gene_links.ipynb)) for pre-processing CRISPRi-FlowFISH data and scoring enhancer-gene links using EPInformer-derived attention scores and the Attention-ABC score. Additionally, this notebook provides a end-to-end example of in-silico perturbations on candidate elements within 100kb of *KLF1* and predicting their effects, with *KLF1* excluded from the training data to prevent overfitting.
 <p align="center">
   <img height="850" src="images/KLF1_insilico_perturbation.png">
 </p>
@@ -54,6 +52,9 @@ To predict cell-type-specific enhancer activity, we provide sequence-based predi
 <p align="center">
   <img height="500" src="images/KLF1_enhancer_motifs.png">
 </p>
+
+## Training
+Coming soon ...
 
 ## Help 
 Please post in the GitHub issues or e-mail Jiecong Lin (jieconglin@outlook.com) with any question about the repository, requests for more data, etc. 
