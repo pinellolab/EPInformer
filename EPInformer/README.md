@@ -1,3 +1,3 @@
 <p align="center">
-  <img height="560" src="../images/detailed_EPInformer.png">
+  <img height="600" src="../images/detailed_EPInformer.png">
 </p>
