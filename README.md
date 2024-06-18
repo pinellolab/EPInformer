@@ -18,10 +18,7 @@ EPInformer requires Python 3.6+ and Python packages PyTorch (>=2.1). You can fol
 
 ### Setup
 
-EPInformer requires ABC enhancer-gene data for training and predicting gene expression. You can obtain the ABC data from [ENCODE](https://www.encodeproject.org/search/?type=Annotation&annotation_type=element+gene+regulatory+interaction+predictions&software_used.software.name=abc-enhancer-gene-prediction-encode_v1) or by running the ABC pipeline available on their [GitHub](https://github.com/broadinstitute/ABC-Enhancer-Gene-Prediction) acquire cell-type-specific gene-enhancer links. We provide a script [here](https://github.com/JasonLinjc/EPInformer/tree/main/data) for downloading ABC enhancer-gene links from ENCODE for *K562* and *GM12878* cell lines.
-
-### 1. Gene expression prediction
-To predict the gene expression measured by CAGE-seq or RNA-seq in *K562* and *GM12878* cell lines with EPInformer, please first run the folloing command to setup the environment:
+EPInformer requires ABC enhancer-gene data for training and predicting gene expression. You can obtain the ABC data from [ENCODE](https://www.encodeproject.org/search/?type=Annotation&annotation_type=element+gene+regulatory+interaction+predictions&software_used.software.name=abc-enhancer-gene-prediction-encode_v1) or by running the ABC pipeline available on their [GitHub](https://github.com/broadinstitute/ABC-Enhancer-Gene-Prediction) acquire cell-type-specific gene-enhancer links. We provide a script [here](https://github.com/JasonLinjc/EPInformer/tree/main/data) for downloading ABC enhancer-gene links from ENCODE for *K562* and *GM12878* cell lines. To predict the gene expression measured by CAGE-seq or RNA-seq in *K562* and *GM12878* cell lines with EPInformer, please first run the folloing command to setup the environment:
 ```
 # Clone this repository
 git clone https://github.com/JasonLinjc/EPInformer.git
@@ -39,6 +36,9 @@ conda install pytorch cpuonly -c pytorch
 # Other pacakges
 pip install pyranges pyfaidx kipoiseq openpyxl tangermeme
 ```
+
+### 1. Gene expression prediction
+
 An end-to-end example to predict gene expression from promoter-enhancer links is in [1_predict_gene_expression.ipynb](https://github.com/JasonLinjc/EPInformer/blob/main/1_predict_gene_expression.ipynb). You can run this notebook yourself to experiment with different EPInformers.
 
 ### 2. Enhancer-gene links prediction
