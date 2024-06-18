@@ -258,3 +258,50 @@ def predict_enhancer_activity(enhancer_model, chrom, position, window_size=1024,
 
     info_df = pd.DataFrame(info_list, columns=['chrom', 'start', 'end', 'seq', 'enhancer_mid', 'pred'])
     return info_df
+
+def perturb_enhancer(model, pe_df, use_hic=False, device='cpu'):
+    pe_df = pe_df.sort_values(by='Distance').reset_index()
+    model.eval()
+    perturb_pred_list = []
+    with torch.no_grad():
+      seq_input, feat_input, rna_input = encoder_promoter_enhancer_CRISPRi(pe_df, hg19_fasta_path='../hg19.fa')
+      seq_input = torch.from_numpy(seq_input)
+      feat_input = torch.from_numpy(feat_input)
+      rna_input = torch.from_numpy(rna_input)
+      seq_input = seq_input.unsqueeze(0).float().to(device)
+      rna_input = rna_input.float().to(device)
+      feat_input = feat_input.unsqueeze(0).float().to(device)
+      distToTSS = feat_input[:, :, 0].detach().cpu().numpy().flatten()*1000
+      signals = feat_input[:, :, 1].detach().cpu().numpy().flatten()
+      hic = feat_input[:, :, 2].detach().cpu().numpy().flatten()
+      if not use_hic:
+          feat_input = feat_input[:, :, :2] # exclude HiC
+      else:
+          feat_input = torch.cat([feat_input[:,:,:1], feat_input[:,:,2:], feat_input[:,:,1:2]], dim=-1)
+      # print(feat_input.shape)
+      all_expr, attn_list = model(seq_input, rna_input, feat_input)
+      all_expr = all_expr.cpu().detach().numpy()[0][0]
+      all_expr = 10**all_expr-1
+      # print('predictive expression', all_expr)
+      attn_list = attn_list.permute((1, 0, 2, 3))+1e-5
+      attn_meanLayer = attn_list.mean(1)[:,0].cpu().detach().numpy()[0]
+      print('Calucuting the change of predicted expression by in-silico perturbation...')
+      for mask_ei in tqdm(range(1, len(pe_df)+1)):
+          # print(mask_ei)
+          seq_perturb = seq_input.clone()
+          seq_perturb[:,mask_ei,:, :] = torch.zeros((1, 2000, 4))
+          pred_expr, _ = model(seq_perturb, rna_input, feat_input)
+          pred_expr = pred_expr.cpu().detach().numpy().flatten()[0]
+          pred_expr = 10**pred_expr-1
+          perturb_pred_list.append(pred_expr)
+
+    perturb_pred_list = np.array(perturb_pred_list)
+    pe_df['change of predicted expression'] = (((perturb_pred_list - all_expr))/all_expr)
+    
+    pe_df['in-silico perturb expr'] = perturb_pred_list
+    pe_df['distanceToTSS'] = (distToTSS[1:]).astype(int)
+    pe_df['enhancer activity'] = 10**signals[1:]-1
+    pe_df['HiC contact'] = hic[1:]
+    pe_df['Attention score'] = attn_meanLayer[1:]/sum(attn_meanLayer[1:])
+    pe_df['pred_expr'] = all_expr
+    return pe_df
