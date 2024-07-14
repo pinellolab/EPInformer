@@ -225,7 +225,6 @@ def compute_enhancer_gene_attention(model, pe_df, use_hic=False, device='cpu'):
     attention_mean = attn_meanLayer[1:]
     return attention_mean, all_expr
 
-
 def predict_enhancer_activity(enhancer_model, chrom, position, window_size=1024, stride=128, device='cuda'):
     hg19_fasta_path = '../hg19.fa'
     if not os.path.exists(hg19_fasta_path):
