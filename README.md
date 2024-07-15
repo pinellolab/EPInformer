@@ -39,7 +39,7 @@ pip install pyranges pyfaidx kipoiseq openpyxl tangermeme
 
 ### 1. Gene expression prediction
 
-An end-to-end example to predict gene expression from promoter-enhancer sequences, epigenomic signals and chromatin contacts is in [1_predict_gene_expression.ipynb](https://github.com/JasonLinjc/EPInformer/blob/main/1_predict_gene_expression.ipynb). You can run this notebook yourself to experiment with different EPInformers.
+An end-to-end example to predict gene expression from promoter-enhancer sequences, epigenomic signals and chromatin contacts is in [1_predict_gene_expression.ipynb](https://github.com/JasonLinjc/EPInformer/blob/main/1_predict_gene_expression.ipynb). You can run this notebook yourself to experiment with different EPInformers. Please download and extract the training data before proceeding from [Zenodo](https://doi.org/10.5281/zenodo.12738705).
 
 <p align="center">
   <img height="600" src="images/gene_expression.png">
