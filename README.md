@@ -18,7 +18,7 @@ EPInformer requires Python 3.6+ and Python packages PyTorch (>=2.1). You can fol
 
 ### Setup
 
-EPInformer requires ABC enhancer-gene data for training and predicting gene expression. You can obtain the ABC data from [ENCODE](https://www.encodeproject.org/search/?type=Annotation&annotation_type=element+gene+regulatory+interaction+predictions&software_used.software.name=abc-enhancer-gene-prediction-encode_v1) or by running the ABC pipeline available on their [GitHub](https://github.com/broadinstitute/ABC-Enhancer-Gene-Prediction) acquire cell-type-specific gene-enhancer links. We provide a script [here](https://github.com/JasonLinjc/EPInformer/tree/main/data) for downloading ABC enhancer-gene links from ENCODE for *K562* and *GM12878* cell lines. To  experiment three applications below with EPInformer, please first run the folloing command to setup the environment:
+EPInformer requires ABC enhancer-gene data for training and predicting gene expression. You can obtain the ABC data from [ENCODE](https://www.encodeproject.org/search/?type=Annotation&annotation_type=element+gene+regulatory+interaction+predictions&software_used.software.name=abc-enhancer-gene-prediction-encode_v1) or by running the ABC pipeline available on their [GitHub](https://github.com/broadinstitute/ABC-Enhancer-Gene-Prediction) acquire cell-type-specific gene-enhancer links. You can download training resource of EPInformer for *K562* and *GM12878* cell lines from [Zenodo](https://doi.org/10.5281/zenodo.12738705). To  experiment three applications below with EPInformer, please first run the folloing command to setup the environment:
 ```
 # Clone this repository
 git clone https://github.com/JasonLinjc/EPInformer.git
@@ -39,8 +39,7 @@ pip install pyranges pyfaidx kipoiseq openpyxl tangermeme
 
 ### 1. Gene expression prediction
 
-An end-to-end example to predict gene expression from promoter-enhancer sequences, epigenomic signals and chromatin contacts is in [1_predict_gene_expression.ipynb](https://github.com/JasonLinjc/EPInformer/blob/main/1_predict_gene_expression.ipynb). You can run this notebook yourself to experiment with different EPInformers. Please download and extract the training data before proceeding from [Zenodo](https://doi.org/10.5281/zenodo.12738705).
-
+An end-to-end example to predict gene expression from promoter-enhancer sequences, epigenomic signals and chromatin contacts is in [1_predict_gene_expression.ipynb](https://github.com/JasonLinjc/EPInformer/blob/main/1_predict_gene_expression.ipynb). You can run this notebook yourself to experiment with different EPInformers.
 <p align="center">
   <img height="600" src="images/gene_expression.png">
 </p>
