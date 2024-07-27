@@ -18,7 +18,7 @@ EPInformer requires Python 3.6+ and Python packages PyTorch (>=2.1). You can fol
 
 ### Setup
 
-EPInformer requires ABC enhancer-gene data for training and predicting gene expression. You can obtain the ABC data from [ENCODE](https://www.encodeproject.org/search/?type=Annotation&annotation_type=element+gene+regulatory+interaction+predictions&software_used.software.name=abc-enhancer-gene-prediction-encode_v1) or by running the ABC pipeline available on their [GitHub](https://github.com/broadinstitute/ABC-Enhancer-Gene-Prediction) acquire cell-type-specific gene-enhancer links. For *K562* and *GM12878* cell lines, you can download the training resource of EPInformer from [Zenodo](https://doi.org/10.5281/zenodo.12738705) by running the command:
+EPInformer requires ABC enhancer-gene data for training and predicting gene expression. You can obtain the ABC data from [ENCODE](https://www.encodeproject.org/search/?type=Annotation&annotation_type=element+gene+regulatory+interaction+predictions&software_used.software.name=abc-enhancer-gene-prediction-encode_v1) or by running the ABC pipeline available on their [GitHub](https://github.com/broadinstitute/ABC-Enhancer-Gene-Prediction) acquire cell-type-specific gene-enhancer links. For K562 and GM12878 cell lines, you can download the training resource of EPInformer from [Zenodo](https://doi.org/10.5281/zenodo.12738705) by running the command:
 
 ```
 sh ./download_data.sh
@@ -58,13 +58,13 @@ To prioritize the enhancer-gene links tested by [CRISPRi-FlowFISH](https://www.n
 </p>
 
 ### 3. Enhancer activity prediction and TF motif discovery
-To predict cell-type-specific enhancer activity, we provide sequence-based predictors trained on H3K27ac and DNase signals in *K562* and *GM12878* cell lines separately. Enhancer activity was calculated using the [ABC score](https://github.com/broadinstitute/ABC-Enhancer-Gene-Prediction). Additionally, [Tangermeme]([https://github.com/ilyes495/tangermeme/tree/main](https://github.com/jmschrei/tangermeme)) was used to perform in-silico saturation mutagenesis (ISM) on the enhancer sequence to identify key motifs contributing to the predicted activity. The notebook ([3_predict_enhancer_activity.ipynb](https://github.com/JasonLinjc/EPInformer/blob/main/3_predict_enhancer_activity.ipynb)) is available for experimenting with enhancer activity prediction and transcription factor motif discovery.
+To predict cell-type-specific enhancer activity, we provide sequence-based predictors trained on H3K27ac and DNase signals in K562 and GM12878 cell lines separately. Enhancer activity was calculated using the [ABC score](https://github.com/broadinstitute/ABC-Enhancer-Gene-Prediction). Additionally, [Tangermeme]([https://github.com/ilyes495/tangermeme/tree/main](https://github.com/jmschrei/tangermeme)) was used to perform in-silico saturation mutagenesis (ISM) on the enhancer sequence to identify key motifs contributing to the predicted activity. The notebook ([3_predict_enhancer_activity.ipynb](https://github.com/JasonLinjc/EPInformer/blob/main/3_predict_enhancer_activity.ipynb)) is available for experimenting with enhancer activity prediction and transcription factor motif discovery.
 <p align="center">
   <img height="500" src="images/KLF1_enhancer_motifs.png">
 </p>
 
 ## Training
-You can re-train EPInformer models on K562/GM12878 data using the command lines:
+You can re-train EPInformer models on K562 and GM12878 data using the command lines:
 
 ```
 # Download K562 and GM12878 data
