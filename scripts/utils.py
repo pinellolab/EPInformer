@@ -42,13 +42,13 @@ class FastaStringExtractor:
 def one_hot_encode(sequence):
     return kipoiseq.transforms.functional.one_hot_dna(sequence).astype(np.float32)
 
-def encode_promoter_enhancer_links(gene_enhancer_df, fasta_path = '../hg38.fa', max_n_enhancer = 60, max_distanceToTSS = 100_000, max_seq_len=2000, add_flanking=False):
+def encode_promoter_enhancer_links(gene_enhancer_df, fasta_path = './data/hg38.fa', max_n_enhancer = 60, max_distanceToTSS = 100_000, max_seq_len=2000, add_flanking=False):
     fasta_extractor = FastaStringExtractor(fasta_path)
     gene_pe = gene_enhancer_df.sort_values(by='distance')
     row_0 = gene_pe.iloc[0]
     gene_name = row_0['TargetGene']
     gene_tss = row_0['TargetGeneTSS']
-    chrom = row_0['#chr']
+    chrom = row_0['chr']
     if row_0['TargetGeneTSS'] != row_0['TargetGeneTSS']:
         gene_tss = row_0['tss']
         gene_name = row_0['name_gene']
@@ -91,7 +91,7 @@ def encode_promoter_enhancer_links(gene_enhancer_df, fasta_path = '../hg38.fa', 
         # put sequence from the start
         enhancer_activity[e_i] = row['activity_base']
         enhancer_distance[e_i] = row['distance']
-        enhancer_contact[e_i] = row['hic_contact']*100
+        enhancer_contact[e_i] = row['hic_contact']
         gene_element_pair.append([gene_name, row['name']])
         e_i += 1
     # print(promoter_signals.shape, enhancers_signal.shape)
@@ -100,11 +100,18 @@ def encode_promoter_enhancer_links(gene_enhancer_df, fasta_path = '../hg38.fa', 
     return pe_code, enhancer_activity, enhancer_distance, enhancer_contact, gene_name, gene_element_pair
 
 
-def prepare_input(gene_enhancer_table, gene_list, num_features = 3):
+def prepare_input(gene_enhancer_table, gene_list, cell, num_features = 3):
     # enhancer_gene_k562_100kb[enhancer_gene_k562_100kb['#chr'] == 'chrX']['TargetGene'].unique()
-    mRNA_feauture = pd.read_csv('./data/mRNA_halflife_features.csv', index_col='Gene name')
-    promoter_signals = pd.read_csv('./data/GeneList_K562.txt', index_col='symbol', sep='\t')
-    promoter_signals['PromoterActivity'] = np.sqrt(promoter_signals['H3K27ac.RPM.TSS1Kb']*promoter_signals['DHS.RPM.TSS1Kb'])
+    mRNA_feauture = pd.read_csv('./data/mRNA_halflife_features.csv', index_col='gene_id')
+    if cell == 'K562':
+        promoter_signals = pd.read_csv('./data/K562_DNase_ENCFF257HEE_hic_4DNFITUOMFUQ_1MB_ABC_nominated/DNase_ENCFF257HEE_Neighborhoods/GeneList.txt', sep='\t', index_col='symbol')
+        promoter_signals['PromoterActivity'] = np.sqrt(promoter_signals['H3K27ac.RPM.TSS1Kb']*promoter_signals['DHS.RPM.TSS1Kb'])
+    elif cell == 'GM12878':
+        promoter_signals = pd.read_csv('./data/GM12878_DNase_ENCFF020WZB_hic_4DNFI1UEG1HD_1MB_ABC_nominated/DNase_ENCFF020WZB_Neighborhoods/GeneList.txt', sep='\t', index_col='symbol')
+        promoter_signals['PromoterActivity'] = np.sqrt(promoter_signals['H3K27ac.RPM.TSS1Kb']*promoter_signals['DHS.RPM.TSS1Kb'])
+    else:
+        print(cell, 'not found!')
+        return 0
     mRNA_feats = ['UTR5LEN_log10zscore',
        'CDSLEN_log10zscore', 'INTRONLEN_log10zscore', 'UTR3LEN_log10zscore',
        'UTR5GC', 'CDSGC', 'UTR3GC', 'ORFEXONDENSITY']
@@ -113,12 +120,13 @@ def prepare_input(gene_enhancer_table, gene_list, num_features = 3):
     mRNA_promoter_list = []
     PE_links_list = []
     for gene in tqdm(gene_list):
-        gene_df = gene_enhancer_table[gene_enhancer_table['name_gene'] == gene]
+        gene_df = gene_enhancer_table[gene_enhancer_table['ENSID'] == gene]
         PE_code, activity_list, distance_list, contact_list, gene_name, PE_links = encode_promoter_enhancer_links(gene_df, max_seq_len=2000, max_n_enhancer=60, max_distanceToTSS=100_000, add_flanking=False)
-        contact_list = np.concatenate([[0], contact_list*100])
+        contact_list = np.concatenate([[0], contact_list])
         distance_list = np.concatenate([[0], distance_list/1000])
         activity_list = np.concatenate([[0], activity_list])
-        activity_list = np.log10(0.1+activity_list)
+        # activity_list = np.log10(0.1+activity_list)
+        contact_list = np.log10(1+contact_list)
         mRNA_promoter_feat = np.array(list(mRNA_feauture.loc[gene, mRNA_feats].values) + [promoter_signals.loc[gene, 'PromoterActivity']])
         if num_features == 1:
             PE_feat = distance_list[:,np.newaxis]
