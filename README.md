@@ -64,7 +64,7 @@ To predict cell-type-specific enhancer activity, we provide sequence-based predi
 </p>
 
 ## Training
-You can train different EPInformer models on K562/GM12878 data run using the command line:
+You can re-train EPInformer models on K562/GM12878 data run using the command line:
 
 ```
 # Download K562 and GM12878 data
