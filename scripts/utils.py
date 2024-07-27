@@ -146,16 +146,16 @@ def prepare_input(gene_enhancer_table, gene_list, cell, num_features = 3):
     mRNA_promoter_list = np.array(mRNA_promoter_list)
     return PE_code_list, PE_feat_list, mRNA_promoter_list, PE_links_df
 
-def encoder_promoter_enhancer_CRISPRi(pe_df, hg19_fasta_path = '../hg19.fa', verbose=True, HiC_norm=False):
+def encoder_promoter_enhancer_CRISPRi(pe_df, hg19_fasta_path = './data/hg19.fa', verbose=True, HiC_norm=False):
     pe_df = pe_df.sort_values(by='Distance')
     if 'level_0' in pe_df.columns:
         pe_df.drop(columns=['level_0'], inplace=True)
     if not os.path.exists(hg19_fasta_path):
         print('Downloading hg19 reference genome...')
         import urllib.request
-        urllib.request.urlretrieve("https://hgdownload.cse.ucsc.edu/goldenpath/hg19/bigZips/hg19.fa.gz", "./data/hg19.fa.gz")
-        os.system('gunzip ./data/hg19.fa.gz')
-        hg19_fasta_path = './data/hg19.fa'
+        urllib.request.urlretrieve("https://hgdownload.cse.ucsc.edu/goldenpath/hg19/bigZips/hg19.fa.gz", hg19_fasta_path+".gz")
+        os.system('gunzip ' +  hg19_fasta_path+".gz")
+        # hg19_fasta_path = './data/hg19.fa'
     hg19_fasta_extractor = FastaStringExtractor(hg19_fasta_path)
     RNA_feats = pd.read_csv('./data/GM12878_K562_18377_gene_expr_fromXpresso.csv', index_col='Gene stable ID')[['UTR5LEN_log10zscore','CDSLEN_log10zscore','INTRONLEN_log10zscore','UTR3LEN_log10zscore','UTR5GC','CDSGC','UTR3GC', 'ORFEXONDENSITY_log10zscore']]
     promoter_df = pd.read_csv('./data/CRISPRi-FlowFISH_Fulco2019/DNase_ENCFF257HEE_Neighborhoods/GeneList.txt', sep='\t', index_col='symbol')
