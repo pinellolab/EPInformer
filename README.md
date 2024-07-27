@@ -64,7 +64,21 @@ To predict cell-type-specific enhancer activity, we provide sequence-based predi
 </p>
 
 ## Training
-Coming soon ...
+You can train different EPInformer models on K562/GM12878 data run using the command line:
+
+```
+# Download K562 and GM12878 data
+sh ./download_data.sh
+
+# Train EPInformer-PE on K562 to predict CAGE-seq expression
+python train_EPInformer.py --cell K562  --model_type EPInformer-PE --expr_assay CAGE --use_pretrained_encoder --batch_size 16
+
+# Train EPInformer-PE-Activity on GM12878 to predict RNA-seq expression
+python train_EPInformer.py --cell GM12878 --model_type EPInformer-PE-Activity --expr_assay RNA --use_pretrained_encoder --batch_size 16
+
+# Train EPInformer-PE-Activity-HiC on K562 to predict RNA-seq expression
+python train_EPInformer.py --cell K562 --model_type EPInformer-PE-Activity-HiC --expr_assay RNA --use_pretrained_encoder --batch_size 16
+```
 
 ## Help 
 Please post in the GitHub issues or e-mail Jiecong Lin (jieconglin@outlook.com) with any question about the repository, requests for more data, etc. 
