@@ -144,7 +144,7 @@ class EarlyStopping:
         # torch.save(model.state_dict(), self.path)
         self.val_loss_min = val_loss
 
-def train(net, training_dataset, fold_i, saved_model_path='../models', learning_rate=5e-4, model_logger=None, fixed_encoder = False, n_enhancers = 50, valid_dataset = None, model_name = '', batch_size = 64, device = 'cuda', stratify=None, class_weight=None, EPOCHS=100, valid_size=1000, net_type='promoter-enhancers'):
+def train(net, training_dataset, fold_i, saved_model_path='../models', learning_rate=5e-4, model_logger=None, fixed_encoder = False, n_enhancers = 50, valid_dataset = None, model_name = '', batch_size = 64, device = 'cuda', stratify=None, class_weight=None, EPOCHS=100, valid_size=1000):
     if not os.path.exists(saved_model_path):
         os.mkdir(saved_model_path)
     if valid_dataset is not None:
@@ -168,9 +168,8 @@ def train(net, training_dataset, fold_i, saved_model_path='../models', learning_
                verbose=True, path= saved_model_path + "/fold_" + str(fold_i) + "_best_"+model_name+"_checkpoint.pt")
 
     L_expr = nn.SmoothL1Loss()
-    # L_expr = nn.MSELoss()
     optimizer = torch.optim.AdamW(net.parameters(), lr=learning_rate, weight_decay=1e-6)
-
+    print('Model name:', net.name)
     lrs = []
     # last_loss = None
     net.train()
@@ -179,7 +178,7 @@ def train(net, training_dataset, fold_i, saved_model_path='../models', learning_
         print('learning rate:', get_lr(optimizer))
         running_loss = 0
         loss_e = 0
-        print('model training mode is:', net.training)
+        # print('model training mode is:', net.training)
         for data in tqdm(trainloader):
             # print(inputs.size())
             optimizer.zero_grad()
@@ -192,12 +191,12 @@ def train(net, training_dataset, fold_i, saved_model_path='../models', learning_
             y_expr = y_expr.float().to(device)
             # print(input_P.shape, input_E.shape, input_Emask.shape)
             # print(input_dist.shape, input_dist)
-            if net_type == 'seq_feat':
-                pred_expr, _ = net(input_PE, input_feat)
-            elif net_type == 'seq':
-                pred_expr, _ = net(input_PE)
-            elif net_type == 'seq_feat_dist':
-                pred_expr, _ = net(input_PE, input_feat, input_dist)
+            # if net_type == 'seq_feat':
+            #     pred_expr, _ = net(input_PE, input_feat)
+            # elif net_type == 'seq':
+            #     pred_expr, _ = net(input_PE)
+            # elif net_type == 'seq_feat_dist':
+            pred_expr, _ = net(input_PE, input_feat, input_dist)
             loss_expr = L_expr(pred_expr, y_expr)
             loss_e += loss_expr.item()
 
@@ -214,16 +213,11 @@ def train(net, training_dataset, fold_i, saved_model_path='../models', learning_
         # log_cols = ['Epoch', 'Training_Loss', 'Validation_Loss', 'Validation_PearsonR_allGene',
         #             'Validation_R2_allGene', 'Validation_PearsonR_weGene', 'Validation_R2_weGene', 'Saved?']
 
-        if len(valid_ds) == 2:
-            val_mse_all, val_r2_all, val_pr_all = validate(net, valid_ds[0], n_enhancers=n_enhancers, net_type=net_type, device=device)
-            val_mse_wE, val_r2_wE, val_pr_wE = validate(net, valid_ds[1],n_enhancers=n_enhancers, net_type=net_type, device=device)
-            val_r2 = val_r2_all
-            print('Valdaition R square wE:', val_r2_wE, 'R square all:', val_r2_all)
-        else:
-            val_mse_all, val_r2_all, val_pr_all = validate(net, valid_ds, n_enhancers=n_enhancers, net_type=net_type, device=device)
-            val_r2 = val_r2_all
-            val_pr_wE, val_r2_wE = val_pr_all, val_r2_all
-            print('Valdaition R square all:', val_r2_all)
+
+        val_mse_all, val_r2_all, val_pr_all = validate(net, valid_ds, n_enhancers=n_enhancers, device=device)
+        val_r2 = val_r2_all
+        val_pr_wE, val_r2_wE = val_pr_all, val_r2_all
+        print('Valdaition R square all:', val_r2_all)
         early_stopping(-val_r2, net, epoch)
         if model_logger is not None:
             label_type = net.name.split('.')[-1]
@@ -235,7 +229,7 @@ def train(net, training_dataset, fold_i, saved_model_path='../models', learning_
     return lrs
 
 def validate(net, valid_ds,  net_type = 'promoter-only', n_enhancers=50, batch_size=16, device = 'cuda'):
-    validloader = data_utils.DataLoader(valid_ds, batch_size=batch_size, pin_memory=True, num_workers=5)
+    validloader = data_utils.DataLoader(valid_ds, batch_size=batch_size, pin_memory=True, num_workers=0)
     net.eval()
     L_expr = nn.SmoothL1Loss()
     
@@ -276,7 +270,7 @@ def validate(net, valid_ds,  net_type = 'promoter-only', n_enhancers=50, batch_s
     print("valid: mse", mse, "R_sqaure", r_value**2, 'peasonr', peasonr)
     return mse, r_value**2, peasonr
 
-def test(net, test_ds, fold_i, net_type = 'seq_feat', batch_size=64, device = 'cuda', model_type='best'):
+def test(net, test_ds, fold_i, model_path=None, batch_size=64, device = 'cuda', model_type='best'):
     testloader = data_utils.DataLoader(test_ds, batch_size=batch_size, pin_memory=True, num_workers=0)
     # checkpoint = torch.load(saved_model_path + "/fold_" + str(fold_i) + "_"+model_name+"_checkpoint.pt")
     # net.load_state_dict(checkpoint['model_state_dict'])
@@ -285,6 +279,11 @@ def test(net, test_ds, fold_i, net_type = 'seq_feat', batch_size=64, device = 'c
     # net.load_state_dict(checkpoint['model_state_dict'])
     # net.load_state_dict(torch.load("./K562_10crx_models/fold_" + str(fold_i) + "_best_"+model_name+"_checkpoint.pt"))
     # print("Load the best model from fold_" + str(fold_i) + "_"+model_type+"_"+model_name+"_checkpoint.pt", )
+    if model_path is not None:
+        checkpoint = torch.load(saved_model_path + "/fold_" + str(fold_i) + "_best_"+model_name+"_checkpoint.pt")
+        net.load_state_dict(checkpoint['model_state_dict'])
+        print(model_name,'loaded!')
+        
     net.eval()
     with torch.no_grad():
         preds = []
@@ -299,10 +298,7 @@ def test(net, test_ds, fold_i, net_type = 'seq_feat', batch_size=64, device = 'c
             # input_PEmask = ~(input_PE.sum(-1).sum(-1) > 0).bool().to(device)
             y_expr = y_expr.float().to(device)
             # print(input_P.shape, input_E.shape, input_Emask.shape)
-            if net_type == 'seq':
-                pred_expr, _ = net(input_PE)
-            elif net_type == 'seq_feat':
-                pred_expr, _ = net(input_PE, input_feat, input_dist)
+            pred_expr, _ = net(input_PE, input_feat, input_dist)
 
             outputs = list(pred_expr.flatten().cpu().detach().numpy())
             labels = list(y_expr.flatten().cpu().detach().numpy())
@@ -324,8 +320,7 @@ def test(net, test_ds, fold_i, net_type = 'seq_feat', batch_size=64, device = 'c
 
     pearsonr_we, pvalue = stats.pearsonr(df['Pred'], df['actual'])
     print('PearsonR:', pearsonr_we)
-
-    # df.to_csv(saved_model_path + "/fold_" + str(fold_i) + "_"+ model_name + "_predictions.csv")
+    df.to_csv(saved_model_path + "/fold_" + str(fold_i) + "_"+ model_name + "_predictions.csv")
     return df
 
 class promoter_enhancer_dataset(Dataset):
@@ -404,23 +399,9 @@ class promoter_enhancer_dataset(Dataset):
         pe_distance = np.concatenate([[0], enhancer_distance/1000]).flatten()
         # print(pe_distance)
         if self.n_extraFeat == 1:
-            if self.first_signal == 'hic':
-                pe_feat = np.concatenate([pe_hic[:,np.newaxis]],axis=-1)
-            elif self.first_signal == 'distance':
-                pe_feat = np.concatenate([pe_distance[:,np.newaxis]],axis=-1)
-            elif self.first_signal == 'distance_hic':
-                pe_feat = np.concatenate([pe_hic[:,np.newaxis], pe_distance[:,np.newaxis]],axis=-1)
-            else:
-                print('contact signal not found!')
+            pe_feat = np.concatenate([pe_distance[:,np.newaxis]],axis=-1)
         elif self.n_extraFeat == 2:
-            if self.first_signal == 'hic':
-                pe_feat = np.concatenate([pe_hic[:,np.newaxis], pe_activity[:,np.newaxis]],axis=-1)
-            elif self.first_signal == 'distance':
-                pe_feat = np.concatenate([pe_distance[:,np.newaxis], pe_activity[:,np.newaxis]],axis=-1)
-            elif self.first_signal == 'distance_hic':
-                pe_feat = np.concatenate([pe_hic[:,np.newaxis], pe_distance[:,np.newaxis], pe_activity[:,np.newaxis]],axis=-1)
-            else:
-                print('feature not found!')
+            pe_feat = np.concatenate([pe_distance[:,np.newaxis], pe_activity[:,np.newaxis]],axis=-1)
         elif self.n_extraFeat == 3:
             pe_feat = np.concatenate([pe_distance[:,np.newaxis], pe_hic[:,np.newaxis], pe_activity[:,np.newaxis], ],axis=-1)
         else:
