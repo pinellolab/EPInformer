@@ -29,7 +29,7 @@ To  experiment three applications below with EPInformer, please first run the fo
 ```
 # Clone this repository
 git clone https://github.com/JasonLinjc/EPInformer.git
-cd EPInformer。 
+cd EPInformer
 
 # create 'EPInformer_env' conda environment by running the following:
 conda create --name EPInformer_env python=3.8 pandas scipy scikit-learn jupyter seaborn
