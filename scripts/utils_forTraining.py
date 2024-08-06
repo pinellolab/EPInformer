@@ -367,11 +367,11 @@ class promoter_enhancer_dataset(Dataset):
         enhancers_code = seq_code[1:]
 
         rnaFeat = list(self.expr_df.loc[sample_ensid][['UTR5LEN_log10zscore','CDSLEN_log10zscore','INTRONLEN_log10zscore','UTR3LEN_log10zscore','UTR5GC','CDSGC','UTR3GC', 'ORFEXONDENSITY']].values.astype(float))
+        pe_activity = np.concatenate([[0], enhancer_intensity]).flatten()
+
         if self.usePromoterSignal:
-            pe_activity = np.concatenate([[0], enhancer_intensity]).flatten()
             rnaFeat = np.array(rnaFeat + [promoter_activity])
         else:
-            pe_activity = np.concatenate([[0], enhancer_intensity]).flatten()
             rnaFeat = np.array(rnaFeat + [0])
 
         if self.distance_threshold is not None:
