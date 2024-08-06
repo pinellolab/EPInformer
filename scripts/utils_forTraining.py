@@ -231,7 +231,7 @@ def train(net, training_dataset, fold_i, saved_model_path='../models', learning_
 def validate(net, valid_ds,  net_type = 'promoter-only', n_enhancers=50, batch_size=16, device = 'cuda'):
     validloader = data_utils.DataLoader(valid_ds, batch_size=batch_size, pin_memory=True, num_workers=0)
     net.eval()
-    L_expr = nn.SmoothL1Loss()
+    L_expr = nn.MSELoss()
     
     with torch.no_grad():
         preds = []
