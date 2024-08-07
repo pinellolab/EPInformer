@@ -83,4 +83,4 @@ python train_EPInformer.py --cell K562 --model_type EPInformer-PE-Activity-HiC -
 ```
 
 ## Help 
-Please post in the GitHub issues or e-mail Jiecong Lin (jieconglin@outlook.com) with any question about the repository, requests for more data, etc. 
+Please post in the GitHub issues or e-mail Jiecong Lin (_jieconglin(at)@outlook.com_) with any question about the repository, requests for more data, etc. 
