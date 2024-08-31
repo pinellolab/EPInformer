@@ -37,7 +37,7 @@ cd EPInformer
 conda create --name EPInformer_env python=3.8 pandas scipy scikit-learn jupyter seaborn
 source activate EPInformer_env
 
-# GPU version putorch
+# GPU version pytorch
 conda install pytorch pytorch-cuda=12.1 -c pytorch -c nvidia
 # CPU version pytorch
 conda install pytorch cpuonly -c pytorch
