@@ -364,7 +364,7 @@ class promoter_enhancer_dataset(Dataset):
         rnaFeat = list(self.expr_df.loc[sample_ensid][['UTR5LEN_log10zscore','CDSLEN_log10zscore','INTRONLEN_log10zscore','UTR3LEN_log10zscore','UTR5GC','CDSGC','UTR3GC', 'ORFEXONDENSITY']].values.astype(float))
         pe_activity = np.concatenate([[0], enhancer_intensity]).flatten()
 
-        if self.usePromoterSignal:
+        if self.usePromoterSignal and self.n_extraFeat > 1:
             rnaFeat = np.array(rnaFeat + [promoter_activity])
         else:
             rnaFeat = np.array(rnaFeat + [0])
