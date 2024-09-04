@@ -248,12 +248,7 @@ def validate(net, valid_ds,  net_type = 'seq_feat_dist', n_enhancers=50, batch_s
             # input_PEmask = ~(input_PE.sum(-1).sum(-1) > 0).bool().to(device)
             y_expr = y_expr.float().to(device)
             # print(input_P.shape, input_E.shape, input_Emask.shape)
-            if net_type == 'seq_feat':
-                pred_expr, _ = net(input_PE, input_feat)
-            elif net_type == 'seq':
-                pred_expr, _ = net(input_PE)
-            elif net_type == 'seq_feat_dist':
-                pred_expr, _ = net(input_PE, input_feat, input_dist)
+            pred_expr, _ = net(input_PE, input_feat, input_dist)
 
             outputs = list(pred_expr.flatten().cpu().detach().numpy())
             labels = list(y_expr.flatten().cpu().detach().numpy())
