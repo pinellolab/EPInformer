@@ -6,7 +6,7 @@ Welcome to the EPInformer framework repository! EPInformer is a scalable deep le
 
 [https://www.biorxiv.org/content/10.1101/2024.08.01.606099v1](https://www.biorxiv.org/content/10.1101/2024.08.01.606099v1).
 
-This repository can be used to run the EPInformer model to predit gene expression (e.g. CAGE-seq and RNA-seq) and prioritize enhancer-gene interactions for input DNA sequences and epigenomic signals (e.g. DNase, H3K27ac and Hi-C).
+This repository can be used to run the EPInformer model to predit gene expression (e.g., CAGE-seq and RNA-seq) and prioritize enhancer-gene interactions for input DNA sequences and epigenomic signals (e.g., DNase, H3K27ac and Hi-C).
 
 We also provide information and instructions for how to train different versions of EPInformer given diffenet inputs including DNA sequence, epigemoic signals and chromatin contacts.
 
