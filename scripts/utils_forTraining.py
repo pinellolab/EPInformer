@@ -265,7 +265,7 @@ def validate(net, valid_ds,  net_type = 'seq_feat_dist', n_enhancers=50, batch_s
     print("valid: mse", mse, "R_sqaure", r_value**2, 'peasonr', peasonr)
     return mse, r_value**2, peasonr
 
-def test(net, test_ds, fold_i, model_path=None, batch_size=64, device = 'cuda', model_type='best'):
+def test(net, test_ds, fold_i, model_name = None,saved_model_path=None, batch_size=64, device = 'cuda', model_type='best'):
     testloader = data_utils.DataLoader(test_ds, batch_size=batch_size, pin_memory=True, num_workers=0)
     # checkpoint = torch.load(saved_model_path + "/fold_" + str(fold_i) + "_"+model_name+"_checkpoint.pt")
     # net.load_state_dict(checkpoint['model_state_dict'])
@@ -274,7 +274,7 @@ def test(net, test_ds, fold_i, model_path=None, batch_size=64, device = 'cuda', 
     # net.load_state_dict(checkpoint['model_state_dict'])
     # net.load_state_dict(torch.load("./K562_10crx_models/fold_" + str(fold_i) + "_best_"+model_name+"_checkpoint.pt"))
     # print("Load the best model from fold_" + str(fold_i) + "_"+model_type+"_"+model_name+"_checkpoint.pt", )
-    if model_path is not None:
+    if saved_model_path is not None:
         checkpoint = torch.load(saved_model_path + "/fold_" + str(fold_i) + "_best_"+model_name+"_checkpoint.pt")
         net.load_state_dict(checkpoint['model_state_dict'])
         print(model_name,'loaded!')
