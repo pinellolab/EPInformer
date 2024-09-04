@@ -67,7 +67,6 @@ datetime_str = today.strftime("%Y-%m-%d-%H")
 split_df = pd.read_csv('./data/leave_chrom_out_crossvalidation_split_18377genes.csv', index_col=0)
 saved_model_path = './trained_models/{}/'.format(datetime_str)
 
-fold_list = ['1']
 if 'all' in fold_list:
     fold_list = list(range(1, 13))
 else:
