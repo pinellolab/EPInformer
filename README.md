@@ -4,7 +4,7 @@
 
 Welcome to the EPInformer framework repository! EPInformer is a scalable deep learning framework for gene expression prediction by integrating promoter-enhancer sequences with epigenomic signals. EPInformer is designed for three key applications: 1) predict gene expression levels using promoter-enhancer sequences, epigenomic signals, and chromatin contacts; 2) identify cell-type-specific enhancer-gene interactions and conduct in-silico perturbation; 3) predict enhancer activity and recapitulate transcription factor binding motifs from sequences. The framework is described in the following bioRxiv preprint:
 
-[https://www.biorxiv.org/content/10.1101/2024.08.01.606099v1](https://www.biorxiv.org/content/10.1101/2024.08.01.606099v1).
+[https://www.biorxiv.org/content/10.1101/2024.08.01.606099v1](https://www.biorxiv.org/content/10.1101/2024.08.01.606099v1)
 
 This repository can be used to run the EPInformer model to predit gene expression (e.g. CAGE-seq and RNA-seq) and prioritize enhancer-gene interactions for input DNA sequences and epigenomic signals (e.g. DNase, H3K27ac and Hi-C).
 
