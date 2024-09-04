@@ -80,7 +80,7 @@ for fi in fold_list:
     valid_ensid = split_df[split_df[fold_i] == 'valid'].index
     test_ensid = split_df[split_df[fold_i] == 'test'].index
 
-    all_ds = utils.promoter_enhancer_dataset(expr_type=expr_type, cell_type=cell, n_extraFeat=n_extraFeat, usePromoterSignal=True, n_enhancers=n_enhancers, hic_threshold=hic_threshold, distance_threshold=distance_threshold)
+    all_ds = utils.promoter_enhancer_dataset(data_folder= './data/', expr_type=expr_type, cell_type=cell, n_extraFeat=n_extraFeat, usePromoterSignal=True, n_enhancers=n_enhancers, hic_threshold=hic_threshold, distance_threshold=distance_threshold)
     ensid_list = [eid.decode() for eid in all_ds.data_h5['ensid'][:]]
     ensid_df = pd.DataFrame(ensid_list, columns=['ensid'])
     ensid_df['idx'] = np.arange(len(ensid_list))
