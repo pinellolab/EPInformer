@@ -73,13 +73,13 @@ You can re-train EPInformer models on K562 and GM12878 data using the command li
 sh ./download_data.sh
 
 # Train EPInformer-PE on K562 to predict CAGE-seq expression
-python train_EPInformer.py --cell K562  --model_type EPInformer-PE --expr_assay CAGE --use_pretrained_encoder --batch_size 16
+python train_EPInformer.py --cell K562  --model_type EPInformer-PE --expr_assay CAGE --use_pretrained_encoder --batch_size 16 --cuda
 
 # Train EPInformer-PE-Activity on GM12878 to predict RNA-seq expression
-python train_EPInformer.py --cell GM12878 --model_type EPInformer-PE-Activity --expr_assay RNA --use_pretrained_encoder --batch_size 16
+python train_EPInformer.py --cell GM12878 --model_type EPInformer-PE-Activity --expr_assay RNA --use_pretrained_encoder --batch_size 16 --cuda
 
 # Train EPInformer-PE-Activity-HiC on K562 to predict RNA-seq expression
-python train_EPInformer.py --cell K562 --model_type EPInformer-PE-Activity-HiC --expr_assay RNA --use_pretrained_encoder --batch_size 16
+python train_EPInformer.py --cell K562 --model_type EPInformer-PE-Activity-HiC --expr_assay RNA --use_pretrained_encoder --batch_size 16 --cuda
 ```
 
 ## Help 
