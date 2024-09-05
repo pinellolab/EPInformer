@@ -103,6 +103,6 @@ for fi in fold_list:
         model = EPInformer_v2(n_encoder=n_encoder, pre_trained_encoder=None, n_enhancer=n_enhancers, out_dim=64, n_extraFeat=n_extraFeat, device=device).to(device)
 
     model = model.to(device)
-    model.name = model.name + '.' +  cell + '.' + expr_type
+    model.name = model.name.replace('EPInformerV2', args.model_type) + '.' +  cell + '.' + expr_type
     utils.train(model, train_ds, valid_dataset=valid_ds, EPOCHS=n_epoch, model_name = model.name, fold_i=fi, batch_size=batch_size, device=device, saved_model_path=saved_model_path)
     test_df = utils.test(model, test_ds, model_name = model.name, saved_model_path=saved_model_path, fold_i=fi, batch_size=batch_size, device=device)
