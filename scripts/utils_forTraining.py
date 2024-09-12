@@ -315,7 +315,8 @@ def test(net, test_ds, fold_i, model_name = None, saved_model_path=None, batch_s
 
     pearsonr_we, pvalue = stats.pearsonr(df['Pred'], df['actual'])
     print('PearsonR:', pearsonr_we)
-    df.to_csv(saved_model_path + "/fold_" + str(fold_i) + "_"+ model_name + "_predictions.csv")
+    if saved_model_path is not None:
+        df.to_csv(saved_model_path + "/fold_" + str(fold_i) + "_"+ model_name + "_predictions.csv")
     return df
 
 class promoter_enhancer_dataset(Dataset):
