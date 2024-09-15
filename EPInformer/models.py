@@ -49,7 +49,7 @@ class seq_256bp_encoder(nn.Module):
         if enhancers_input.shape[2] == 1:
             x_enhancer = enhancers_input
         else:
-            x_enhancer = enhancers_input.permute(0, 3, 1, 2).contiguous()  # batch_size x 4 x 78 x 12566
+            x_enhancer = enhancers_input.permute(0, 3, 1, 2).contiguous()  
         x_enhancer = self.stem_conv(x_enhancer)
 #         print(x_enhancer.shape)
         for i in range(0, len(self.conv_tower), 2):
