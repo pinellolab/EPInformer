@@ -48,7 +48,7 @@ pip install pyranges pyfaidx kipoiseq openpyxl tangermeme
 
 ### Gene expression prediction
 
-An end-to-end example to predict gene expression from promoter-enhancer sequences, epigenomic signals and chromatin contacts is in [1_predict_gene_expression.ipynb](https://github.com/JasonLinjc/EPInformer/blob/main/1_predict_gene_expression.ipynb). You can run this notebook yourself to experiment with different EPInformers.
+An end-to-end example to predict gene expression from promoter-enhancer sequences, epigenomic signals and chromatin contacts is in [1_predict_gene_expression.ipynb](https://github.com/pinellolab/EPInformer/predict_gene_expression.ipynb). You can run this notebook yourself to experiment with different EPInformers.
 <p align="center">
   <img height="600" src="images/gene_expression.png">
 </p>
@@ -61,7 +61,7 @@ We evaluated EPInformer for enhancer–gene link prediction in K562 using the la
 </p>
 
 ### Enhancer activity prediction and TF motif discovery
-To predict cell-type-specific enhancer activity, we provide sequence-based predictors trained on H3K27ac and DNase signals in K562 and GM12878 cell lines separately. Enhancer activity was calculated using the [ABC score](https://github.com/broadinstitute/ABC-Enhancer-Gene-Prediction). Additionally, [Tangermeme]([https://github.com/ilyes495/tangermeme/tree/main](https://github.com/jmschrei/tangermeme)) was used to perform in-silico saturation mutagenesis (ISM) on the enhancer sequence to identify key motifs contributing to the predicted activity. The notebook ([3_predict_enhancer_activity.ipynb](https://github.com/JasonLinjc/EPInformer/blob/main/3_predict_enhancer_activity.ipynb)) is available for experimenting with enhancer activity prediction and transcription factor motif discovery.
+To predict cell-type-specific enhancer activity, we provide sequence-based predictors trained on H3K27ac and DNase signals in K562 and GM12878 cell lines separately. Enhancer activity was calculated using the [ABC score](https://github.com/broadinstitute/ABC-Enhancer-Gene-Prediction). Additionally, [Tangermeme]([https://github.com/ilyes495/tangermeme/tree/main](https://github.com/jmschrei/tangermeme)) was used to perform in-silico saturation mutagenesis (ISM) on the enhancer sequence to identify key motifs contributing to the predicted activity. The notebook ([3_predict_enhancer_activity.ipynb](https://github.com/pinellolab/EPInformer/predict_enhancer_activity.ipynb)) is available for experimenting with enhancer activity prediction and transcription factor motif discovery.
 <p align="center">
   <img height="500" src="images/KLF1_showcase.png">
 </p>
