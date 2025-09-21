@@ -6,7 +6,7 @@ Welcome to the EPInformer framework repository! EPInformer is a scalable deep le
 
 [https://www.biorxiv.org/content/10.1101/2024.08.01.606099v1](https://www.biorxiv.org/content/10.1101/2024.08.01.606099v1).
 
-This repository can be used to run the EPInformer model to predit gene expression (e.g., CAGE-seq and RNA-seq) and prioritize enhancer-gene interactions for input DNA sequences and epigenomic signals (e.g., DNase, H3K27ac and Hi-C).
+This repository can be used to run the EPInformer model to predit gene expression (e.g., CAGE and RNA-seq) and prioritize enhancer-gene interactions for input DNA sequences and epigenomic signals (e.g., DNase, H3K27ac and Hi-C).
 
 We also provide information and instructions for how to train different versions of EPInformer given diffenet inputs including DNA sequence, epigemoic signals and chromatin contacts.
 
@@ -54,7 +54,7 @@ An end-to-end example to predict gene expression from promoter-enhancer sequence
 </p>
 
 ### Enhancer-gene links prediction
-We evaluated EPInformer for enhancer–gene link prediction using the K562 CRISPR and eQTLs benchmark datasets from the Engreitz Lab repository [CRISPR](https://github.com/EngreitzLab/CRISPR_comparison/) and [eQTL enrichment](https://github.com/EngreitzLab/eQTLEnrichment).
+We evaluated EPInformer for enhancer–gene link prediction using the K562 CRISPR and eQTLs benchmark datasets from the Engreitz Lab repository ([CRISPR](https://github.com/EngreitzLab/CRISPR_comparison/) and [eQTL enrichment](https://github.com/EngreitzLab/eQTLEnrichment)).
 <!-- We provide a jupyter notebook ([2_prioritize_enhancer_gene_links.ipynb](https://github.com/JasonLinjc/EPInformer/blob/main/2_prioritize_enhancer_gene_links.ipynb)) for pre-processing CRISPRi-FlowFISH data and scoring enhancer-gene links using EPInformer-derived attention scores and the Attention-ABC score. Additionally, this notebook provides a end-to-end example of in-silico perturbations on candidate elements within 100kb of *KLF1* and predicting their effects, with *KLF1* excluded from the training data to prevent overfitting. -->
 <p align="center">
   <img height="750" src="images/EG_benchmark.png">
