@@ -1,0 +1,23 @@
+# Data and models
+data_EPInformer/
+training_data/
+EPInformer_models*/
+EPInformer_report*/
+enhancer_attn_scores*/
+
+# Test outputs
+test/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+
+# OS
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+.ipynb_checkpoints/
