@@ -16,7 +16,7 @@ from .utils import StepLogger, check_dependencies, ensure_bam_indexed, load_gene
 from .candidates import define_candidates, load_candidates_from_peaks
 from .neighborhoods import quantify_neighborhoods
 from .predictions import predict_abc
-from .encoder_data import generate_encoder_data
+from .encoder_pretrain_data import generate_encoder_data
 from .contact import load_hic
 
 # ---------------------------------------------------------------------------
@@ -150,7 +150,7 @@ def run_abc_pipeline(
         ensure_bam_indexed(h3k27ac_bam)
 
     # ---- Determine steps ----
-    total_steps = 4  # candidates, neighborhoods, predictions, encoder_data
+    total_steps = 4  # candidates, neighborhoods, predictions, encoder_pretrain_data
     logger = StepLogger(total_steps)
 
     outputs = {}
@@ -225,7 +225,7 @@ def run_abc_pipeline(
             h3k27ac_bam=h3k27ac_bam,
             max_peaks=max_encoder_peaks,
         )
-    outputs["encoder_data"] = encoder_csv
+    outputs["encoder_pretrain_data"] = encoder_csv
     logger.done()
 
     # ---- Summary ----
