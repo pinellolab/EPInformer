@@ -4,6 +4,15 @@ training_data/
 EPInformer_models*/
 EPInformer_report*/
 enhancer_attn_scores*/
+pretrained_seqencoder_h3k27ac*/
+
+# Large data files
+data/K562/
+data/reference/hg38/
+GM12878_peak_5bins_around_summit_activity_sequence_new.csv
+
+# Pipeline outputs
+abc_output/
 
 # Test outputs
 test/
