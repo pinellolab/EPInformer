@@ -86,6 +86,8 @@ def _add_shared(p: argparse.ArgumentParser) -> None:
     p.add_argument("--hic-resolution", type=int, default=5000, help="Hi-C bin resolution. Default: 5000.")
     p.add_argument("--blacklist", default=None, help="Blacklisted regions BED to exclude.")
     p.add_argument("--neg-fraction", type=float, default=0.05, help="Negative sample fraction for encoder data. Default: 0.05.")
+    p.add_argument("--skip-peaks", action="store_true",
+        help="Skip MACS2, reuse existing narrowPeak in output-dir/macs2/.")
     p.add_argument("--dry-run", action="store_true", help="Validate inputs only, no execution.")
     p.add_argument(
         "--chain-preprocessing", action="store_true",
@@ -95,11 +97,26 @@ def _add_shared(p: argparse.ArgumentParser) -> None:
         "--preprocessing-output-dir", default=None,
         help="Output dir for EPInformer preprocessing (used with --chain-preprocessing).",
     )
+    p.add_argument(
+        "--threads", type=int, default=4,
+        help="Number of threads/processes for parallel processing. Default: 4.",
+    )
 
 
 def cmd_full(args: argparse.Namespace) -> None:
     """Full ABC pipeline from BAM files."""
+    import os
     from epinformer_preprocessing.abc import run_abc_pipeline
+
+    # --skip-peaks: reuse existing narrowPeak from a prior run
+    peaks_file = None
+    if args.skip_peaks:
+        candidate = os.path.join(args.output_dir, "macs2", "peaks_peaks.narrowPeak")
+        if os.path.isfile(candidate):
+            peaks_file = candidate
+            print(f"[--skip-peaks] Reusing existing peaks: {candidate}")
+        else:
+            print(f"[--skip-peaks] No existing peaks found at {candidate}, running MACS2.")
 
     outputs = run_abc_pipeline(
         accessibility_bam=args.accessibility_bam,
@@ -115,6 +132,7 @@ def cmd_full(args: argparse.Namespace) -> None:
         qnorm_ref=args.qnorm_ref,
         cell_type=args.cell_type,
         preset=args.preset,
+        peaks_file=peaks_file,
         n_top_peaks=args.n_top_peaks,
         peak_extend=args.peak_extend,
         window=args.window,
@@ -124,6 +142,7 @@ def cmd_full(args: argparse.Namespace) -> None:
         blacklist=args.blacklist,
         neg_fraction=args.neg_fraction,
         dry_run=args.dry_run,
+        n_threads=args.threads,
     )
 
     if args.chain_preprocessing and outputs:
@@ -158,6 +177,7 @@ def cmd_from_peaks(args: argparse.Namespace) -> None:
         blacklist=args.blacklist,
         neg_fraction=args.neg_fraction,
         dry_run=args.dry_run,
+        n_threads=args.threads,
     )
 
     if args.chain_preprocessing and outputs:

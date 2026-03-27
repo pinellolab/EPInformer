@@ -9,10 +9,12 @@ import os
 import time
 import shutil
 import subprocess
+from concurrent.futures import ThreadPoolExecutor
 
 import numpy as np
 import pandas as pd
 import pysam
+from tqdm import tqdm
 
 
 # ---------------------------------------------------------------------------
@@ -107,11 +109,12 @@ _INSTALL_HINTS = {
 }
 
 
-def check_dependencies() -> None:
+def check_dependencies(require_hic: bool = False) -> None:
     """Verify that required command-line tools are on PATH.
 
     Required: macs2, bedtools, samtools.
-    Optional: hic-straw Python package (warns but does not fail).
+    Optional: hic-straw Python package (warns but does not fail unless
+    *require_hic* is True).
 
     Raises
     ------
@@ -125,9 +128,9 @@ def check_dependencies() -> None:
             print(f"[ERROR] Required tool '{tool}' not found on PATH.")
             print(f"  {_INSTALL_HINTS[tool]}")
 
-    # Optional: hic-straw
+    # Optional: hic-straw (imports as 'hicstraw')
     try:
-        import straw  # noqa: F401
+        import hicstraw  # noqa: F401
     except ImportError:
         print(
             "[WARNING] Optional Python package 'hic-straw' is not installed.\n"
@@ -143,13 +146,92 @@ def check_dependencies() -> None:
 
 
 # ---------------------------------------------------------------------------
-# 3. count_reads_in_regions
+# 3. ensure_bam_indexed
 # ---------------------------------------------------------------------------
+
+def ensure_bam_indexed(bam_path: str, logger=None) -> str:
+    """Ensure a BAM file is coordinate-sorted and indexed.
+
+    If no ``.bai`` index exists, this function will:
+    1. Check sort order from the BAM header.
+    2. If unsorted/name-sorted, run ``samtools sort`` (overwrites in-place).
+    3. Run ``samtools index`` to create the ``.bai`` file.
+
+    Parameters
+    ----------
+    bam_path : str
+        Path to the BAM file.
+    logger : StepLogger, optional
+        Logger for progress messages.  Falls back to ``print``.
+
+    Returns
+    -------
+    str
+        Path to the (possibly re-sorted) BAM file.
+    """
+    def _log(msg):
+        if logger is not None:
+            logger.info(msg)
+        else:
+            print(f"  {msg}")
+
+    # Check for existing index (.bam.bai or .bai)
+    bai_path = bam_path + ".bai"
+    alt_bai = bam_path.replace(".bam", ".bai")
+    if os.path.isfile(bai_path) or os.path.isfile(alt_bai):
+        return bam_path
+
+    _log(f"No index found for {os.path.basename(bam_path)}")
+
+    # Check sort order from header
+    bam = pysam.AlignmentFile(bam_path, "rb")
+    header = bam.header.to_dict()
+    bam.close()
+
+    sort_order = "unknown"
+    for hd in header.get("HD", []) if isinstance(header.get("HD"), list) else [header.get("HD", {})]:
+        sort_order = hd.get("SO", "unknown")
+
+    if sort_order != "coordinate":
+        _log(f"BAM is {sort_order}-sorted — sorting by coordinate (this may take a while) ...")
+        sorted_path = bam_path + ".sorted.bam"
+        subprocess.run(
+            ["samtools", "sort", "-o", sorted_path, bam_path],
+            check=True,
+        )
+        # Replace original with sorted version
+        os.replace(sorted_path, bam_path)
+        _log("Sort complete.")
+
+    _log(f"Indexing {os.path.basename(bam_path)} ...")
+    subprocess.run(["samtools", "index", bam_path], check=True)
+    _log("Index created.")
+
+    return bam_path
+
+
+# ---------------------------------------------------------------------------
+# 4. count_reads_in_regions
+# ---------------------------------------------------------------------------
+
+def _count_reads_chrom(bam_path: str, chrom: str, starts, ends):
+    """Count reads for regions on a single chromosome (thread worker)."""
+    bam = pysam.AlignmentFile(bam_path, "rb")
+    counts = np.zeros(len(starts), dtype=np.int64)
+    for i, (s, e) in enumerate(zip(starts, ends)):
+        try:
+            counts[i] = bam.count(contig=str(chrom), start=int(s), end=int(e))
+        except ValueError:
+            counts[i] = 0
+    bam.close()
+    return counts
+
 
 def count_reads_in_regions(
     bam_path: str,
     regions_bed: pd.DataFrame,
     chrom_sizes: dict = None,
+    n_threads: int = 1,
 ) -> pd.DataFrame:
     """Count aligned reads overlapping BED regions using pysam.
 
@@ -162,6 +244,8 @@ def count_reads_in_regions(
     chrom_sizes : dict, optional
         Mapping of chrom name to length. Not currently used but reserved
         for future clipping of regions to chromosome bounds.
+    n_threads : int
+        Number of threads for parallel counting by chromosome (default 1).
 
     Returns
     -------
@@ -173,18 +257,39 @@ def count_reads_in_regions(
 
     bam = pysam.AlignmentFile(bam_path, "rb")
     total_mapped = bam.mapped
+    bam.close()
 
     counts = np.zeros(len(df), dtype=np.int64)
-    for i, (chrom, start, end) in enumerate(
-        zip(df["chr"], df["start"], df["end"])
-    ):
-        try:
-            counts[i] = bam.count(contig=str(chrom), start=int(start), end=int(end))
-        except ValueError:
-            # Chromosome not in BAM — leave count as 0.
-            counts[i] = 0
 
-    bam.close()
+    if n_threads <= 1:
+        # Sequential path
+        bam = pysam.AlignmentFile(bam_path, "rb")
+        for i, (chrom, start, end) in tqdm(
+            enumerate(zip(df["chr"], df["start"], df["end"])),
+            total=len(df), desc="  Counting reads", leave=False,
+        ):
+            try:
+                counts[i] = bam.count(contig=str(chrom), start=int(start), end=int(end))
+            except ValueError:
+                counts[i] = 0
+        bam.close()
+    else:
+        # Parallel: group by chromosome, one thread per chromosome
+        grouped = df.groupby("chr")
+        futures = {}
+        with ThreadPoolExecutor(max_workers=n_threads) as pool:
+            for chrom, group in grouped:
+                idx = group.index
+                futures[chrom] = (idx, pool.submit(
+                    _count_reads_chrom, bam_path, chrom,
+                    group["start"].values, group["end"].values,
+                ))
+            for chrom, (idx, future) in tqdm(
+                futures.items(), total=len(futures),
+                desc="  Counting reads", leave=False,
+            ):
+                chrom_counts = future.result()
+                counts[idx] = chrom_counts
 
     df["readCount"] = counts
 

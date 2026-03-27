@@ -240,8 +240,10 @@ def define_candidates(
         "--shift", str(shift),
         "--extsize", str(extsize),
         "-B", "--SPMR",
+        "--nolambda",
         "--keep-dup", "all",
         "--call-summits",
+        "-p", "0.01",
         "-n", "peaks",
         "--outdir", macs2_dir,
     ]
@@ -250,14 +252,14 @@ def define_candidates(
 
     result = subprocess.run(
         macs2_cmd,
-        capture_output=True,
+        stdout=subprocess.PIPE,
+        stderr=None,  # inherit — streams MACS2 progress to terminal
         text=True,
     )
 
     if result.returncode != 0:
         raise RuntimeError(
-            f"MACS2 failed with return code {result.returncode}.\n"
-            f"stderr:\n{result.stderr}"
+            f"MACS2 failed with return code {result.returncode}."
         )
 
     # ---- 2. Load and select top peaks --------------------------------------

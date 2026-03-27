@@ -12,7 +12,7 @@ import time
 from pathlib import Path
 from typing import Optional
 
-from .utils import StepLogger, check_dependencies, load_gene_bed
+from .utils import StepLogger, check_dependencies, ensure_bam_indexed, load_gene_bed
 from .candidates import define_candidates, load_candidates_from_peaks
 from .neighborhoods import quantify_neighborhoods
 from .predictions import predict_abc
@@ -92,8 +92,10 @@ def run_abc_pipeline(
     hic_resolution: int = 5000,
     blacklist: Optional[str] = None,
     neg_fraction: float = 0.05,
+    max_encoder_peaks: int = 100_000,
     include_self_promoter: bool = False,
     dry_run: bool = False,
+    n_threads: int = 1,
 ) -> dict:
     """Run the full ABC pipeline.
 
@@ -127,6 +129,7 @@ def run_abc_pipeline(
     print(f"  Expression:        {expression or '(not provided)'}")
     print(f"  Cell type:         {cell_type}")
     print(f"  Assay:             {assay}")
+    print(f"  Threads:           {n_threads}")
     print(f"  Output:            {output_dir}")
     print("=" * 80)
 
@@ -139,6 +142,12 @@ def run_abc_pipeline(
 
     # ---- Check dependencies ----
     check_dependencies(require_hic=hic_file is not None)
+
+    # ---- Ensure BAMs are sorted and indexed ----
+    print("Checking BAM files ...")
+    ensure_bam_indexed(accessibility_bam)
+    if h3k27ac_bam:
+        ensure_bam_indexed(h3k27ac_bam)
 
     # ---- Determine steps ----
     total_steps = 4  # candidates, neighborhoods, predictions, encoder_data
@@ -177,6 +186,7 @@ def run_abc_pipeline(
         logger=logger,
         tss_slop=tss_slop,
         qnorm_ref=qnorm_ref,
+        n_threads=n_threads,
     )
     outputs["enhancer_list"] = enhancer_list_path
     outputs["gene_list"] = gene_list_path
@@ -188,7 +198,7 @@ def run_abc_pipeline(
         enhancer_list_path, gene_list_path, output_dir, logger,
         hic_file=hic_file, window=window, gamma=gamma,
         tss_slop=tss_slop, hic_resolution=hic_resolution,
-        cell_type=cell_type,
+        cell_type=cell_type, n_threads=n_threads,
     )
     outputs["predictions"] = predictions_path
     logger.done()
@@ -210,7 +220,10 @@ def run_abc_pipeline(
             enhancer_list_path, summits_bed, fasta, chrom_sizes,
             output_dir, logger,
             cell_type=cell_type, neg_fraction=neg_fraction,
-            blacklist=blacklist,
+            blacklist=blacklist, n_threads=n_threads,
+            accessibility_bam=accessibility_bam,
+            h3k27ac_bam=h3k27ac_bam,
+            max_peaks=max_encoder_peaks,
         )
     outputs["encoder_data"] = encoder_csv
     logger.done()

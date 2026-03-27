@@ -76,6 +76,22 @@ def _orf_density_alias(cage_xpresso_df: pd.DataFrame) -> pd.DataFrame:
     return cage_xpresso_df
 
 
+def _map_symbol_to_ensid(promoter_enhancer_df: pd.DataFrame, cage_xpresso_df: pd.DataFrame) -> pd.DataFrame:
+    """Map ABC TargetGene (gene symbol) → ENSID using expression CSV lookup.
+
+    ABC output uses gene symbols (e.g. BET1L) while the expression CSV indexes
+    by ENSID (e.g. ENSG00000000003).  This creates a ``TargetGene_ENSID`` column
+    so the downstream merge can join on ENSID.
+    """
+    symbol_to_ensid = cage_xpresso_df.set_index("Gene name")["ENSID"].to_dict()
+    promoter_enhancer_df["TargetGene_ENSID"] = promoter_enhancer_df["TargetGene"].map(symbol_to_ensid)
+    n_mapped = promoter_enhancer_df["TargetGene_ENSID"].notna().sum()
+    n_genes = promoter_enhancer_df.loc[promoter_enhancer_df["TargetGene_ENSID"].notna(), "TargetGene"].nunique()
+    n_total_genes = promoter_enhancer_df["TargetGene"].nunique()
+    print(f"Gene symbol → ENSID: {n_genes}/{n_total_genes} genes mapped ({n_mapped}/{len(promoter_enhancer_df)} rows)")
+    return promoter_enhancer_df
+
+
 class DataGenerator_seqs2Expr(torch.utils.data.Dataset):
     def __init__(
         self, pe_sequences, rna_feat_list, distance_list, ensid_list, cell_type="CAGE"
@@ -163,9 +179,10 @@ def obtain_PE(
             "ORFEXONDENSITY",
         ]
     ]
+    promoter_enhancer_df = _map_symbol_to_ensid(promoter_enhancer_df, cage_xpresso_df)
     gene_enhancer_expr_df = promoter_enhancer_df.merge(
         cage_xpresso_df,
-        left_on="TargetGene",
+        left_on="TargetGene_ENSID",
         right_on="ENSID",
         how="right",
         suffixes=["_element", "_gene"],
@@ -360,9 +377,10 @@ def obtain_K562_H3K27ac_PE(
             "ORFEXONDENSITY_log10zscore",
         ]
     ]
+    promoter_enhancer_df = _map_symbol_to_ensid(promoter_enhancer_df, cage_xpresso_df)
     gene_enhancer_expr_df = promoter_enhancer_df.merge(
         cage_xpresso_df,
-        left_on="TargetGene",
+        left_on="TargetGene_ENSID",
         right_on="ENSID",
         how="right",
         suffixes=["_element", "_gene"],
@@ -517,9 +535,10 @@ def obtain_GM12878_PE(max_distance=150_000, add_flank=False, n_enhancer=60, max_
             "ORFEXONDENSITY",
         ]
     ]
+    promoter_enhancer_df = _map_symbol_to_ensid(promoter_enhancer_df, cage_xpresso_df)
     gene_enhancer_expr_df = promoter_enhancer_df.merge(
         cage_xpresso_df,
-        left_on="TargetGene",
+        left_on="TargetGene_ENSID",
         right_on="ENSID",
         how="right",
         suffixes=["_element", "_gene"],
@@ -670,9 +689,10 @@ def obtain_GM12878_H3K27ac_PE():
             "ORFEXONDENSITY_log10zscore",
         ]
     ]
+    promoter_enhancer_df = _map_symbol_to_ensid(promoter_enhancer_df, cage_xpresso_df)
     gene_enhancer_expr_df = promoter_enhancer_df.merge(
         cage_xpresso_df,
-        left_on="TargetGene",
+        left_on="TargetGene_ENSID",
         right_on="ENSID",
         how="right",
         suffixes=["_element", "_gene"],
@@ -794,6 +814,301 @@ def obtain_GM12878_H3K27ac_PE():
     gene_enhancer_expr_sub_df.to_csv(out_folder + "/gene_enhancer_pair_all.csv", index=False)
 
 
+def obtain_PE_withSignals(
+    fname,
+    max_distance=150_000,
+    min_distance=0,
+    add_flank=False,
+    n_enhancer=60,
+    max_seq_len=2000,
+    gene_expression_csv: Optional[str] = None,
+    fasta_path: Optional[str] = None,
+    output_dir: Optional[str] = None,
+    signal_files: Optional[list[str]] = None,
+    tss_column: str = "TSS",
+    include_self_promoter: bool = False,
+    abc_all_putative: Optional[str] = None,
+    cell_type: str = "K562",
+):
+    """General version of obtain_K562_PE_withSignals that works for any cell type.
+
+    Matches ABC ``TargetGene`` (ENSID) with ``Actual_{cell_type}`` expression column.
+    """
+    pe_fname = fname[0]
+    enhancer_fname = fname[1]
+    promoter_enhancer_df = pd.read_csv(pe_fname, sep="\t")
+    promoter_enhancer_df["element_mid"] = (
+        promoter_enhancer_df["end"] + promoter_enhancer_df["start"]
+    ) / 2
+    promoter_enhancer_df["distance_relative"] = (
+        promoter_enhancer_df["element_mid"] - promoter_enhancer_df["TargetGeneTSS"]
+    )
+    enhancer_df = pd.read_csv(enhancer_fname, sep="\t")[
+        ["name", "normalized_h3K27ac", "normalized_dhs"]
+    ]
+    promoter_enhancer_df = promoter_enhancer_df.merge(enhancer_df, on="name", suffixes=["_pred", "_enh"])
+    for col in ["normalized_h3K27ac", "normalized_dhs"]:
+        if col + "_enh" in promoter_enhancer_df.columns:
+            promoter_enhancer_df[col] = promoter_enhancer_df[col + "_enh"]
+            promoter_enhancer_df.drop(columns=[col + "_pred", col + "_enh"], inplace=True)
+
+    # --- Load gene expression and resolve cell-type column ---
+    _ge = gene_expression_csv or _DEFAULT_GENE_EXPR_CSV
+    cage_xpresso_df = pd.read_csv(_ge)
+    cage_xpresso_df = _apply_tss_column(cage_xpresso_df, tss_column)
+    cage_xpresso_df = _orf_density_alias(cage_xpresso_df)
+
+    actual_col = f"Actual_{cell_type}"
+    if actual_col not in cage_xpresso_df.columns:
+        raise ValueError(
+            f"Expression column '{actual_col}' not found in {_ge}. "
+            f"Available Actual_* columns: "
+            f"{[c for c in cage_xpresso_df.columns if c.startswith('Actual_')]}"
+        )
+
+    base_cols = [
+        "ENSID", "chrom", "start", "end", "strand", "TSS", "Gene name",
+        actual_col,
+        "UTR5LEN_log10zscore", "CDSLEN_log10zscore", "INTRONLEN_log10zscore",
+        "UTR3LEN_log10zscore", "UTR5GC", "CDSGC", "UTR3GC", "ORFEXONDENSITY",
+    ]
+    cage_xpresso_df = cage_xpresso_df[base_cols]
+
+    promoter_enhancer_df = _map_symbol_to_ensid(promoter_enhancer_df, cage_xpresso_df)
+
+    gene_enhancer_expr_df = promoter_enhancer_df.merge(
+        cage_xpresso_df,
+        left_on="TargetGene_ENSID",
+        right_on="ENSID",
+        how="right",
+        suffixes=["_element", "_gene"],
+    ).sort_values(by=["ENSID", "distance"])
+
+    merge_cols = [
+        "chrom", "start_element", "end_element", "hic_contact", "activity_base",
+        "normalized_dhs", "name", "distance", "distance_relative",
+        "ENSID", "TSS", "strand", "Gene name",
+        actual_col,
+        "UTR5LEN_log10zscore", "CDSLEN_log10zscore", "INTRONLEN_log10zscore",
+        "UTR3LEN_log10zscore", "UTR5GC", "CDSGC", "UTR3GC", "ORFEXONDENSITY",
+    ]
+    gene_enhancer_expr_df = gene_enhancer_expr_df[merge_cols]
+
+    # Report gene matching
+    n_abc_genes = promoter_enhancer_df["TargetGene"].nunique()
+    n_matched = gene_enhancer_expr_df["ENSID"].nunique()
+    print(f"Gene matching: {n_matched}/{n_abc_genes} ABC genes found in expression CSV ({actual_col})")
+
+    for distanceToTSS in [50_000, 100_000, 150_000, 250_000, 500_000]:
+        count_df = gene_enhancer_expr_df[
+            (gene_enhancer_expr_df["distance"] <= distanceToTSS)
+            & (gene_enhancer_expr_df["distance"] > max_seq_len / 2)
+        ].groupby("ENSID")["name"].count()
+        if len(count_df) > 0:
+            print(f"  {distanceToTSS/1000:.0f}kb: 90%={np.percentile(count_df, 90):.0f}, "
+                  f"95%={np.percentile(count_df, 95):.0f}, max={np.percentile(count_df, 100):.0f}")
+
+    _fa = fasta_path or _DEFAULT_FASTA_PINELLO
+    fasta_extractor = FastaStringExtractor(_fa)
+    _min_dist = max(min_distance, max_seq_len / 2)
+    gene_enhancer_expr_sub_df = gene_enhancer_expr_df[
+        (gene_enhancer_expr_df["distance"] <= max_distance)
+        & (gene_enhancer_expr_df["distance"] > _min_dist)
+    ]
+    gene_tss_df = gene_enhancer_expr_df.drop_duplicates(subset=["ENSID"])[
+        ["ENSID", "TSS", "chrom", "strand"]
+    ].reset_index()
+    gene_enhancer_expr_sub_df = gene_enhancer_expr_sub_df.merge(
+        gene_tss_df, on="ENSID", how="right", suffixes=["_x", "_y"]
+    )
+
+    # ── Self-promoter lookup ───────────────────────────────────────────
+    self_prm_lookup = {}
+    if include_self_promoter:
+        _abc_path = abc_all_putative or pe_fname
+        print(f"Loading self-promoter data from: {_abc_path}")
+        abc_df = pd.read_csv(_abc_path, sep="\t")
+        sp = abc_df[abc_df["isSelfPromoter"] == True].copy()
+        sp = sp.sort_values("distance").groupby("TargetGene").first().reset_index()
+        for _, row in sp.iterrows():
+            self_prm_lookup[row["TargetGene"]] = {
+                "activity_base": float(row["activity_base"]),
+                "hic_contact": float(row["hic_contact"]),
+                "normalized_dhs": float(row.get("normalized_dhs", 0)),
+                "distance_relative": float(row.get("distance", 0)),
+                "name": row["name"],
+                "chr": row["chr"],
+                "start": int(row["start"]),
+                "end": int(row["end"]),
+            }
+        print(f"Self-promoter entries: {len(self_prm_lookup)} genes")
+
+    out_folder = output_dir or f"./seqs2expr_dataset/{cell_type}_{max_distance//1000}kb{n_enhancer}e"
+    signal_files = signal_files if signal_files is not None else []
+    n_sig = len(signal_files)
+    os.makedirs(out_folder, exist_ok=True)
+    print(f"Output: {out_folder}")
+
+    import kipoiseq
+    from Bio.Seq import Seq
+
+    ensid_list = list(set(gene_enhancer_expr_sub_df["ENSID"]))
+
+    # ── Pass 1: collect unique enhancers and encode sequences ──────────
+    unique_enh_names = list(gene_enhancer_expr_sub_df["name"].dropna().unique())
+    if include_self_promoter:
+        for ensid_sp, sp_info in self_prm_lookup.items():
+            sp_name = sp_info["name"]
+            if sp_name not in set(unique_enh_names):
+                unique_enh_names.append(sp_name)
+
+    enh_name_to_idx = {n: i for i, n in enumerate(unique_enh_names)}
+    n_unique_enh = len(unique_enh_names)
+    print(f"Unique enhancers: {n_unique_enh} (incl. self-promoter: {include_self_promoter}), genes: {len(ensid_list)}")
+
+    enh_coords = (
+        gene_enhancer_expr_sub_df[["name", "chrom_x", "start_element", "end_element"]]
+        .dropna(subset=["name", "start_element"])
+        .drop_duplicates(subset=["name"])
+        .set_index("name")
+    )
+    if include_self_promoter:
+        sp_rows = []
+        for sp_info in self_prm_lookup.values():
+            sp_rows.append({
+                "name": sp_info["name"],
+                "chrom_x": sp_info["chr"].replace("chr", ""),
+                "start_element": sp_info["start"],
+                "end_element": sp_info["end"],
+            })
+        if sp_rows:
+            sp_df = pd.DataFrame(sp_rows).drop_duplicates(subset=["name"]).set_index("name")
+            enh_coords = pd.concat([enh_coords, sp_df[~sp_df.index.isin(enh_coords.index)]])
+
+    signal_objs = []
+    if n_sig > 0:
+        import pyBigWig
+        for sf in signal_files:
+            signal_objs.append(pyBigWig.open(sf, "r"))
+
+    h5_path = os.path.join(out_folder, "samples.h5")
+    hf = create_pe_arrays_h5(
+        h5_path,
+        n_samples=len(ensid_list),
+        n_enhancers=n_unique_enh,
+        max_n_enhancer=n_enhancer,
+        max_seq_len=max_seq_len,
+        n_signal_tracks=n_sig,
+    )
+
+    print("Pass 1: encoding unique enhancer sequences...")
+    for enh_name, enh_idx in tqdm.tqdm(enh_name_to_idx.items(), total=n_unique_enh):
+        if enh_name not in enh_coords.index:
+            continue
+        row = enh_coords.loc[enh_name]
+        chrom = "chr" + str(int(row["chrom_x"]) if not isinstance(row["chrom_x"], str) else row["chrom_x"])
+        enh_start = int(row["start_element"])
+        enh_end = int(row["end_element"])
+        enh_center = (enh_start + enh_end) // 2
+        enh_len = enh_end - enh_start
+
+        enh_seq = np.zeros((max_seq_len, 4), dtype=np.float32)
+        if add_flank or enh_len > max_seq_len:
+            interval = kipoiseq.Interval(chrom, enh_center - max_seq_len // 2, enh_center + max_seq_len // 2)
+            enh_seq[:] = one_hot_encode(fasta_extractor.extract(interval))
+        else:
+            code_start = max_seq_len // 2 - enh_len // 2
+            interval = kipoiseq.Interval(chrom, enh_start, enh_end)
+            enh_seq[code_start:code_start + enh_len] = one_hot_encode(fasta_extractor.extract(interval))
+
+        enh_signal = None
+        if n_sig > 0:
+            enh_signal = np.zeros((max_seq_len, n_sig), dtype=np.float32)
+            for s_i, sig in enumerate(signal_objs):
+                if add_flank or enh_len > max_seq_len:
+                    sv = sig.values(chrom, enh_center - max_seq_len // 2, enh_center + max_seq_len // 2, numpy=True)
+                    enh_signal[:, s_i] = np.nan_to_num(sv)
+                else:
+                    sv = sig.values(chrom, enh_start, enh_end, numpy=True)
+                    enh_signal[code_start:code_start + enh_len, s_i] = np.nan_to_num(sv)
+
+        write_enhancer(hf, enh_idx, enh_name, enh_seq, signal=enh_signal)
+
+    # ── Pass 2: write gene-level data with enhancer indices ────────────
+    print("Pass 2: writing gene-level data...")
+    ensid_pair_list = []
+    for row_i, ensid in enumerate(tqdm.tqdm(ensid_list)):
+        gene_df = gene_enhancer_expr_sub_df[
+            gene_enhancer_expr_sub_df["ENSID"] == ensid
+        ].sort_values(by="distance_relative")
+
+        row_0 = gene_df.iloc[0]
+        gene_tss = row_0["TSS_y"]
+        chrom = "chr" + str(row_0["chrom_y"])
+
+        target_interval = kipoiseq.Interval(
+            chrom, int(gene_tss - max_seq_len / 2), int(gene_tss + max_seq_len / 2)
+        )
+        promoter_seq = Seq(fasta_extractor.extract(target_interval))
+        promoter_code = one_hot_encode(str(promoter_seq))
+
+        prm_signal = None
+        if n_sig > 0:
+            prm_signal = np.zeros((max_seq_len, n_sig), dtype=np.float32)
+            for s_i, sig in enumerate(signal_objs):
+                sv = sig.values(chrom, int(gene_tss - max_seq_len / 2), int(gene_tss + max_seq_len / 2), numpy=True)
+                prm_signal[:, s_i] = np.nan_to_num(sv)
+
+        gene_pe = gene_df[
+            (gene_df["distance"] > _min_dist) & (gene_df["distance"] <= max_distance)
+        ]
+
+        enh_indices = np.full(n_enhancer, -1, dtype=np.int32)
+        act_arr = np.zeros(n_enhancer, dtype=np.float32)
+        dhs_arr = np.zeros(n_enhancer, dtype=np.float32)
+        dist_arr = np.zeros(n_enhancer, dtype=np.float32)
+        contact_arr = np.zeros(n_enhancer, dtype=np.float32)
+
+        e_i = 0
+        if include_self_promoter and ensid in self_prm_lookup:
+            sp = self_prm_lookup[ensid]
+            enh_indices[0] = enh_name_to_idx[sp["name"]]
+            act_arr[0] = sp["activity_base"]
+            dhs_arr[0] = sp["normalized_dhs"]
+            dist_arr[0] = sp["distance_relative"]
+            contact_arr[0] = sp["hic_contact"]
+            ensid_pair_list.append([ensid, sp["name"]])
+            e_i = 1
+
+        for _, erow in gene_pe.iterrows():
+            if pd.isna(erow["start_element"]):
+                continue
+            if e_i >= n_enhancer:
+                break
+            ename = erow["name"]
+            if ename in enh_name_to_idx:
+                enh_indices[e_i] = enh_name_to_idx[ename]
+                act_arr[e_i] = erow["activity_base"]
+                dhs_arr[e_i] = erow["normalized_dhs"]
+                dist_arr[e_i] = erow["distance_relative"]
+                contact_arr[e_i] = erow["hic_contact"]
+                ensid_pair_list.append([ensid, ename])
+                e_i += 1
+
+        write_gene_sample(
+            hf, row_i, str(ensid), promoter_code, enh_indices,
+            act_arr, dhs_arr, dist_arr, contact_arr,
+            promoter_signal=prm_signal,
+        )
+
+    for sig in signal_objs:
+        sig.close()
+    hf.close()
+    gene_enhancer_df = pd.DataFrame(ensid_pair_list, columns=["ensid", "element"])
+    gene_enhancer_df.to_csv(out_folder + "/gene_enhancer_pair.csv", index=False)
+    gene_enhancer_expr_sub_df.to_csv(out_folder + "/gene_enhancer_pair_all.csv", index=False)
+
+
 def obtain_K562_PE_withSignals(
     fname,
     max_distance=150_000,
@@ -855,9 +1170,10 @@ def obtain_K562_PE_withSignals(
             "ORFEXONDENSITY",
         ]
     ]
+    promoter_enhancer_df = _map_symbol_to_ensid(promoter_enhancer_df, cage_xpresso_df)
     gene_enhancer_expr_df = promoter_enhancer_df.merge(
         cage_xpresso_df,
-        left_on="TargetGene",
+        left_on="TargetGene_ENSID",
         right_on="ENSID",
         how="right",
         suffixes=["_element", "_gene"],
@@ -1183,9 +1499,10 @@ def obtain_GM12878_PE_withSignals(
             "ORFEXONDENSITY",
         ]
     ]
+    promoter_enhancer_df = _map_symbol_to_ensid(promoter_enhancer_df, cage_xpresso_df)
     gene_enhancer_expr_df = promoter_enhancer_df.merge(
         cage_xpresso_df,
-        left_on="TargetGene",
+        left_on="TargetGene_ENSID",
         right_on="ENSID",
         how="right",
         suffixes=["_element", "_gene"],

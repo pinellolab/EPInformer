@@ -8,6 +8,8 @@ library is not installed), all functions fall back to the power-law model.
 
 from __future__ import annotations
 
+import subprocess
+import sys
 import warnings
 from typing import Dict, Optional
 
@@ -62,8 +64,9 @@ def powerlaw_contact(distance: float, gamma: float = 0.87) -> float:
 class HiCContactMap:
     """Lazy-loading wrapper around a ``.hic`` file.
 
-    Chromosome pair data is fetched on first access and cached so that
-    repeated queries to the same chromosome are fast.
+    Uses the stable ``hicstraw.straw()`` API.  Chromosome data is fetched
+    on first access and cached.  Normalization is auto-detected (tries
+    KR → VC → VC_SQRT → NONE) to handle files missing specific vectors.
 
     Parameters
     ----------
@@ -72,8 +75,11 @@ class HiCContactMap:
     resolution : int
         Bin resolution in base pairs (default 5000).
     normalization : str
-        Matrix normalization type (default ``"KR"``).
+        Preferred normalization (default ``"KR"``).  Falls back automatically
+        if the requested normalization is unavailable.
     """
+
+    _NORM_FALLBACK = ["KR", "VC", "VC_SQRT", "NONE"]
 
     def __init__(
         self,
@@ -89,46 +95,97 @@ class HiCContactMap:
         self.hic_file = hic_file
         self.resolution = resolution
         self.normalization = normalization
-        self._hic: Optional[hicstraw.HiCFile] = None
         # Cache: chrom -> dict[(bin_i, bin_j) -> value]
         self._cache: Dict[str, Dict[tuple, float]] = {}
+        # Resolved normalization (set on first successful query)
+        self._resolved_norm: Optional[str] = None
+        # Resolved chrom prefix style (set on first successful query)
+        self._chrom_style: Optional[str] = None  # "chr" or ""
 
     # -- internal helpers ----------------------------------------------------
 
-    def _open(self) -> "hicstraw.HiCFile":
-        if self._hic is None:
-            self._hic = hicstraw.HiCFile(self.hic_file)
-        return self._hic
+    def _straw_query(self, norm: str, chrom_key: str) -> list:
+        """Call hicstraw.straw() and return contact records."""
+        return hicstraw.straw(
+            "observed", norm, self.hic_file,
+            chrom_key, chrom_key, "BP", self.resolution,
+        )
+
+    @staticmethod
+    def _probe_norm_subprocess(hic_file: str, norm: str, chrom_key: str, resolution: int) -> bool:
+        """Test if a normalization works without risking a segfault in this process."""
+        script = (
+            f"import hicstraw; "
+            f"recs = hicstraw.straw('observed', '{norm}', '{hic_file}', "
+            f"'{chrom_key}:0:100000', '{chrom_key}:0:100000', 'BP', {resolution}); "
+            f"print(len(recs))"
+        )
+        result = subprocess.run(
+            [sys.executable, "-c", script],
+            capture_output=True, text=True, timeout=30,
+        )
+        return result.returncode == 0
+
+    def _detect_norm_and_style(self, chrom: str) -> None:
+        """Auto-detect working normalization and chromosome naming style.
+
+        Uses a subprocess to probe each normalization, since some (e.g. KR)
+        can cause a C-level segfault when vectors are missing from the file.
+        """
+        if self._resolved_norm is not None:
+            return
+
+        chrom_variants = [chrom, chrom.replace("chr", "")]
+        norms = list(self._NORM_FALLBACK)
+        # Put the preferred normalization first
+        if self.normalization in norms:
+            norms = [self.normalization] + [n for n in norms if n != self.normalization]
+
+        for norm in norms:
+            for ck in chrom_variants:
+                if self._probe_norm_subprocess(self.hic_file, norm, ck, self.resolution):
+                    self._resolved_norm = norm
+                    self._chrom_style = "chr" if ck.startswith("chr") else ""
+                    if norm != self.normalization:
+                        print(
+                            f"  Hi-C: {self.normalization} normalization unavailable at "
+                            f"{self.resolution}bp, using {norm} instead."
+                        )
+                    else:
+                        print(f"  Hi-C: using {norm} normalization at {self.resolution}bp.")
+                    return
+
+        warnings.warn(
+            "Could not find any working normalization for Hi-C file. "
+            "Power-law fallback will be used."
+        )
+        self._resolved_norm = "NONE"
+        self._chrom_style = "chr" if chrom.startswith("chr") else ""
+
+    def _chrom_key(self, chrom: str) -> str:
+        """Convert chromosome name to the style used by this .hic file."""
+        if self._chrom_style == "chr":
+            return chrom if chrom.startswith("chr") else f"chr{chrom}"
+        return chrom.replace("chr", "")
 
     def _ensure_chrom(self, chrom: str) -> None:
         """Load all records for an intra-chromosomal matrix into the cache."""
         if chrom in self._cache:
             return
 
-        hic = self._open()
-        # hicstraw expects chromosome names without the "chr" prefix in
-        # some builds; try both.
-        chrom_key = chrom
-        try:
-            mzd = hic.getMatrixZoomData(
-                chrom_key, chrom_key, "observed", self.normalization, "BP", self.resolution
-            )
-        except Exception:
-            # Retry without "chr" prefix
-            chrom_key = chrom.replace("chr", "")
-            try:
-                mzd = hic.getMatrixZoomData(
-                    chrom_key, chrom_key, "observed", self.normalization, "BP", self.resolution
-                )
-            except Exception:
-                warnings.warn(
-                    f"Could not load Hi-C data for chromosome '{chrom}'. "
-                    "Power-law fallback will be used for this chromosome."
-                )
-                self._cache[chrom] = {}
-                return
+        self._detect_norm_and_style(chrom)
+        chrom_key = self._chrom_key(chrom)
 
-        records = mzd.getRecords()
+        try:
+            records = self._straw_query(self._resolved_norm, chrom_key)
+        except Exception:
+            warnings.warn(
+                f"Could not load Hi-C data for chromosome '{chrom}'. "
+                "Power-law fallback will be used for this chromosome."
+            )
+            self._cache[chrom] = {}
+            return
+
         contact_dict: Dict[tuple, float] = {}
         for rec in records:
             contact_dict[(rec.binX, rec.binY)] = rec.counts

@@ -9,9 +9,11 @@ writes the final EnhancerPredictionsAllPutative.txt output.
 from __future__ import annotations
 
 import os
+from concurrent.futures import ProcessPoolExecutor
 
 import numpy as np
 import pandas as pd
+from tqdm import tqdm
 
 from .contact import load_hic, get_contacts_for_pairs
 
@@ -19,6 +21,19 @@ from .contact import load_hic, get_contacts_for_pairs
 # ---------------------------------------------------------------------------
 # Public API
 # ---------------------------------------------------------------------------
+
+def _pair_chromosome(chrom, enh_group, gene_group, window):
+    """Build gene-enhancer pairs for a single chromosome (process worker)."""
+    enh_sub = enh_group.copy()
+    gene_sub = gene_group.copy()
+    enh_sub["_merge_key"] = 1
+    gene_sub["_merge_key"] = 1
+    cross = enh_sub.merge(gene_sub, on="_merge_key", suffixes=("", "_gene"))
+    cross.drop(columns=["_merge_key"], inplace=True)
+    cross["distance"] = (cross["element_mid"] - cross["tss"]).abs()
+    cross = cross[cross["distance"] <= window].copy()
+    return cross
+
 
 def predict_abc(
     enhancer_list_path: str,
@@ -31,6 +46,7 @@ def predict_abc(
     tss_slop: int = 500,
     hic_resolution: int = 5000,
     cell_type: str = "K562",
+    n_threads: int = 1,
 ) -> str:
     """Compute ABC scores for all gene-enhancer pairs (ABC Step 3).
 
@@ -90,29 +106,30 @@ def predict_abc(
     # ------------------------------------------------------------------
     _log(f"Building gene-enhancer pairs (window={window / 1e6:.0f}Mb) ...")
 
+    # Build per-chromosome pairing tasks
+    enh_groups = {chrom: grp for chrom, grp in enhancers.groupby("chr")}
+    gene_groups = {chrom: grp for chrom, grp in genes.groupby("chr")}
+    chrom_list = [c for c in enh_groups if c in gene_groups]
+
     pair_frames = []
-    for chrom, enh_group in enhancers.groupby("chr"):
-        gene_group = genes[genes["chr"] == chrom]
-        if gene_group.empty:
-            continue
-
-        # Cross-join: every gene x every enhancer on the same chromosome
-        enh_sub = enh_group.copy()
-        gene_sub = gene_group.copy()
-
-        # Use a merge key to produce the cross product
-        enh_sub["_merge_key"] = 1
-        gene_sub["_merge_key"] = 1
-
-        cross = enh_sub.merge(gene_sub, on="_merge_key", suffixes=("", "_gene"))
-        cross.drop(columns=["_merge_key"], inplace=True)
-
-        # Compute distance and filter by window
-        cross["distance"] = (cross["element_mid"] - cross["tss"]).abs()
-        cross = cross[cross["distance"] <= window].copy()
-
-        if not cross.empty:
-            pair_frames.append(cross)
+    if n_threads <= 1 or len(chrom_list) <= 1:
+        # Sequential path
+        for chrom in tqdm(chrom_list, desc="  Pairing chromosomes", leave=False):
+            cross = _pair_chromosome(chrom, enh_groups[chrom], gene_groups[chrom], window)
+            if not cross.empty:
+                pair_frames.append(cross)
+    else:
+        # Parallel: one process per chromosome
+        with ProcessPoolExecutor(max_workers=min(n_threads, len(chrom_list))) as pool:
+            futures = {
+                chrom: pool.submit(_pair_chromosome, chrom, enh_groups[chrom], gene_groups[chrom], window)
+                for chrom in chrom_list
+            }
+            for chrom, future in tqdm(futures.items(), total=len(futures),
+                                      desc="  Pairing chromosomes", leave=False):
+                cross = future.result()
+                if not cross.empty:
+                    pair_frames.append(cross)
 
     if not pair_frames:
         _log("WARNING: No gene-enhancer pairs found within the distance window.")

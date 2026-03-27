@@ -13,6 +13,7 @@ import numpy as np
 import pandas as pd
 import pybedtools
 from scipy.stats import rankdata
+from tqdm import tqdm
 
 from .utils import count_reads_in_regions, quantile_normalize
 
@@ -35,9 +36,9 @@ def _load_candidates(candidates_bed: str) -> pd.DataFrame:
     return df
 
 
-def _count_signal(bam_path: str, regions: pd.DataFrame, prefix: str) -> pd.DataFrame:
+def _count_signal(bam_path: str, regions: pd.DataFrame, prefix: str, n_threads: int = 1) -> pd.DataFrame:
     """Count reads and rename columns with *prefix* (e.g. 'DHS' or 'H3K27ac')."""
-    result = count_reads_in_regions(bam_path, regions)
+    result = count_reads_in_regions(bam_path, regions, n_threads=n_threads)
     rename_map = {
         "readCount": f"{prefix}.readCount",
         "RPM": f"{prefix}.RPM",
@@ -49,14 +50,15 @@ def _count_signal(bam_path: str, regions: pd.DataFrame, prefix: str) -> pd.DataF
 
 def _apply_qnorm(df: pd.DataFrame, qnorm_ref: str, has_h3k27ac: bool) -> pd.DataFrame:
     """Apply quantile normalization to RPM columns using a reference file."""
-    ref = np.loadtxt(qnorm_ref)
-    ref = np.sort(ref)
+    ref_df = pd.read_csv(qnorm_ref, sep="\t")
 
-    df["DHS.RPM.quantile"] = quantile_normalize(df["DHS.RPM"].values, reference=ref)
+    dhs_ref = np.sort(ref_df["DHS.RPM"].values)
+    df["DHS.RPM.quantile"] = quantile_normalize(df["DHS.RPM"].values, reference=dhs_ref)
 
-    if has_h3k27ac:
+    if has_h3k27ac and "H3K27ac.RPM" in ref_df.columns:
+        h3k_ref = np.sort(ref_df["H3K27ac.RPM"].values)
         df["H3K27ac.RPM.quantile"] = quantile_normalize(
-            df["H3K27ac.RPM"].values, reference=ref
+            df["H3K27ac.RPM"].values, reference=h3k_ref
         )
 
     return df
@@ -106,7 +108,8 @@ def _classify_candidates(
 
     # Classify each candidate
     classes = []
-    for _, row in candidates.iterrows():
+    for _, row in tqdm(candidates.iterrows(), total=len(candidates),
+                       desc="  Classifying elements", leave=False):
         key = (str(row["chr"]), int(row["start"]), int(row["end"]))
         if key in promoter_set:
             classes.append("promoter")
@@ -141,6 +144,7 @@ def quantify_neighborhoods(
     logger=None,
     tss_slop: int = 500,
     qnorm_ref: str = None,
+    n_threads: int = 1,
 ) -> tuple:
     """Quantify enhancer activity for candidate elements (ABC Step 2).
 
@@ -190,12 +194,12 @@ def quantify_neighborhoods(
     # ------------------------------------------------------------------
     # 2. Count reads in candidates
     # ------------------------------------------------------------------
-    _log(f"Counting DNase reads in {n_cand} candidates ...")
-    candidates = _count_signal(accessibility_bam, candidates, "DHS")
+    _log(f"Counting DNase reads in {n_cand} candidates (threads={n_threads}) ...")
+    candidates = _count_signal(accessibility_bam, candidates, "DHS", n_threads=n_threads)
 
     if has_h3k27ac:
-        _log(f"Counting H3K27ac reads in {n_cand} candidates ...")
-        candidates = _count_signal(h3k27ac_bam, candidates, "H3K27ac")
+        _log(f"Counting H3K27ac reads in {n_cand} candidates (threads={n_threads}) ...")
+        candidates = _count_signal(h3k27ac_bam, candidates, "H3K27ac", n_threads=n_threads)
 
     # ------------------------------------------------------------------
     # 3. Quantile normalization
@@ -220,11 +224,11 @@ def quantify_neighborhoods(
         "end": gene_df["tss"] + 1000,
     })
 
-    promoter_counts = count_reads_in_regions(accessibility_bam, promoter_df)
+    promoter_counts = count_reads_in_regions(accessibility_bam, promoter_df, n_threads=n_threads)
     gene_df["DHS.RPM.TSS1Kb"] = promoter_counts["RPM"].values
 
     if has_h3k27ac:
-        promoter_counts_h3k = count_reads_in_regions(h3k27ac_bam, promoter_df)
+        promoter_counts_h3k = count_reads_in_regions(h3k27ac_bam, promoter_df, n_threads=n_threads)
         gene_df["H3K27ac.RPM.TSS1Kb"] = promoter_counts_h3k["RPM"].values
         gene_df["PromoterActivity"] = np.sqrt(
             gene_df["H3K27ac.RPM.TSS1Kb"] * gene_df["DHS.RPM.TSS1Kb"]
