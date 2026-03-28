@@ -13,6 +13,22 @@ Key applications:
 
 ## Environment Setup
 
+### EPInformer_env (recommended, matches `dna_composer` PyTorch stack)
+
+Use the helper script so torch/torchvision/torchaudio and CUDA wheels match the `dna_composer` conda env (torch 2.10 + cu128-style wheels, plus pytorch-lightning / torchmetrics / triton as in that env):
+
+```bash
+# Fast path: clone dna_composer, then install EPInformer-only pip deps
+bash scripts/setup_EPInformer_env.sh --clone-dna-composer
+
+# Or: fresh Python 3.10 + pinned torch stack from scripts/requirements_torch_dna_composer.txt
+bash scripts/setup_EPInformer_env.sh
+```
+
+If a broken partial env is left on disk, remove it first: `conda env remove -n EPInformer_env -y` and delete `…/miniconda3/envs/EPInformer_env` if it remains.
+
+### Legacy (manual conda + pytorch 12.1)
+
 ```bash
 conda create --name EPInformer_env python=3.8 pandas scipy scikit-learn jupyter seaborn
 conda install pytorch pytorch-cuda=12.1 -c pytorch -c nvidia

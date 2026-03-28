@@ -1,0 +1,9 @@
+# PyTorch stack aligned with conda env `dna_composer` (pip / conda list, torch 2.10 + CUDA 12.8 wheels).
+# Install with: pip install -r requirements_torch_dna_composer.txt
+--extra-index-url https://download.pytorch.org/whl/cu128
+torch==2.10.0
+torchvision==0.25.0
+torchaudio==2.10.0
+pytorch-lightning==2.6.1
+torchmetrics==1.9.0
+triton==3.6.0

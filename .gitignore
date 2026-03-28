@@ -20,6 +20,10 @@ abc_output/
 # Test outputs
 test/
 
+# Local Slurm submit templates and cluster logs (not tracked)
+slurm/
+log_gpu/
+
 # Python
 __pycache__/
 *.pyc

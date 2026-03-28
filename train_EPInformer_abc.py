@@ -190,7 +190,8 @@ class promoter_enhancer_dataset_legacy(Dataset):
 
     def __init__(self, h5_path, expr_csv, cell_type='K562', expr_type='RNA',
                  n_enh_feats=3, disable_enh=False, distance_thr=None,
-                 max_n_enh=60, use_prm_signal=False, rm_prm_seq=False):
+                 max_n_enh=60, use_prm_signal=False, rm_prm_seq=False,
+                 use_h5_expr=False):
         self.expr_df = pd.read_csv(expr_csv, index_col='gene_id')
         self.cell_type = cell_type
         self.n_enh_feats = n_enh_feats
@@ -200,7 +201,10 @@ class promoter_enhancer_dataset_legacy(Dataset):
         self.max_n_enh = max_n_enh
         self.use_prm_signal = use_prm_signal
         self.rm_prm_seq = rm_prm_seq
-        self._expr_col = _resolve_expr_col(self.expr_df, cell_type)
+        self.use_h5_expr = use_h5_expr
+        if use_h5_expr and expr_type != 'RNA':
+            raise ValueError('use_h5_expr is only supported with expr_type RNA')
+        self._expr_col = None if use_h5_expr else _resolve_expr_col(self.expr_df, cell_type)
 
         # Preload all data into memory for fast training
         print('Loading legacy HDF5 data into memory...')
@@ -211,6 +215,18 @@ class promoter_enhancer_dataset_legacy(Dataset):
         # Load 1kb promoter from HDF5 and zero-pad to 2kb (500bp each side)
         prm_1k = f['promoter_ohe'][:].astype(np.float32)  # (N, 1000, 4)
         self._promoter_ohe = np.pad(prm_1k, ((0, 0), (500, 500), (0, 0)), mode='constant')  # (N, 2000, 4)
+        self._expr_h5 = None
+        if use_h5_expr:
+            if 'expr' not in f:
+                f.close()
+                raise ValueError('use_h5_expr=True but HDF5 has no expr dataset')
+            self._expr_h5 = f['expr'][:].astype(np.float64).reshape(-1)
+            if len(self._expr_h5) != len(self._ensid):
+                f.close()
+                raise ValueError(
+                    f'expr length {len(self._expr_h5)} != ensid length {len(self._ensid)}'
+                )
+            print('Using expression targets from HDF5 expr (RNA).')
         f.close()
         print(f'Loaded: {len(self._ensid)} genes, {self._enhancers_feat.shape[1]} CREs per gene, '
               f'enhancers_ohe: {self._enhancers_ohe.nbytes/1e9:.1f} GB, '
@@ -272,8 +288,10 @@ class promoter_enhancer_dataset_legacy(Dataset):
             enh_ohe = np.zeros_like(enh_ohe)
             enh_feats = np.zeros_like(enh_feats)
 
-        # Expression target
-        if self.expr_type == 'CAGE':
+        # Expression target (HDF5 or CSV)
+        if self.use_h5_expr:
+            expr = float(self._expr_h5[idx])
+        elif self.expr_type == 'CAGE':
             expr = float(np.log10(self.expr_df.loc[sample_ensid, self.cell_type + '_CAGE_128*3_sum'] + 1))
         else:
             expr = float(self.expr_df.loc[sample_ensid, self._expr_col])
@@ -436,7 +454,7 @@ class EarlyStopping:
         print('Saving ckpt at', self.path)
         self.val_loss_min = val_loss
 
-def train(net, training_dataset, fold_i, saved_model_path='./models/', learning_rate=1e-4, model_logger=None, fixed_encoder=False, valid_dataset=None, model_name='', batch_size=64, device='cuda', stratify=None, class_weight=None, EPOCHS=100, valid_size=1000, hparams=None):
+def train(net, training_dataset, fold_i, saved_model_path='./models/', learning_rate=1e-4, model_logger=None, fixed_encoder=False, valid_dataset=None, model_name='', batch_size=64, device='cuda', stratify=None, class_weight=None, EPOCHS=100, valid_size=1000, hparams=None, early_stop_patience=5):
     if not os.path.exists(saved_model_path):
         os.makedirs(saved_model_path, exist_ok=True)
     if valid_dataset is not None:
@@ -455,7 +473,10 @@ def train(net, training_dataset, fold_i, saved_model_path='./models/', learning_
 
     print("fold", fold_i, "training data:", len(train_ds), "validated data:", len(valid_ds), 'total data:', len(training_dataset))
     trainloader = data_utils.DataLoader(train_ds, batch_size=batch_size, shuffle=True, num_workers=4, pin_memory=True, drop_last=True, persistent_workers=True)
-    early_stopping = EarlyStopping(patience=5,
+    es_patience = early_stop_patience if early_stop_patience > 0 else 10**9
+    if early_stop_patience <= 0:
+        print('Early stopping disabled (early_stop_patience=0); training for full EPOCHS.')
+    early_stopping = EarlyStopping(patience=es_patience,
                verbose=True, path=saved_model_path + "/fold_" + str(fold_i) + "_best_" + model_name + "_checkpoint.pt",
                hparams=hparams)
 
@@ -598,10 +619,6 @@ def test(net, test_ds, fold_i, model_name=None, saved_model_path=None, batch_siz
 
 if __name__ == '__main__':
 
-    split_df = pd.read_csv('./data/leave_chrom_out_crossvalidation_split_18377genes.csv', index_col=0)
-
-    device = 'cuda' if torch.cuda.is_available() else ('mps' if torch.backends.mps.is_available() else 'cpu')
-
     parser = argparse.ArgumentParser()
     parser.add_argument('--cuda_id', type=int, help='cuda id', default=0)
     parser.add_argument('--model_type', type=str, help='model type', default='EPInformer-v2', choices=['EPInformer-v2', 'EPInformer-abc', 'EPInformer-abc-dist', 'EPInformer-abc-dist-v2'])
@@ -613,15 +630,36 @@ if __name__ == '__main__':
     parser.add_argument('--rm_prm_seq', action='store_true', help='remove promoter sequence')
     parser.add_argument('--h5_path', type=str, default='./training_data/k562_run/samples.h5', help='path to preprocessed HDF5')
     parser.add_argument('--expr_csv', type=str, default='./data_EPInformer/GM12878_K562_18377_gene_expr_fromXpresso_with_sequence_strand.csv', help='gene expression CSV')
+    parser.add_argument('--split_csv', type=str, default='./data/leave_chrom_out_crossvalidation_split_18377genes.csv', help='leave-chrom-out fold assignments (index = gene_id / ENSID)')
+    parser.add_argument('--use_h5_expr', action='store_true', help='legacy HDF5 only: use expr dataset in HDF5 as RNA target (still use expr_csv for Xpresso RNA features)')
     parser.add_argument('--output_dir', type=str, default='./EPInformer_models/', help='directory for saved models and predictions')
-    parser.add_argument('--epochs', type=int, default=50, help='number of training epochs')
+    parser.add_argument('--epochs', type=int, default=50, help='max training epochs (upper bound; may stop earlier via early stopping)')
+    parser.add_argument('--early_stop_patience', type=int, default=5,
+                        help='stop if validation R² does not improve for this many epochs; 0 disables early stopping')
     parser.add_argument('--batch_size', type=int, default=50, help='batch size')
     parser.add_argument('--rm_self_promoter', action='store_true', help='remove self-promoter elements (distance < 1000bp) at training time')
-    parser.add_argument('--folds', type=int, nargs='+', default=list(range(1, 13)), help='fold indices to run (default: 1..12)')
+    parser.add_argument('--folds', type=int, nargs='+', default=None, help='fold indices to run (default: 1..12)')
+    parser.add_argument('--fold', type=int, default=None, help='if set (1–12), train/test only this fold (overrides --folds default)')
     args = parser.parse_args()
+    if args.early_stop_patience < 0:
+        raise SystemExit('--early_stop_patience must be >= 0')
 
-    if device == 'cuda':
-        os.environ["CUDA_VISIBLE_DEVICES"] = str(args.cuda_id)
+    split_df = pd.read_csv(args.split_csv, index_col=0)
+
+    if args.fold is not None:
+        if not (1 <= args.fold <= 12):
+            raise SystemExit('--fold must be between 1 and 12')
+        fold_list = [args.fold]
+    elif args.folds is not None:
+        fold_list = args.folds
+    else:
+        fold_list = list(range(1, 13))
+    for fi in fold_list:
+        if not (1 <= fi <= 12):
+            raise SystemExit('each fold index must be between 1 and 12')
+
+    os.environ["CUDA_VISIBLE_DEVICES"] = str(args.cuda_id)
+    device = 'cuda' if torch.cuda.is_available() else ('mps' if torch.backends.mps.is_available() else 'cpu')
 
     results = []
     fold_metrics = []
@@ -652,7 +690,7 @@ if __name__ == '__main__':
             h5_format = 'factored'
     print(f'HDF5 format: {h5_format}')
 
-    for fi in args.folds:
+    for fi in fold_list:
         fold_i = 'fold_{}'.format(fi)
         for use_rna_feats, rm_prm_seq in [(True, args.rm_prm_seq)]:
             for cell in [cell_type]:
@@ -665,7 +703,8 @@ if __name__ == '__main__':
                         rm_prm_seq=rm_prm_seq,
                     )
                     if h5_format == 'legacy':
-                        ds = promoter_enhancer_dataset_legacy(**ds_kwargs)
+                        ds = promoter_enhancer_dataset_legacy(
+                            **ds_kwargs, use_h5_expr=args.use_h5_expr)
                     elif h5_format == 'pe_code':
                         ds = promoter_enhancer_dataset_pecode(**ds_kwargs, rm_self_promoter=args.rm_self_promoter)
                     else:
@@ -721,9 +760,12 @@ if __name__ == '__main__':
                         'learning_rate': lr,
                         'batch_size': batch_size,
                         'epochs': args.epochs,
+                        'early_stop_patience': args.early_stop_patience,
                         'h5_path': args.h5_path,
+                        'split_csv': args.split_csv,
+                        'use_h5_expr': args.use_h5_expr,
                     }
-                    train(model, train_ds, valid_dataset=valid_ds, learning_rate=lr, EPOCHS=args.epochs, model_name=model.name, fold_i=fi, batch_size=batch_size, device=device, saved_model_path=saved_model_path, hparams=hparams)
+                    train(model, train_ds, valid_dataset=valid_ds, learning_rate=lr, EPOCHS=args.epochs, model_name=model.name, fold_i=fi, batch_size=batch_size, device=device, saved_model_path=saved_model_path, hparams=hparams, early_stop_patience=args.early_stop_patience)
                     # Test
                     test_df, metrics = test(model, test_ds, model_name=model.name, saved_model_path=saved_model_path, fold_i=fi, batch_size=batch_size, device=device)
                     test_df['cell'] = cell

@@ -1,0 +1,14 @@
+# EPInformer training / preprocessing (see CLAUDE.md)
+pandas
+scipy
+scikit-learn
+jupyter
+seaborn
+h5py
+tqdm
+pyranges
+pyfaidx
+kipoiseq
+openpyxl
+tangermeme
+pyBigWig
