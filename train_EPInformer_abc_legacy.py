@@ -30,7 +30,7 @@ from scipy.stats import pearsonr
 
 from sklearn.model_selection import train_test_split
 from EPInformer.models_abc import EPInformer_abc, EPInformer_v2, EPInformer_abc_dist, EPInformer_abc_dist_v2, enhancer_predictor_256bp
-from epinformer_preprocessing import FastaStringExtractor, one_hot_encode
+from preprocessing import FastaStringExtractor, one_hot_encode
 
 fasta_extractor = FastaStringExtractor("./data/hg38.fa")
 

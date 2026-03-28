@@ -2,7 +2,7 @@
 """
 General preprocessing CLI for any cell type.
 
-Wraps :func:`epinformer_preprocessing.pipelines_legacy.obtain_PE_withSignals`
+Wraps :func:`preprocessing.pipelines_legacy.obtain_PE_withSignals`
 to generate ``samples.h5`` (factored HDF5) from ABC pipeline outputs.
 
 Examples::
@@ -68,7 +68,7 @@ def main() -> None:
     parser.add_argument(
         "--gene-expr-csv",
         default=str(ed / "GM12878_K562_18377_gene_expr_fromXpresso.csv"),
-        help="Gene expression / features table (must contain {cell_type}_RNArpkm column).",
+        help="Gene expression / features table (must contain {cell_type}_RPKM column).",
     )
     parser.add_argument(
         "--tss-column",
@@ -89,7 +89,7 @@ def main() -> None:
         "--cell-type",
         default="K562",
         choices=_CELL_TYPES,
-        help="Cell type — selects expression column {cell_type}_RNArpkm.",
+        help="Cell type — selects expression column {cell_type}_RPKM.",
     )
     parser.add_argument(
         "--predictions", required=True,
@@ -141,7 +141,7 @@ def main() -> None:
         signal_bigwigs = list(args.signal_bigwigs)
         _ensure_bigwigs(signal_bigwigs)
 
-    from epinformer_preprocessing.pipelines_legacy import obtain_PE_withSignals
+    from preprocessing.pipelines_legacy import obtain_PE_withSignals
 
     os.makedirs(out, exist_ok=True)
     print(f"Cell type:      {args.cell_type}")

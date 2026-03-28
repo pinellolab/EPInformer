@@ -11,8 +11,8 @@ import numpy as np
 import pandas as pd
 import kipoiseq
 
-from epinformer_preprocessing.encode import one_hot_encode
-from epinformer_preprocessing.fasta import FastaStringExtractor
+from .encode import one_hot_encode
+from .fasta import FastaStringExtractor
 
 
 def encode_promoter_enhancer_links(

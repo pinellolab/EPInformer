@@ -110,7 +110,7 @@ def _add_shared(p: argparse.ArgumentParser) -> None:
 def cmd_full(args: argparse.Namespace) -> None:
     """Full ABC pipeline from BAM files."""
     import os
-    from epinformer_preprocessing.abc import run_abc_pipeline
+    from preprocessing.abc import run_abc_pipeline
 
     # --skip-peaks: reuse existing narrowPeak from a prior run
     peaks_file = None
@@ -156,7 +156,7 @@ def cmd_full(args: argparse.Namespace) -> None:
 
 def cmd_from_peaks(args: argparse.Namespace) -> None:
     """ABC pipeline from pre-called peaks (skip MACS2)."""
-    from epinformer_preprocessing.abc import run_abc_pipeline
+    from preprocessing.abc import run_abc_pipeline
 
     outputs = run_abc_pipeline(
         accessibility_bam=args.accessibility_bam,
@@ -208,7 +208,7 @@ def _chain_preprocessing(args, outputs):
     print(f"  Output:       {prep_out}")
     print(f"{'=' * 80}")
 
-    from epinformer_preprocessing.pipelines_legacy import obtain_PE
+    from preprocessing.pipelines_legacy import obtain_PE
 
     fasta = args.fasta
     if fasta is None:
@@ -218,7 +218,7 @@ def _chain_preprocessing(args, outputs):
 
     gene_expr = args.expression
     if gene_expr is None and args.preset:
-        from epinformer_preprocessing.abc import PRESETS
+        from preprocessing.abc import PRESETS
         gene_expr = PRESETS.get(args.preset, {}).get("expression")
 
     obtain_PE(

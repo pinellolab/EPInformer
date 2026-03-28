@@ -32,7 +32,7 @@ from Bio.Seq import Seq
 import glob
 import random
 from EPInformer.models import enhancer_predictor_256bp
-from epinformer_preprocessing import one_hot_encode
+from preprocessing import one_hot_encode
 
 class dnase_dataset(Dataset):
     def __init__(self, cell_name, chrom_list, strand = 'both'):

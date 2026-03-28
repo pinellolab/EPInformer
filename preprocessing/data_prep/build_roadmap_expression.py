@@ -192,7 +192,7 @@ def main() -> None:
     print(f"  Raw RPKM → {rpkm_out}")
 
     # ------------------------------------------------------------------
-    # 4. Apply log transformation → {cell_type}_RNArpkm columns
+    # 4. Apply log transformation → {cell_type}_RPKM columns
     # ------------------------------------------------------------------
     # Filter to Xpresso gene list if provided (so z-score stats match)
     if args.xpresso_csv:
@@ -228,11 +228,11 @@ def main() -> None:
     eg_map = dict(zip(eg_names["epigenome_id"], eg_names["name"]))
     eg_map.update(_ROADMAP_CELL_NAMES)  # override with cleaner names
 
-    # Rename columns: E003 → H1_RNArpkm, E123 → K562_RNArpkm, etc.
+    # Rename columns: E003 → H1_RPKM, E123 → K562_RPKM, etc.
     renamed = {}
     for col in expr.columns:
         cell_name = eg_map.get(col, col)
-        renamed[col] = f"{cell_name}_RNArpkm"
+        renamed[col] = f"{cell_name}_RPKM"
     expr_renamed = expr.rename(columns=renamed)
 
     # Also keep RPKM columns with original Roadmap IDs
@@ -289,8 +289,8 @@ def main() -> None:
     print(f"\nDone! {len(result)} genes × {len(result.columns)} columns")
     print(f"  → {out_path}")
 
-    # Print available *_RNArpkm columns
-    expr_cols = sorted([c for c in result.columns if c.endswith("_RNArpkm")])
+    # Print available *_RPKM columns
+    expr_cols = sorted([c for c in result.columns if c.endswith("_RPKM")])
     print(f"\n{len(expr_cols)} expression targets available:")
     for c in expr_cols:
         print(f"  {c}")

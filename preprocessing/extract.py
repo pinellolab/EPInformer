@@ -8,7 +8,7 @@ import pyBigWig
 import kipoiseq
 from Bio.Seq import Seq
 
-from epinformer_preprocessing.encode import one_hot_encode
+from .encode import one_hot_encode
 
 
 def extract_promoter_enhancer_loci(

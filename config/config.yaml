@@ -1,0 +1,39 @@
+# EPInformer batch pipeline configuration
+samples_table: samples.tsv
+
+# ---- Shared reference files ----
+reference:
+  fasta: ./data_EPInformer/hg38.fa
+  gene_bed: ./data/reference/hg38/CollapsedGeneBounds.Ensembl_v65.Gencode_v10.hg38.bed
+  chrom_sizes: ./data/reference/hg38/GRCh38_EBV.chrom.sizes.tsv
+  expression_csv: ./data/roadmap_expression/roadmap_expression_all.csv
+  blacklist: null
+
+# ---- Element-gene link parameters (Stage 1: BAM -> predictions) ----
+abc_params:
+  n_top_peaks: 150000
+  peak_extend: 250
+  max_distance: 2500000
+  gamma: 0.87
+  tss_slop: 500
+  hic_resolution: 5000
+  neg_fraction: 0.05
+  max_encoder_peaks: 100000
+  include_self_promoter: false
+  include_promoter_region: false
+  n_threads: 4
+
+# ---- Encoding parameters (Stage 2: predictions -> HDF5) ----
+preprocessing_params:
+  min_distance: 0
+  max_distance: 100000
+  n_enhancer: 60
+  max_seq_len: 2000
+  include_self_promoter: true
+  tss_column: TSS_xpresso
+  no_bigwig: true  # sequence-only; no BigWig signal tracks in HDF5
+
+# ---- Output directory layout ----
+output:
+  base_dir: ./batch_output
+  # Per-sample dirs: {base_dir}/{cell_type}/links/ and {base_dir}/{cell_type}/encoding/

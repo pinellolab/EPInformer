@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-K562 preprocessing CLI (wraps :mod:`epinformer_preprocessing.pipelines_legacy`).
+K562 preprocessing CLI (wraps :mod:`preprocessing.pipelines_legacy`).
 
 Run from the repository root (or anywhere, using absolute paths).
 
@@ -113,7 +113,7 @@ def cmd_with_signals(args: argparse.Namespace) -> None:
         signal_bigwigs = list(args.signal_bigwigs)
         _ensure_bigwigs(signal_bigwigs)
 
-    from epinformer_preprocessing.pipelines_legacy import obtain_K562_PE_withSignals
+    from preprocessing.pipelines_legacy import obtain_K562_PE_withSignals
 
     os.makedirs(out, exist_ok=True)
     print("gene_expr:", ge)
@@ -161,7 +161,7 @@ def cmd_h3k27ac(args: argparse.Namespace) -> None:
         assert bw_resolved
         _must_exist(bw_resolved, "DNase BigWig")
 
-    from epinformer_preprocessing.pipelines_legacy import obtain_K562_H3K27ac_PE
+    from preprocessing.pipelines_legacy import obtain_K562_H3K27ac_PE
 
     os.makedirs(out, exist_ok=True)
     print("gene_expr:", ge)
@@ -201,7 +201,7 @@ def cmd_pe(args: argparse.Namespace) -> None:
         signal_bigwigs = list(args.signal_bigwigs)
         _ensure_bigwigs(signal_bigwigs)
 
-    from epinformer_preprocessing.pipelines_legacy import obtain_PE
+    from preprocessing.pipelines_legacy import obtain_PE
 
     os.makedirs(out, exist_ok=True)
     print("gene_expr:", ge)

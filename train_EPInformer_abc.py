@@ -29,8 +29,8 @@ from EPInformer.models_abc import EPInformer_abc, EPInformer_v2, EPInformer_abc_
 
 
 def _resolve_expr_col(df, cell_type):
-    """Resolve expression column: try {cell}_RNArpkm, then Actual_{cell}."""
-    col = cell_type + '_RNArpkm'
+    """Resolve expression column: try {cell}_RPKM, then Actual_{cell}."""
+    col = cell_type + '_RPKM'
     if col in df.columns:
         return col
     alt = 'Actual_' + cell_type

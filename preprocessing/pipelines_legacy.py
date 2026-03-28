@@ -1,7 +1,7 @@
 """
 Legacy one-off preprocessing drivers (hardcoded paths) and :class:`DataGenerator_seqs2Expr`.
 
-Outputs **compressed HDF5** ``samples.h5`` per run (see :mod:`epinformer_preprocessing.hdf5`),
+Outputs **compressed HDF5** ``samples.h5`` per run (see :mod:`preprocessing.hdf5`),
 plus ``gene_enhancer_pair.csv`` sidecars. Per-gene ``.npy`` files are no longer written.
 """
 
@@ -15,17 +15,17 @@ import pandas as pd
 import torch
 import tqdm
 
-from epinformer_preprocessing.extract import (
+from .extract import (
     extract_promoter_enhancer_loci,
     extract_promoter_enhancer_loci_signals,
 )
-from epinformer_preprocessing.fasta import FastaStringExtractor
-from epinformer_preprocessing.hdf5 import (
+from .fasta import FastaStringExtractor
+from .hdf5 import (
     create_pe_arrays_h5,
     write_enhancer,
     write_gene_sample,
 )
-from epinformer_preprocessing.encode import one_hot_encode
+from .encode import one_hot_encode
 
 _DEFAULT_GENE_EXPR_CSV = "../2020_06_Pred_Gene_expression/EPInformerV2_20230209/GM12878_K562_18377_gene_expression.csv"
 _DEFAULT_FASTA_PINELLO = (
@@ -118,7 +118,7 @@ class DataGenerator_seqs2Expr(torch.utils.data.Dataset):
                 self.expr_df.loc[ensid][self.cell_type + "_CAGE_128*3_sum"] + 1
             )
         elif self.expr_type == "RNA":
-            y_expr = self.expr_df.loc[ensid][self.cell_type + "_RNArpkm"]
+            y_expr = self.expr_df.loc[ensid][self.cell_type + "_RPKM"]
         else:
             assert False, "label not exists!"
         return X_seq, X_rnaFeat, y_expr, ensid
@@ -829,10 +829,16 @@ def obtain_PE_withSignals(
     include_self_promoter: bool = False,
     abc_all_putative: Optional[str] = None,
     cell_type: str = "K562",
+    h5_name: Optional[str] = None,
 ):
     """General version of obtain_K562_PE_withSignals that works for any cell type.
 
     Matches ABC ``TargetGene`` (ENSID) with ``Actual_{cell_type}`` expression column.
+
+    Parameters
+    ----------
+    h5_name : str, optional
+        Custom filename for the output HDF5 (default: ``{cell_type}_samples.h5``).
     """
     pe_fname = fname[0]
     enhancer_fname = fname[1]
@@ -858,7 +864,7 @@ def obtain_PE_withSignals(
     cage_xpresso_df = _apply_tss_column(cage_xpresso_df, tss_column)
     cage_xpresso_df = _orf_density_alias(cage_xpresso_df)
 
-    actual_col = f"{cell_type}_RNArpkm"
+    actual_col = f"{cell_type}_RPKM"
     if actual_col not in cage_xpresso_df.columns:
         # Fallback: try legacy Actual_{cell_type} naming
         legacy_col = f"Actual_{cell_type}"
@@ -868,7 +874,7 @@ def obtain_PE_withSignals(
             raise ValueError(
                 f"Expression column '{actual_col}' (or '{legacy_col}') not found in {_ge}. "
                 f"Available expression columns: "
-                f"{[c for c in cage_xpresso_df.columns if c.endswith('_RNArpkm') or c.startswith('Actual_')]}"
+                f"{[c for c in cage_xpresso_df.columns if c.endswith('_RPKM') or c.startswith('Actual_')]}"
             )
 
     base_cols = [
@@ -996,7 +1002,8 @@ def obtain_PE_withSignals(
         for sf in signal_files:
             signal_objs.append(pyBigWig.open(sf, "r"))
 
-    h5_path = os.path.join(out_folder, "samples.h5")
+    _h5_fname = h5_name or f"{cell_type}_samples.h5"
+    h5_path = os.path.join(out_folder, _h5_fname)
     hf = create_pe_arrays_h5(
         h5_path,
         n_samples=len(ensid_list),
