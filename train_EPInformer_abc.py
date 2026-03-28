@@ -185,7 +185,7 @@ class promoter_enhancer_dataset_legacy(Dataset):
       - ensid:          (N,)                gene IDs
       - expr:           (N, 1)              expression values (optional, can use CSV)
 
-    Features extracted as: [abs(distance), feat[3], feat[-1]][:, :n_enh_feats]
+    Features extracted as: [abs(distance), activity, contact][:, :n_enh_feats]
     """
 
     def __init__(self, h5_path, expr_csv, cell_type='K562', expr_type='RNA',
@@ -206,15 +206,18 @@ class promoter_enhancer_dataset_legacy(Dataset):
             raise ValueError('use_h5_expr is only supported with expr_type RNA')
         self._expr_col = None if use_h5_expr else _resolve_expr_col(self.expr_df, cell_type)
 
-        # Preload all data into memory for fast training
-        print('Loading legacy HDF5 data into memory...')
+        # Load small arrays into memory; keep large sequence arrays on disk
+        print('Loading legacy HDF5 metadata...')
+        self._h5_path = h5_path
         f = h5py.File(h5_path, 'r')
         self._ensid = [e.decode() if isinstance(e, bytes) else e for e in f['ensid'][:]]
-        self._enhancers_feat = f['enhancers_feat'][:]  # (N, 200, 5)
-        self._enhancers_ohe = f['enhancers_ohe'][:].astype(np.float32)  # (N, 200, 2000, 4)
+        self._enhancers_feat = f['enhancers_feat'][:]  # (N, 200, 5) — small
         # Load 1kb promoter from HDF5 and zero-pad to 2kb (500bp each side)
         prm_1k = f['promoter_ohe'][:].astype(np.float32)  # (N, 1000, 4)
         self._promoter_ohe = np.pad(prm_1k, ((0, 0), (500, 500), (0, 0)), mode='constant')  # (N, 2000, 4)
+        # Keep enhancers_ohe on disk — read per-sample in __getitem__
+        self._enhancers_ohe = None  # lazy-loaded from HDF5
+        n_cre = f['enhancers_ohe'].shape[1]
         self._expr_h5 = None
         if use_h5_expr:
             if 'expr' not in f:
@@ -228,9 +231,10 @@ class promoter_enhancer_dataset_legacy(Dataset):
                 )
             print('Using expression targets from HDF5 expr (RNA).')
         f.close()
-        print(f'Loaded: {len(self._ensid)} genes, {self._enhancers_feat.shape[1]} CREs per gene, '
-              f'enhancers_ohe: {self._enhancers_ohe.nbytes/1e9:.1f} GB, '
-              f'promoter_ohe: {self._promoter_ohe.nbytes/1e9:.1f} GB')
+        enh_size_gb = len(self._ensid) * n_cre * 2000 * 4 * 4 / 1e9
+        print(f'Loaded: {len(self._ensid)} genes, {n_cre} CREs per gene, '
+              f'enhancers_ohe: {enh_size_gb:.1f} GB (lazy, on disk), '
+              f'promoter_ohe: {self._promoter_ohe.nbytes/1e9:.1f} GB (in memory)')
 
     def __len__(self):
         return len(self._ensid)
@@ -241,10 +245,16 @@ class promoter_enhancer_dataset_legacy(Dataset):
         # Promoter: preloaded 2kb one-hot
         prm_ohe = self._promoter_ohe[idx][np.newaxis, :]  # (1, 2000, 4)
 
-        # Enhancer sequences: preloaded
-        enh_ohe = self._enhancers_ohe[idx]  # (200, 2000, 4)
+        # Enhancer sequences: lazy-load from HDF5 (avoids ~29 GB in memory)
+        if self._enhancers_ohe is None:
+            # Open per-worker file handle (h5py is not fork-safe)
+            if not hasattr(self, '_h5_handle') or self._h5_handle is None:
+                self._h5_handle = h5py.File(self._h5_path, 'r')
+            enh_ohe = self._h5_handle['enhancers_ohe'][idx].astype(np.float32)
+        else:
+            enh_ohe = self._enhancers_ohe[idx]
 
-        # Extract features: [abs(distance), feat[3], feat[-1]]
+        # Extract features: [abs(distance), DNase, H3K27ac]
         raw_feats = self._enhancers_feat[idx]  # (200, 5)
         if self.n_enh_feats == 0:
             enh_feats = np.zeros_like(np.concatenate(
@@ -629,7 +639,7 @@ if __name__ == '__main__':
     parser.add_argument('--use_pretrained_encoder', action='store_true', help='use pretrained encoder')
     parser.add_argument('--rm_prm_seq', action='store_true', help='remove promoter sequence')
     parser.add_argument('--h5_path', type=str, default='./training_data/k562_run/samples.h5', help='path to preprocessed HDF5')
-    parser.add_argument('--expr_csv', type=str, default='./data_EPInformer/GM12878_K562_18377_gene_expr_fromXpresso_with_sequence_strand.csv', help='gene expression CSV')
+    parser.add_argument('--expr_csv', type=str, default='./data/GM12878_K562_18377_gene_expr_fromXpresso_with_sequence_strand.csv', help='gene expression CSV')
     parser.add_argument('--split_csv', type=str, default='./data/leave_chrom_out_crossvalidation_split_18377genes.csv', help='leave-chrom-out fold assignments (index = gene_id / ENSID)')
     parser.add_argument('--use_h5_expr', action='store_true', help='legacy HDF5 only: use expr dataset in HDF5 as RNA target (still use expr_csv for Xpresso RNA features)')
     parser.add_argument('--output_dir', type=str, default='./EPInformer_models/', help='directory for saved models and predictions')
