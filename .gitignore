@@ -8,7 +8,10 @@ pretrained_seqencoder_h3k27ac*/
 
 # Large data files
 data/K562/
-data/reference/hg38/57epigenomes.RPKM.pc.gz
+data/reference/hg38/
+data/roadmap_expression/*.csv
+data/roadmap_expression/.cache/
+.DS_Store
 GM12878_peak_5bins_around_summit_activity_sequence_new.csv
 
 # Pipeline outputs
