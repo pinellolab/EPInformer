@@ -73,10 +73,23 @@ def _download(url: str, cache_dir: str) -> str:
 
 
 def _load_rpkm(path: str) -> pd.DataFrame:
-    """Load the gzipped RPKM matrix (genes × epigenomes)."""
+    """Load the gzipped RPKM matrix (genes × epigenomes).
+
+    Note: Roadmap data lines have a trailing tab (59 fields vs 58 in header),
+    which causes pandas index_col=0 to mis-align columns by one position.
+    We read the header separately and parse data with explicit column names.
+    """
     with gzip.open(path, "rt") as f:
-        df = pd.read_csv(f, sep="\t", index_col=0)
-    # Index is ENSID (e.g. ENSG00000000003), columns are epigenome IDs (e.g. E003)
+        header = f.readline().rstrip("\n").split("\t")
+        # header = ['gene_id', 'E000', 'E003', ..., 'E128']  (58 fields)
+        rows = []
+        for line in f:
+            fields = line.rstrip("\n\t").split("\t")
+            # fields = ['ENSG...', val, val, ..., val]  (58 values after stripping trailing tab)
+            rows.append(fields)
+    import numpy as np
+    data = np.array(rows)
+    df = pd.DataFrame(data[:, 1:], index=data[:, 0], columns=header[1:]).astype(float)
     df.index.name = "ENSID"
     return df
 

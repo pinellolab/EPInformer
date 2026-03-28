@@ -28,6 +28,18 @@ from sklearn.model_selection import train_test_split
 from EPInformer.models_abc import EPInformer_abc, EPInformer_v2, EPInformer_abc_dist, EPInformer_abc_dist_v2, enhancer_predictor_256bp
 
 
+def _resolve_expr_col(df, cell_type):
+    """Resolve expression column: try {cell}_RNArpkm, then Actual_{cell}."""
+    col = cell_type + '_RNArpkm'
+    if col in df.columns:
+        return col
+    alt = 'Actual_' + cell_type
+    if alt in df.columns:
+        print(f'  Expression column: {alt} (fallback)')
+        return alt
+    raise KeyError(f"No expression column found: tried '{col}' and '{alt}'")
+
+
 class promoter_enhancer_dataset(Dataset):
     """Dataset that reads from the factored HDF5 format (samples.h5).
 
@@ -76,6 +88,7 @@ class promoter_enhancer_dataset(Dataset):
         # Precompute per-gene expression features (avoids slow pandas .loc in workers)
         rna_cols = ['UTR5LEN_log10zscore', 'CDSLEN_log10zscore', 'INTRONLEN_log10zscore',
                     'UTR3LEN_log10zscore', 'UTR5GC', 'CDSGC', 'UTR3GC', 'ORFEXONDENSITY']
+        expr_col = _resolve_expr_col(self.expr_df, cell_type)
         rna_list = []
         expr_list = []
         for ensid in self._ensid:
@@ -89,7 +102,7 @@ class promoter_enhancer_dataset(Dataset):
             if expr_type == 'CAGE':
                 expr_list.append(float(np.log10(row[cell_type + '_CAGE_128*3_sum'] + 1)))
             else:
-                expr_list.append(float(row[cell_type + '_RNArpkm']))
+                expr_list.append(float(row[expr_col]))
         self._rna_feats = torch.from_numpy(np.array(rna_list)).share_memory_()
         self._expr = torch.from_numpy(np.array(expr_list, dtype=np.float64)).share_memory_()
         del self.expr_df  # free memory; no longer needed after precomputation
@@ -187,6 +200,7 @@ class promoter_enhancer_dataset_legacy(Dataset):
         self.max_n_enh = max_n_enh
         self.use_prm_signal = use_prm_signal
         self.rm_prm_seq = rm_prm_seq
+        self._expr_col = _resolve_expr_col(self.expr_df, cell_type)
 
         # Preload all data into memory for fast training
         print('Loading legacy HDF5 data into memory...')
@@ -262,12 +276,99 @@ class promoter_enhancer_dataset_legacy(Dataset):
         if self.expr_type == 'CAGE':
             expr = float(np.log10(self.expr_df.loc[sample_ensid, self.cell_type + '_CAGE_128*3_sum'] + 1))
         else:
-            expr = float(self.expr_df.loc[sample_ensid, self.cell_type + '_RNArpkm'])
+            expr = float(self.expr_df.loc[sample_ensid, self._expr_col])
 
         pe_ohe = np.concatenate([prm_ohe, enh_ohe], axis=0)
         pe_feats = np.concatenate([np.zeros_like(enh_feats[[0]]), enh_feats], axis=0)
 
         return pe_ohe, rna_feats, pe_feats, expr, sample_ensid
+
+
+class promoter_enhancer_dataset_pecode(Dataset):
+    """Dataset for pe_code HDF5 format (combined promoter+enhancer sequences).
+
+    HDF5 contains:
+      - pe_code:   (N, 1+n_enh, 2000, 4)  index 0 = promoter, 1..n_enh = enhancers
+      - activity:  (N, 1+n_enh)
+      - distance:  (N, 1+n_enh)
+      - hic:       (N, 1+n_enh)
+      - ensid:     (N,)
+    """
+
+    def __init__(self, h5_path, expr_csv, cell_type='K562', expr_type='RNA',
+                 n_enh_feats=3, disable_enh=False, distance_thr=None,
+                 max_n_enh=60, use_prm_signal=False, rm_prm_seq=False,
+                 rm_self_promoter=False):
+        self.cell_type = cell_type
+        self.n_enh_feats = n_enh_feats
+        self.expr_type = expr_type
+        self.disable_enh = disable_enh
+        self.distance_thr = distance_thr
+        self.max_n_enh = max_n_enh
+        self.use_prm_signal = use_prm_signal
+        self.rm_prm_seq = rm_prm_seq
+        self.rm_self_promoter = rm_self_promoter
+
+        print('Loading pe_code HDF5 data into shared memory...')
+        f = h5py.File(h5_path, 'r')
+        self._ensid = [e.decode() if isinstance(e, bytes) else e for e in f['ensid'][:]]
+        pe_code = f['pe_code'][:].astype(np.float32)  # (N, 1+n_enh, 2000, 4)
+        activity = f['activity'][:].astype(np.float64)  # (N, 1+n_enh)
+        distance = f['distance'][:].astype(np.float64)  # (N, 1+n_enh)
+        hic = f['hic'][:].astype(np.float64)            # (N, 1+n_enh)
+        f.close()
+
+        n_enh_in_file = pe_code.shape[1] - 1  # exclude promoter slot
+        n_enh = min(n_enh_in_file, max_n_enh)
+
+        # Split into promoter (slot 0) and enhancers (slots 1..n_enh)
+        self._pe_ohe = torch.from_numpy(pe_code[:, :1+n_enh]).share_memory_()
+        # Build features: [abs(distance), activity, hic]
+        dist_feat = np.abs(distance[:, 1:1+n_enh, np.newaxis])
+        act_feat = activity[:, 1:1+n_enh, np.newaxis]
+        hic_feat = hic[:, 1:1+n_enh, np.newaxis]
+        enh_feats = np.concatenate([dist_feat, act_feat, hic_feat], axis=-1)[:, :, :n_enh_feats]
+        # Prepend promoter placeholder features
+        prm_feats = np.ones((enh_feats.shape[0], 1, enh_feats.shape[2]))
+        self._pe_feats = torch.from_numpy(
+            np.concatenate([prm_feats, enh_feats], axis=1).astype(np.float64)
+        ).share_memory_()
+
+        # Expression and RNA features from CSV
+        expr_df = pd.read_csv(expr_csv, index_col='gene_id')
+        rna_cols = ['UTR5LEN_log10zscore', 'CDSLEN_log10zscore', 'INTRONLEN_log10zscore',
+                    'UTR3LEN_log10zscore', 'UTR5GC', 'CDSGC', 'UTR3GC', 'ORFEXONDENSITY']
+        expr_col = _resolve_expr_col(expr_df, cell_type)
+        rna_list, expr_list = [], []
+        for ensid in self._ensid:
+            row = expr_df.loc[ensid]
+            if isinstance(row, pd.DataFrame):
+                row = row.iloc[0]
+            rna = row[rna_cols].values.astype(np.float64).flatten()
+            if use_prm_signal:
+                rna = np.concatenate([rna, [0.0]])
+            rna_list.append(rna)
+            if expr_type == 'CAGE':
+                expr_list.append(float(np.log10(row[cell_type + '_CAGE_128*3_sum'] + 1)))
+            else:
+                expr_list.append(float(row[expr_col]))
+        self._rna_feats = torch.from_numpy(np.array(rna_list)).share_memory_()
+        self._expr = torch.from_numpy(np.array(expr_list, dtype=np.float64)).share_memory_()
+        del expr_df
+
+        print(f'Loaded: {len(self._ensid)} genes, {n_enh} enhancers/gene, '
+              f'pe_ohe: {self._pe_ohe.nbytes/1e9:.1f} GB')
+
+    def __len__(self):
+        return len(self._ensid)
+
+    def __getitem__(self, idx):
+        pe_ohe = self._pe_ohe[idx]      # (1+n_enh, 2000, 4)
+        rna_feats = self._rna_feats[idx]
+        pe_feats = self._pe_feats[idx]   # (1+n_enh, n_enh_feats)
+        expr = self._expr[idx]
+        ensid = self._ensid[idx]
+        return pe_ohe, rna_feats, pe_feats, expr, ensid
 
 
 def get_lr(optimizer):
@@ -516,6 +617,7 @@ if __name__ == '__main__':
     parser.add_argument('--epochs', type=int, default=50, help='number of training epochs')
     parser.add_argument('--batch_size', type=int, default=50, help='batch size')
     parser.add_argument('--rm_self_promoter', action='store_true', help='remove self-promoter elements (distance < 1000bp) at training time')
+    parser.add_argument('--folds', type=int, nargs='+', default=list(range(1, 13)), help='fold indices to run (default: 1..12)')
     args = parser.parse_args()
 
     if device == 'cuda':
@@ -541,39 +643,33 @@ if __name__ == '__main__':
 
     # Auto-detect HDF5 format
     with h5py.File(args.h5_path, 'r') as _f:
-        is_legacy = 'enhancers_ohe' in _f
-    print(f'HDF5 format: {"legacy (flat)" if is_legacy else "factored"}')
+        h5_keys = list(_f.keys())
+        if 'enhancers_ohe' in _f:
+            h5_format = 'legacy'
+        elif 'pe_code' in _f:
+            h5_format = 'pe_code'
+        else:
+            h5_format = 'factored'
+    print(f'HDF5 format: {h5_format}')
 
-    for fi in range(1, 13):
+    for fi in args.folds:
         fold_i = 'fold_{}'.format(fi)
         for use_rna_feats, rm_prm_seq in [(True, args.rm_prm_seq)]:
             for cell in [cell_type]:
                 for n_enh_feats in [args.n_enh_feats]:
-                    if is_legacy:
-                        ds = promoter_enhancer_dataset_legacy(
-                            h5_path=args.h5_path,
-                            expr_csv=args.expr_csv,
-                            cell_type=cell,
-                            expr_type=expr_type,
-                            n_enh_feats=n_enh_feats,
-                            distance_thr=dist_thr,
-                            max_n_enh=max_n_enh,
-                            use_prm_signal=use_prm_signal,
-                            rm_prm_seq=rm_prm_seq,
-                        )
+                    ds_kwargs = dict(
+                        h5_path=args.h5_path, expr_csv=args.expr_csv,
+                        cell_type=cell, expr_type=expr_type,
+                        n_enh_feats=n_enh_feats, distance_thr=dist_thr,
+                        max_n_enh=max_n_enh, use_prm_signal=use_prm_signal,
+                        rm_prm_seq=rm_prm_seq,
+                    )
+                    if h5_format == 'legacy':
+                        ds = promoter_enhancer_dataset_legacy(**ds_kwargs)
+                    elif h5_format == 'pe_code':
+                        ds = promoter_enhancer_dataset_pecode(**ds_kwargs, rm_self_promoter=args.rm_self_promoter)
                     else:
-                        ds = promoter_enhancer_dataset(
-                            h5_path=args.h5_path,
-                            expr_csv=args.expr_csv,
-                            cell_type=cell,
-                            expr_type=expr_type,
-                            n_enh_feats=n_enh_feats,
-                            distance_thr=dist_thr,
-                            max_n_enh=max_n_enh,
-                            use_prm_signal=use_prm_signal,
-                            rm_prm_seq=rm_prm_seq,
-                            rm_self_promoter=args.rm_self_promoter,
-                        )
+                        ds = promoter_enhancer_dataset(**ds_kwargs, rm_self_promoter=args.rm_self_promoter)
                     train_ensid = split_df[split_df[fold_i] == 'train'].index
                     valid_ensid = split_df[split_df[fold_i] == 'valid'].index
                     test_ensid = split_df[split_df[fold_i] == 'test'].index
