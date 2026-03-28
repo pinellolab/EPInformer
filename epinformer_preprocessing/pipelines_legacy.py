@@ -118,7 +118,7 @@ class DataGenerator_seqs2Expr(torch.utils.data.Dataset):
                 self.expr_df.loc[ensid][self.cell_type + "_CAGE_128*3_sum"] + 1
             )
         elif self.expr_type == "RNA":
-            y_expr = self.expr_df.loc[ensid]["Actual_" + self.cell_type]
+            y_expr = self.expr_df.loc[ensid][self.cell_type + "_RNArpkm"]
         else:
             assert False, "label not exists!"
         return X_seq, X_rnaFeat, y_expr, ensid
@@ -858,13 +858,18 @@ def obtain_PE_withSignals(
     cage_xpresso_df = _apply_tss_column(cage_xpresso_df, tss_column)
     cage_xpresso_df = _orf_density_alias(cage_xpresso_df)
 
-    actual_col = f"Actual_{cell_type}"
+    actual_col = f"{cell_type}_RNArpkm"
     if actual_col not in cage_xpresso_df.columns:
-        raise ValueError(
-            f"Expression column '{actual_col}' not found in {_ge}. "
-            f"Available Actual_* columns: "
-            f"{[c for c in cage_xpresso_df.columns if c.startswith('Actual_')]}"
-        )
+        # Fallback: try legacy Actual_{cell_type} naming
+        legacy_col = f"Actual_{cell_type}"
+        if legacy_col in cage_xpresso_df.columns:
+            actual_col = legacy_col
+        else:
+            raise ValueError(
+                f"Expression column '{actual_col}' (or '{legacy_col}') not found in {_ge}. "
+                f"Available expression columns: "
+                f"{[c for c in cage_xpresso_df.columns if c.endswith('_RNArpkm') or c.startswith('Actual_')]}"
+            )
 
     base_cols = [
         "ENSID", "chrom", "start", "end", "strand", "TSS", "Gene name",

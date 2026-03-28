@@ -24,42 +24,43 @@ from .contact import load_hic
 # ---------------------------------------------------------------------------
 
 _REF_DIR = Path(__file__).resolve().parent.parent.parent / "data" / "reference" / "hg38"
+_EXPR_CSV = str(Path(__file__).resolve().parent.parent.parent / "data" / "roadmap_expression" / "roadmap_expression_all.csv")
 
 PRESETS = {
     "K562": {
-        "gene_bed": str(_REF_DIR / "CollapsedGeneBounds.hg38.bed"),
+        "gene_bed": str(_REF_DIR / "CollapsedGeneBounds.Ensembl_v65.Gencode_v10.hg38.bed"),
         "chrom_sizes": str(_REF_DIR / "GRCh38_EBV.chrom.sizes.tsv"),
-        "expression": str(_REF_DIR / "K562_expression.tsv"),
+        "expression": _EXPR_CSV,
         "qnorm_ref": str(_REF_DIR / "EnhancersQNormRef.K562.txt"),
-        "roadmap_id": "E118",
+        "roadmap_id": "RPKM_E123",
     },
     "GM12878": {
-        "gene_bed": str(_REF_DIR / "CollapsedGeneBounds.hg38.bed"),
+        "gene_bed": str(_REF_DIR / "CollapsedGeneBounds.Ensembl_v65.Gencode_v10.hg38.bed"),
         "chrom_sizes": str(_REF_DIR / "GRCh38_EBV.chrom.sizes.tsv"),
-        "expression": str(_REF_DIR / "GM12878_expression.tsv"),
+        "expression": _EXPR_CSV,
         "qnorm_ref": str(_REF_DIR / "EnhancersQNormRef.K562.txt"),
-        "roadmap_id": "E116",
+        "roadmap_id": "RPKM_E116",
     },
     "H1": {
-        "gene_bed": str(_REF_DIR / "CollapsedGeneBounds.hg38.bed"),
+        "gene_bed": str(_REF_DIR / "CollapsedGeneBounds.Ensembl_v65.Gencode_v10.hg38.bed"),
         "chrom_sizes": str(_REF_DIR / "GRCh38_EBV.chrom.sizes.tsv"),
-        "expression": str(_REF_DIR / "H1_expression.tsv"),
+        "expression": _EXPR_CSV,
         "qnorm_ref": str(_REF_DIR / "EnhancersQNormRef.K562.txt"),
-        "roadmap_id": "E003",
+        "roadmap_id": "RPKM_E003",
     },
     "HUVEC": {
-        "gene_bed": str(_REF_DIR / "CollapsedGeneBounds.hg38.bed"),
+        "gene_bed": str(_REF_DIR / "CollapsedGeneBounds.Ensembl_v65.Gencode_v10.hg38.bed"),
         "chrom_sizes": str(_REF_DIR / "GRCh38_EBV.chrom.sizes.tsv"),
-        "expression": str(_REF_DIR / "HUVEC_expression.tsv"),
+        "expression": _EXPR_CSV,
         "qnorm_ref": str(_REF_DIR / "EnhancersQNormRef.K562.txt"),
-        "roadmap_id": "E122",
+        "roadmap_id": "RPKM_E122",
     },
     "NHEK": {
-        "gene_bed": str(_REF_DIR / "CollapsedGeneBounds.hg38.bed"),
+        "gene_bed": str(_REF_DIR / "CollapsedGeneBounds.Ensembl_v65.Gencode_v10.hg38.bed"),
         "chrom_sizes": str(_REF_DIR / "GRCh38_EBV.chrom.sizes.tsv"),
-        "expression": str(_REF_DIR / "NHEK_expression.tsv"),
+        "expression": _EXPR_CSV,
         "qnorm_ref": str(_REF_DIR / "EnhancersQNormRef.K562.txt"),
-        "roadmap_id": "E127",
+        "roadmap_id": "RPKM_E127",
     },
 }
 
@@ -86,7 +87,7 @@ def run_abc_pipeline(
     peaks_file: Optional[str] = None,
     n_top_peaks: int = 150_000,
     peak_extend: int = 250,
-    window: int = 5_000_000,
+    max_distance: int = 2_500_000,
     gamma: float = 0.87,
     tss_slop: int = 500,
     hic_resolution: int = 5000,
@@ -94,6 +95,7 @@ def run_abc_pipeline(
     neg_fraction: float = 0.05,
     max_encoder_peaks: int = 100_000,
     include_self_promoter: bool = False,
+    include_promoter_region: bool = False,
     dry_run: bool = False,
     n_threads: int = 1,
 ) -> dict:
@@ -187,6 +189,7 @@ def run_abc_pipeline(
         tss_slop=tss_slop,
         qnorm_ref=qnorm_ref,
         n_threads=n_threads,
+        include_promoter_region=include_promoter_region,
     )
     outputs["enhancer_list"] = enhancer_list_path
     outputs["gene_list"] = gene_list_path
@@ -196,7 +199,7 @@ def run_abc_pipeline(
     logger.start_step("Computing ABC scores")
     predictions_path = predict_abc(
         enhancer_list_path, gene_list_path, output_dir, logger,
-        hic_file=hic_file, window=window, gamma=gamma,
+        hic_file=hic_file, max_distance=max_distance, gamma=gamma,
         tss_slop=tss_slop, hic_resolution=hic_resolution,
         cell_type=cell_type, n_threads=n_threads,
     )
@@ -205,9 +208,13 @@ def run_abc_pipeline(
 
     # ---- Step 4: Sequence encoder training data ----
     logger.start_step("Generating sequence encoder training data")
-    summits_bed = os.path.join(output_dir, "candidates_with_summits.bed")
-    if not os.path.exists(summits_bed):
-        logger.info("Warning: candidates_with_summits.bed not found, skipping encoder data")
+    # Determine narrowPeak path
+    if peaks_file:
+        narrowpeak_path = peaks_file
+    else:
+        narrowpeak_path = os.path.join(output_dir, "macs2", "peaks_peaks.narrowPeak")
+    if not os.path.exists(narrowpeak_path):
+        logger.info(f"Warning: narrowPeak not found at {narrowpeak_path}, skipping encoder data")
         encoder_csv = None
     elif fasta is None:
         logger.info("Warning: no FASTA provided, skipping encoder data")
@@ -217,7 +224,7 @@ def run_abc_pipeline(
         encoder_csv = None
     else:
         encoder_csv = generate_encoder_data(
-            enhancer_list_path, summits_bed, fasta, chrom_sizes,
+            narrowpeak_path, fasta, chrom_sizes,
             output_dir, logger,
             cell_type=cell_type, neg_fraction=neg_fraction,
             blacklist=blacklist, n_threads=n_threads,

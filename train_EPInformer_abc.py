@@ -71,6 +71,7 @@ class promoter_enhancer_dataset(Dataset):
         self._activity = torch.from_numpy(self.data_h5['activity'][:].astype(np.float64)).share_memory_()
         self._contact = torch.from_numpy(self.data_h5['contact'][:].astype(np.float64)).share_memory_()
         self.data_h5.close()
+        del self.data_h5
 
         # Precompute per-gene expression features (avoids slow pandas .loc in workers)
         rna_cols = ['UTR5LEN_log10zscore', 'CDSLEN_log10zscore', 'INTRONLEN_log10zscore',
@@ -79,6 +80,8 @@ class promoter_enhancer_dataset(Dataset):
         expr_list = []
         for ensid in self._ensid:
             row = self.expr_df.loc[ensid]
+            if isinstance(row, pd.DataFrame):
+                row = row.iloc[0]
             rna = row[rna_cols].values.astype(np.float64).flatten()
             if use_prm_signal:
                 rna = np.concatenate([rna, [0.0]])
@@ -86,9 +89,10 @@ class promoter_enhancer_dataset(Dataset):
             if expr_type == 'CAGE':
                 expr_list.append(float(np.log10(row[cell_type + '_CAGE_128*3_sum'] + 1)))
             else:
-                expr_list.append(float(row['Actual_' + cell_type]))
+                expr_list.append(float(row[cell_type + '_RNArpkm']))
         self._rna_feats = torch.from_numpy(np.array(rna_list)).share_memory_()
         self._expr = torch.from_numpy(np.array(expr_list, dtype=np.float64)).share_memory_()
+        del self.expr_df  # free memory; no longer needed after precomputation
 
         print(f'Loaded: {len(self._ensid)} genes, {self._enhancer_seq.shape[0]} enhancers')
 
@@ -258,7 +262,7 @@ class promoter_enhancer_dataset_legacy(Dataset):
         if self.expr_type == 'CAGE':
             expr = float(np.log10(self.expr_df.loc[sample_ensid, self.cell_type + '_CAGE_128*3_sum'] + 1))
         else:
-            expr = float(self.expr_df.loc[sample_ensid, 'Actual_' + self.cell_type])
+            expr = float(self.expr_df.loc[sample_ensid, self.cell_type + '_RNArpkm'])
 
         pe_ohe = np.concatenate([prm_ohe, enh_ohe], axis=0)
         pe_feats = np.concatenate([np.zeros_like(enh_feats[[0]]), enh_feats], axis=0)
@@ -367,7 +371,7 @@ def train(net, training_dataset, fold_i, saved_model_path='./models/', learning_
         print('learning rate:', cur_lr)
         running_loss = 0
         loss_e = 0
-        for data in tqdm(trainloader):
+        for data in tqdm(trainloader, ncols=80):
             optimizer.zero_grad()
             pe_seqs, rna_feats, enh_feats, y_expr, eid = data
             pe_seqs = pe_seqs.float().to(device)
@@ -419,7 +423,7 @@ def validate(net, valid_ds, batch_size=16, device='cuda'):
         preds = []
         actual = []
         loss_e = 0
-        for data in tqdm(validloader):
+        for data in tqdm(validloader, ncols=80):
             pe_seqs, rna_feats, enh_feats, y_expr, eid = data
             pe_seqs = pe_seqs.float().to(device)
             if net.useFeat:
@@ -573,10 +577,7 @@ if __name__ == '__main__':
                     train_ensid = split_df[split_df[fold_i] == 'train'].index
                     valid_ensid = split_df[split_df[fold_i] == 'valid'].index
                     test_ensid = split_df[split_df[fold_i] == 'test'].index
-                    if is_legacy:
-                        ensid_list = ds._ensid
-                    else:
-                        ensid_list = [eid.decode('utf-8') for eid in ds.data_h5['ensid'][:]]
+                    ensid_list = ds._ensid
                     ensid_df = pd.DataFrame(ensid_list, columns=['ensid'])
                     ensid_df['idx'] = np.arange(len(ensid_list))
                     ensid_df = ensid_df.set_index('ensid')

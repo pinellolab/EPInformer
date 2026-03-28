@@ -80,7 +80,7 @@ def _add_shared(p: argparse.ArgumentParser) -> None:
     p.add_argument("--qnorm-ref", default=None, help="Quantile normalization reference file.")
     p.add_argument("--n-top-peaks", type=int, default=150_000, help="Max peaks from MACS2. Default: 150000.")
     p.add_argument("--peak-extend", type=int, default=250, help="Half-width for peak resizing. Default: 250 (=500bp).")
-    p.add_argument("--window", type=int, default=5_000_000, help="Max distance for gene-enhancer pairing. Default: 5Mb.")
+    p.add_argument("--max-distance", type=int, default=2_500_000, help="Max distance (bp) from TSS to consider enhancers. Default: 2.5Mb.")
     p.add_argument("--gamma", type=float, default=0.87, help="Power-law exponent. Default: 0.87.")
     p.add_argument("--tss-slop", type=int, default=500, help="TSS ± this = promoter region. Default: 500.")
     p.add_argument("--hic-resolution", type=int, default=5000, help="Hi-C bin resolution. Default: 5000.")
@@ -88,6 +88,10 @@ def _add_shared(p: argparse.ArgumentParser) -> None:
     p.add_argument("--neg-fraction", type=float, default=0.05, help="Negative sample fraction for encoder data. Default: 0.05.")
     p.add_argument("--skip-peaks", action="store_true",
         help="Skip MACS2, reuse existing narrowPeak in output-dir/macs2/.")
+    p.add_argument(
+        "--include-promoter-region", action="store_true",
+        help="Inject promoter regions (TSS ± 500bp) as candidate elements before activity quantification.",
+    )
     p.add_argument("--dry-run", action="store_true", help="Validate inputs only, no execution.")
     p.add_argument(
         "--chain-preprocessing", action="store_true",
@@ -135,12 +139,13 @@ def cmd_full(args: argparse.Namespace) -> None:
         peaks_file=peaks_file,
         n_top_peaks=args.n_top_peaks,
         peak_extend=args.peak_extend,
-        window=args.window,
+        max_distance=args.max_distance,
         gamma=args.gamma,
         tss_slop=args.tss_slop,
         hic_resolution=args.hic_resolution,
         blacklist=args.blacklist,
         neg_fraction=args.neg_fraction,
+        include_promoter_region=args.include_promoter_region,
         dry_run=args.dry_run,
         n_threads=args.threads,
     )
@@ -170,12 +175,13 @@ def cmd_from_peaks(args: argparse.Namespace) -> None:
         peaks_file=args.peaks,
         n_top_peaks=args.n_top_peaks,
         peak_extend=args.peak_extend,
-        window=args.window,
+        max_distance=args.max_distance,
         gamma=args.gamma,
         tss_slop=args.tss_slop,
         hic_resolution=args.hic_resolution,
         blacklist=args.blacklist,
         neg_fraction=args.neg_fraction,
+        include_promoter_region=args.include_promoter_region,
         dry_run=args.dry_run,
         n_threads=args.threads,
     )

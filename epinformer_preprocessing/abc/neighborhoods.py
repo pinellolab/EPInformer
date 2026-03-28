@@ -109,7 +109,7 @@ def _classify_candidates(
     # Classify each candidate
     classes = []
     for _, row in tqdm(candidates.iterrows(), total=len(candidates),
-                       desc="  Classifying elements", leave=False):
+                       desc="  Classifying elements", leave=False, ncols=80):
         key = (str(row["chr"]), int(row["start"]), int(row["end"]))
         if key in promoter_set:
             classes.append("promoter")
@@ -145,6 +145,7 @@ def quantify_neighborhoods(
     tss_slop: int = 500,
     qnorm_ref: str = None,
     n_threads: int = 1,
+    include_promoter_region: bool = False,
 ) -> tuple:
     """Quantify enhancer activity for candidate elements (ABC Step 2).
 
@@ -192,6 +193,27 @@ def quantify_neighborhoods(
     n_cand = len(candidates)
 
     # ------------------------------------------------------------------
+    # 1b. Inject promoter regions as additional candidates (optional)
+    # ------------------------------------------------------------------
+    if include_promoter_region:
+        promoter_regions = pd.DataFrame({
+            "chr": gene_bed_df["chr"],
+            "start": (gene_bed_df["tss"] - 500).clip(lower=0).astype(int),
+            "end": (gene_bed_df["tss"] + 500).astype(int),
+        }).drop_duplicates()
+        cand_bt = pybedtools.BedTool.from_dataframe(candidates[["chr", "start", "end"]])
+        prm_bt = pybedtools.BedTool.from_dataframe(promoter_regions)
+        novel_prm = prm_bt.intersect(cand_bt, v=True)  # keep only non-overlapping
+        if len(novel_prm) > 0:
+            novel_df = novel_prm.to_dataframe(names=["chr", "start", "end"])
+            _log(f"Adding {len(novel_df)} promoter regions not in existing {n_cand} candidates")
+            candidates = pd.concat([candidates, novel_df], ignore_index=True)
+            n_cand = len(candidates)
+        else:
+            _log("All promoter regions already covered by existing candidates")
+        pybedtools.cleanup()
+
+    # ------------------------------------------------------------------
     # 2. Count reads in candidates
     # ------------------------------------------------------------------
     _log(f"Counting DNase reads in {n_cand} candidates (threads={n_threads}) ...")
@@ -213,9 +235,9 @@ def quantify_neighborhoods(
             candidates["H3K27ac.RPM.quantile"] = candidates["H3K27ac.RPM"].copy()
 
     # ------------------------------------------------------------------
-    # 4. Count reads in gene promoter regions (TSS +/- 1kb)
+    # 4. Count reads in gene promoter regions (TSS +/- tss_slop)
     # ------------------------------------------------------------------
-    _log("Counting reads in gene promoter regions (TSS +/- 1kb) ...")
+    _log(f"Counting reads in gene promoter regions (TSS +/- {tss_slop}bp) ...")
     gene_df = gene_bed_df.copy()
 
     promoter_df = pd.DataFrame({

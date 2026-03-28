@@ -266,7 +266,7 @@ def count_reads_in_regions(
         bam = pysam.AlignmentFile(bam_path, "rb")
         for i, (chrom, start, end) in tqdm(
             enumerate(zip(df["chr"], df["start"], df["end"])),
-            total=len(df), desc="  Counting reads", leave=False,
+            total=len(df), desc="  Counting reads", leave=False, ncols=80,
         ):
             try:
                 counts[i] = bam.count(contig=str(chrom), start=int(start), end=int(end))
@@ -286,7 +286,7 @@ def count_reads_in_regions(
                 ))
             for chrom, (idx, future) in tqdm(
                 futures.items(), total=len(futures),
-                desc="  Counting reads", leave=False,
+                desc="  Counting reads", leave=False, ncols=80,
             ):
                 chrom_counts = future.result()
                 counts[idx] = chrom_counts

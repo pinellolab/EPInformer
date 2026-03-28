@@ -145,7 +145,7 @@ class promoter_enhancer_dataset(Dataset):
         if self.expr_type == 'CAGE':
             expr = np.log10(self.expr_df.loc[sample_ensid, self.cell_type + '_CAGE_128*3_sum']+1)
         else:
-            expr = self.expr_df.loc[sample_ensid, 'Actual_' + self.cell_type]
+            expr = self.expr_df.loc[sample_ensid, self.cell_type + '_RNArpkm']
         pe_ohe = np.concatenate([prm_ohe, enh_ohe], axis=0)
         prm_feats = np.ones_like(enh_feats[[0]])
         if self.use_prm_signal and self.n_enh_feats == 3:

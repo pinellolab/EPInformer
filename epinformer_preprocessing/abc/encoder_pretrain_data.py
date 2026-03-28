@@ -25,8 +25,15 @@ from tqdm import tqdm
 
 _BIN_SIZE = 256
 _HALF_BIN = _BIN_SIZE // 2  # 128
-_OFFSETS = [-3, -2, -1, 0, 1]
+_OVERLAP = 100
+_STRIDE = _BIN_SIZE - _OVERLAP  # 156
+_OFFSETS = [-2, -1, 0, 1, 2]
 _NEG_EXCLUSION_FLANK = 1000  # exclude regions within 1 kb of any peak
+
+_NARROWPEAK_COLUMNS = [
+    "chr", "start", "end", "name", "score", "strand",
+    "signalValue", "pValue", "qValue", "peak",
+]
 
 
 # ---------------------------------------------------------------------------
@@ -91,8 +98,8 @@ def _generate_negative_regions(
         idx = rng.choices(range(len(chroms)), weights=weights, k=1)[0]
         chrom = chroms[idx]
         clen = chrom_sizes[chrom]
-        # Need room for the widest offset bin: center - 3*256 - 128
-        margin = abs(min(_OFFSETS)) * _BIN_SIZE + _HALF_BIN
+        # Need room for the widest offset bin
+        margin = abs(max(_OFFSETS, key=abs)) * _STRIDE + _HALF_BIN
         pos = rng.randint(margin, clen - margin - 1)
         records.append((chrom, pos - _HALF_BIN, pos + _HALF_BIN, pos))
 
@@ -137,7 +144,7 @@ def _extract_chrom_sequences(fasta_path, chrom, chrom_rows, chrom_sizes, has_h3k
     fasta = pyfaidx.Fasta(fasta_path)
     rows = []
     for _, row in tqdm(chrom_rows.iterrows(), total=len(chrom_rows),
-                       desc=f"  {chrom}", leave=False):
+                       desc=f"  {chrom}", leave=False, ncols=80):
         summit = int(row["summit"])
         name = row["name"]
         dhs_rpm = float(row.get("DHS.RPM", 0.0))
@@ -145,7 +152,7 @@ def _extract_chrom_sequences(fasta_path, chrom, chrom_rows, chrom_sizes, has_h3k
         activity = float(row.get("activity_base", dhs_rpm))
 
         for offset in _OFFSETS:
-            center = summit + offset * _BIN_SIZE
+            center = summit + offset * _STRIDE
             start = center - _HALF_BIN
             end = center + _HALF_BIN
 
@@ -170,33 +177,29 @@ def _extract_chrom_sequences(fasta_path, chrom, chrom_rows, chrom_sizes, has_h3k
 
 
 def generate_encoder_data(
-    enhancer_list_path,
-    candidates_summits_bed,
+    narrowpeak_path,
     fasta_path,
     chrom_sizes_path,
     output_dir,
     logger,
     cell_type="K562",
+    max_peaks=100_000,
     neg_fraction=0.05,
     blacklist=None,
     n_threads=1,
     accessibility_bam=None,
     h3k27ac_bam=None,
-    max_peaks=100_000,
 ):
     """Generate 256bp sequences + activity labels for encoder pre-training.
 
-    Both positive (peak) and negative (random) regions are scored using
-    the same activity pipeline: BAM read counting → RPM → quantile
-    normalization → activity_base.
+    Reads the raw MACS2 narrowPeak file, selects the top *max_peaks* summits
+    by signalValue, counts BAM reads for activity labels, extracts 5 bins of
+    256bp around each summit, and adds negative samples.
 
     Parameters
     ----------
-    enhancer_list_path : str
-        Path to EnhancerList.txt from Step 2.
-    candidates_summits_bed : str
-        Path to candidates_with_summits.bed (columns: chr, start, end, name,
-        summit).
+    narrowpeak_path : str
+        Path to a MACS2 narrowPeak file (10-column, tab-separated).
     fasta_path : str
         Path to the hg38.fa reference genome FASTA.
     chrom_sizes_path : str
@@ -207,10 +210,14 @@ def generate_encoder_data(
         Logger instance for progress messages.
     cell_type : str
         Cell-type label used in the output filename (default ``"K562"``).
+    max_peaks : int
+        Number of top peaks to select by signalValue (default 100,000).
     neg_fraction : float
         Fraction of negative samples relative to peak count (default 0.05).
     blacklist : str or None
         Optional path to a blacklist BED file.
+    n_threads : int
+        Number of threads for parallel sequence extraction.
     accessibility_bam : str
         Path to the DNase/ATAC BAM for read counting.
     h3k27ac_bam : str or None
@@ -222,107 +229,43 @@ def generate_encoder_data(
         Path to the output CSV file.
     """
     # -----------------------------------------------------------------
-    # 1. Load EnhancerList and summit positions, then merge
+    # 1. Load narrowPeak, select top peaks by signalValue
     # -----------------------------------------------------------------
-    enh = pd.read_csv(enhancer_list_path, sep="\t")
-    summits = pd.read_csv(
-        candidates_summits_bed,
+    peaks = pd.read_csv(
+        narrowpeak_path,
         sep="\t",
         header=None,
-        names=["chr", "start", "end", "name", "summit"],
+        names=_NARROWPEAK_COLUMNS,
+        comment="#",
     )
+    n_total = len(peaks)
+    n_select = min(max_peaks, n_total)
+    peaks = peaks.nlargest(n_select, "signalValue").reset_index(drop=True)
+    peaks["summit"] = peaks["start"] + peaks["peak"]
 
-    # Use interval overlap to match summits to EnhancerList regions.
-    # Summit coordinates are pre-merge (original MACS2 peaks ±250bp),
-    # while EnhancerList has post-merge coordinates, so exact matching
-    # loses ~half the data.  Instead, intersect summit midpoints with
-    # EnhancerList intervals.
-    summit_points = pybedtools.BedTool([
-        (row["chr"], int(row["summit"]), int(row["summit"]) + 1, str(i))
-        for i, row in summits.iterrows()
-    ]).sort()
-    enh_bed = pybedtools.BedTool([
-        (row["chr"], int(row["start"]), int(row["end"]), str(i))
-        for i, row in enh.iterrows()
-    ]).sort()
-    hits = summit_points.intersect(enh_bed, wa=True, wb=True)
-
-    # Build merged DataFrame: each hit maps a summit to an EnhancerList row
-    merge_rows = []
-    for feat in hits:
-        summit_pos = int(feat.fields[1])  # summit point
-        enh_idx = int(feat.fields[7])     # EnhancerList row index
-        merge_rows.append({"summit": summit_pos, "_enh_idx": enh_idx})
-
-    if merge_rows:
-        hits_df = pd.DataFrame(merge_rows).drop_duplicates(subset=["_enh_idx"])
-        merged = enh.loc[hits_df["_enh_idx"].values].copy().reset_index(drop=True)
-        merged["summit"] = hits_df["summit"].values
-    else:
-        # Fallback to exact match if interval overlap finds nothing
-        merged = enh.merge(summits[["chr", "start", "end", "summit"]],
-                           on=["chr", "start", "end"], how="inner")
-    pybedtools.cleanup()
-
-    has_h3k27ac = "H3K27ac.RPM" in merged.columns and merged["H3K27ac.RPM"].sum() > 0
-
-    logger.info(f"Loaded {len(merged)} candidates with summits (H3K27ac={'yes' if has_h3k27ac else 'no'})")
+    logger.info(f"Selected top {n_select} summits by signalValue (from {n_total} total peaks)")
 
     # -----------------------------------------------------------------
-    # 2. Load chromosome sizes and FASTA
+    # 2. Count BAM reads for activity labels
     # -----------------------------------------------------------------
     chrom_sizes = _load_chrom_sizes(chrom_sizes_path)
 
-    # -----------------------------------------------------------------
-    # 3. Extract 5 bins per candidate peak (parallel by chromosome)
-    # -----------------------------------------------------------------
-    grouped = {chrom: grp for chrom, grp in merged.groupby("chr")}
-
-    if n_threads <= 1 or len(grouped) <= 1:
-        rows = []
-        for chrom, grp in tqdm(grouped.items(), desc="  Extracting sequences", leave=False):
-            rows.extend(_extract_chrom_sequences(fasta_path, chrom, grp, chrom_sizes, has_h3k27ac))
-    else:
-        rows = []
-        with ThreadPoolExecutor(max_workers=min(n_threads, len(grouped))) as pool:
-            futures = {
-                chrom: pool.submit(_extract_chrom_sequences, fasta_path, chrom, grp, chrom_sizes, has_h3k27ac)
-                for chrom, grp in grouped.items()
-            }
-            for chrom, future in tqdm(futures.items(), total=len(futures),
-                                      desc="  Extracting sequences", leave=False):
-                rows.extend(future.result())
-
-    logger.info(f"Extracted {len(rows)} sequence bins from {len(merged)} peaks")
-
-    # -----------------------------------------------------------------
-    # 4. Generate negative samples
-    # -----------------------------------------------------------------
-    n_neg = max(1, int(len(merged) * neg_fraction))
-
-    # Build a BedTool from peaks for exclusion
-    peak_records = [
-        (str(r["chr"]), int(r["start"]), int(r["end"]))
-        for _, r in merged.iterrows()
-    ]
-    peak_bed = pybedtools.BedTool(peak_records).sort()
-
-    neg_df = _generate_negative_regions(
-        peak_bed,
-        chrom_sizes,
-        n_neg,
-        blacklist=blacklist,
-    )
-
-    # -----------------------------------------------------------------
-    # 4b. Compute activity for ALL regions (positive + negative) via BAM
-    # -----------------------------------------------------------------
     from .utils import count_reads_in_regions
 
-    # Combine positive and negative regions into one DataFrame
-    pos_regions = merged[["chr", "start", "end", "name", "summit"]].copy()
-    n_pos = len(pos_regions)
-    all_regions = pd.concat([pos_regions, neg_df], ignore_index=True)
+    # Build regions for read counting (peak regions around summits)
+    regions = peaks[["chr", "start", "end", "name", "summit"]].copy()
+    n_pos = len(regions)
+
+    # Generate negative regions
+    n_neg = max(1, int(n_pos * neg_fraction))
+    peak_bed = pybedtools.BedTool([
+        (str(r["chr"]), int(r["start"]), int(r["end"]))
+        for _, r in regions.iterrows()
+    ]).sort()
+    neg_df = _generate_negative_regions(peak_bed, chrom_sizes, n_neg, blacklist=blacklist)
+
+    # Combine positive and negative for BAM counting
+    all_regions = pd.concat([regions, neg_df], ignore_index=True)
 
     # Count DNase/ATAC reads
     logger.info("Counting accessibility reads for all regions ...")
@@ -332,33 +275,25 @@ def generate_encoder_data(
     }, inplace=True)
 
     # Count H3K27ac reads (if BAM provided)
-    _has_h3k27ac_bam = h3k27ac_bam is not None
-    if _has_h3k27ac_bam:
+    has_h3k27ac = h3k27ac_bam is not None
+    if has_h3k27ac:
         logger.info("Counting H3K27ac reads for all regions ...")
         h3k_counts = count_reads_in_regions(h3k27ac_bam, all_regions, n_threads=n_threads)
         all_regions["H3K27ac.RPM"] = h3k_counts["RPM"]
 
-    # Compute activity_base from raw RPM
-    # With H3K27ac: geometric mean of both signals
-    # Without: DNase RPM alone
-    if _has_h3k27ac_bam:
+    # Compute activity_base
+    if has_h3k27ac:
         all_regions["activity_base"] = np.sqrt(
             all_regions["H3K27ac.RPM"] * all_regions["DHS.RPM"]
         )
     else:
         all_regions["activity_base"] = all_regions["DHS.RPM"]
 
-    # Split back into positive and negative
+    # Split back
     merged = all_regions.iloc[:n_pos].copy()
     neg_df = all_regions.iloc[n_pos:].copy()
 
-    # Keep only top-N peaks by activity
-    if max_peaks and len(merged) > max_peaks:
-        merged = merged.nlargest(max_peaks, "activity_base").reset_index(drop=True)
-        logger.info(f"Kept top {max_peaks} peaks by activity (dropped {n_pos - max_peaks})")
-
-    # Update has_h3k27ac flag based on measured data
-    has_h3k27ac = "H3K27ac.RPM" in merged.columns and merged["H3K27ac.RPM"].sum() > 0
+    has_h3k27ac_col = "H3K27ac.RPM" in merged.columns and merged["H3K27ac.RPM"].sum() > 0
 
     logger.info(
         f"Activity computed from BAMs — "
@@ -366,20 +301,45 @@ def generate_encoder_data(
         f"negative mean: {neg_df['activity_base'].mean():.4f}"
     )
 
+    # -----------------------------------------------------------------
+    # 3. Extract 5 bins per summit (parallel by chromosome)
+    # -----------------------------------------------------------------
+    grouped = {chrom: grp for chrom, grp in merged.groupby("chr")}
+
+    if n_threads <= 1 or len(grouped) <= 1:
+        rows = []
+        for chrom, grp in tqdm(grouped.items(), desc="  Extracting sequences", leave=False, ncols=80):
+            rows.extend(_extract_chrom_sequences(fasta_path, chrom, grp, chrom_sizes, has_h3k27ac_col))
+    else:
+        rows = []
+        with ThreadPoolExecutor(max_workers=min(n_threads, len(grouped))) as pool:
+            futures = {
+                chrom: pool.submit(_extract_chrom_sequences, fasta_path, chrom, grp, chrom_sizes, has_h3k27ac_col)
+                for chrom, grp in grouped.items()
+            }
+            for chrom, future in tqdm(futures.items(), total=len(futures),
+                                      desc="  Extracting sequences", leave=False, ncols=80):
+                rows.extend(future.result())
+
+    logger.info(f"Extracted {len(rows)} sequence bins from {n_pos} peaks")
+
+    # -----------------------------------------------------------------
+    # 4. Extract sequences for negative samples
+    # -----------------------------------------------------------------
     neg_grouped = {chrom: grp for chrom, grp in neg_df.groupby("chr")}
     if n_threads <= 1 or len(neg_grouped) <= 1:
         neg_rows = []
-        for chrom, grp in tqdm(neg_grouped.items(), desc="  Negative sequences", leave=False):
-            neg_rows.extend(_extract_chrom_sequences(fasta_path, chrom, grp, chrom_sizes, has_h3k27ac))
+        for chrom, grp in tqdm(neg_grouped.items(), desc="  Negative sequences", leave=False, ncols=80):
+            neg_rows.extend(_extract_chrom_sequences(fasta_path, chrom, grp, chrom_sizes, has_h3k27ac_col))
     else:
         neg_rows = []
         with ThreadPoolExecutor(max_workers=min(n_threads, len(neg_grouped))) as pool:
             futures = {
-                chrom: pool.submit(_extract_chrom_sequences, fasta_path, chrom, grp, chrom_sizes, has_h3k27ac)
+                chrom: pool.submit(_extract_chrom_sequences, fasta_path, chrom, grp, chrom_sizes, has_h3k27ac_col)
                 for chrom, grp in neg_grouped.items()
             }
             for chrom, future in tqdm(futures.items(), total=len(futures),
-                                      desc="  Negative sequences", leave=False):
+                                      desc="  Negative sequences", leave=False, ncols=80):
                 neg_rows.extend(future.result())
 
     logger.info(f"Generated {len(neg_rows)} negative sequence bins from {len(neg_df)} regions")

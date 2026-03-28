@@ -8,14 +8,14 @@ to generate ``samples.h5`` (factored HDF5) from ABC pipeline outputs.
 Examples::
 
     # K562 with no BigWig (sequence + ABC features only)
-    python run_preprocessing.py with-signals --no-bigwig \\
+    python run_preprocessing.py --no-bigwig \\
         --cell-type K562 --output-dir ./training_data/K562_run \\
         --predictions ./abc_output/K562/Predictions/EnhancerPredictionsAllPutative.txt \\
         --enhancer-list ./abc_output/K562/EnhancerList.txt \\
         --include-self-promoter
 
     # GM12878 with BigWig signals
-    python run_preprocessing.py with-signals \\
+    python run_preprocessing.py \\
         --cell-type GM12878 --output-dir ./training_data/GM12878_run \\
         --predictions ./abc_output/GM12878/Predictions/EnhancerPredictionsAllPutative.txt \\
         --enhancer-list ./abc_output/GM12878/EnhancerList.txt \\
@@ -59,37 +59,70 @@ def _ensure_bigwigs(paths: list[str], label: str = "BigWig") -> None:
         _must_exist(p, label)
 
 
-def _add_shared(p: argparse.ArgumentParser, default_output: str) -> None:
+def main() -> None:
     ed = _default_epinformer_data()
-    p.add_argument(
+
+    parser = argparse.ArgumentParser(
+        description="Generate EPInformer training HDF5 from ABC pipeline outputs (any cell type)"
+    )
+    parser.add_argument(
         "--gene-expr-csv",
         default=str(ed / "GM12878_K562_18377_gene_expr_fromXpresso.csv"),
-        help="Gene expression / features table (must contain Actual_{cell_type} column).",
+        help="Gene expression / features table (must contain {cell_type}_RNArpkm column).",
     )
-    p.add_argument(
+    parser.add_argument(
         "--tss-column",
         default="TSS_xpresso",
         help="Column to treat as TSS (renamed to TSS internally).",
     )
-    p.add_argument(
+    parser.add_argument(
         "--fasta",
         default=str(ed / "hg38.fa"),
         help="Reference genome FASTA (hg38).",
     )
-    p.add_argument(
+    parser.add_argument(
         "--output-dir",
-        default=default_output,
+        default=str(REPO_ROOT / "training_data" / "run"),
         help="Output directory (will contain samples.h5 and CSV sidecars).",
     )
-    p.add_argument(
+    parser.add_argument(
         "--cell-type",
         default="K562",
         choices=_CELL_TYPES,
-        help="Cell type — selects expression column Actual_{cell_type}.",
+        help="Cell type — selects expression column {cell_type}_RNArpkm.",
     )
+    parser.add_argument(
+        "--predictions", required=True,
+        help="EnhancerPredictionsAllPutative (.txt/.txt.gz) from ABC.",
+    )
+    parser.add_argument(
+        "--enhancer-list", required=True,
+        help="EnhancerList.txt from ABC Neighborhoods.",
+    )
+    sig = parser.add_mutually_exclusive_group(required=True)
+    sig.add_argument(
+        "--signal-bigwigs",
+        nargs="+",
+        metavar="PATH",
+        help="One or more BigWig files (order = channel order in seq_signal).",
+    )
+    sig.add_argument(
+        "--no-bigwig",
+        action="store_true",
+        help="Sequence + ABC tabular features only; omit seq_signal from samples.h5.",
+    )
+    parser.add_argument("--min-distance", type=int, default=0, help="Minimum abs(distance) to TSS in bp.")
+    parser.add_argument("--max-distance", type=int, default=100_000, help="Maximum abs(distance) to TSS in bp.")
+    parser.add_argument("--n-enhancer", type=int, default=60, help="Max enhancer elements per gene.")
+    parser.add_argument("--max-seq-len", type=int, default=2000)
+    parser.add_argument("--add-flank", action="store_true")
+    parser.add_argument("--include-self-promoter", action="store_true",
+                        help="Include isSelfPromoter elements from ABC all-putative file.")
+    parser.add_argument("--abc-all-putative", default=None,
+                        help="Path to EnhancerPredictionsAllPutative (for self-promoter data).")
 
+    args = parser.parse_args()
 
-def cmd_with_signals(args: argparse.Namespace) -> None:
     cwd = Path.cwd()
     out = _resolve(args.output_dir, cwd)
     assert out is not None
@@ -138,53 +171,6 @@ def cmd_with_signals(args: argparse.Namespace) -> None:
         abc_all_putative=abc_putative,
         cell_type=args.cell_type,
     )
-
-
-def main() -> None:
-    parser = argparse.ArgumentParser(
-        description="Generate EPInformer training HDF5 from ABC pipeline outputs (any cell type)"
-    )
-    sub = parser.add_subparsers(dest="command", required=True)
-
-    # --- with-signals subcommand ---
-    p_ws = sub.add_parser(
-        "with-signals",
-        help="Multi-track BigWig pipeline (obtain_PE_withSignals)",
-    )
-    _add_shared(p_ws, default_output=str(REPO_ROOT / "training_data" / "run"))
-    p_ws.add_argument(
-        "--predictions", required=True,
-        help="EnhancerPredictionsAllPutative (.txt/.txt.gz) from ABC.",
-    )
-    p_ws.add_argument(
-        "--enhancer-list", required=True,
-        help="EnhancerList.txt from ABC Neighborhoods.",
-    )
-    sig_ws = p_ws.add_mutually_exclusive_group(required=True)
-    sig_ws.add_argument(
-        "--signal-bigwigs",
-        nargs="+",
-        metavar="PATH",
-        help="One or more BigWig files (order = channel order in seq_signal).",
-    )
-    sig_ws.add_argument(
-        "--no-bigwig",
-        action="store_true",
-        help="Sequence + ABC tabular features only; omit seq_signal from samples.h5.",
-    )
-    p_ws.add_argument("--min-distance", type=int, default=0, help="Minimum abs(distance) to TSS in bp.")
-    p_ws.add_argument("--max-distance", type=int, default=100_000, help="Maximum abs(distance) to TSS in bp.")
-    p_ws.add_argument("--n-enhancer", type=int, default=60, help="Max enhancer elements per gene.")
-    p_ws.add_argument("--max-seq-len", type=int, default=2000)
-    p_ws.add_argument("--add-flank", action="store_true")
-    p_ws.add_argument("--include-self-promoter", action="store_true",
-                       help="Include isSelfPromoter elements from ABC all-putative file.")
-    p_ws.add_argument("--abc-all-putative", default=None,
-                       help="Path to EnhancerPredictionsAllPutative (for self-promoter data).")
-    p_ws.set_defaults(func=cmd_with_signals)
-
-    args = parser.parse_args()
-    args.func(args)
 
 
 if __name__ == "__main__":

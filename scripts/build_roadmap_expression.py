@@ -82,14 +82,27 @@ def _load_rpkm(path: str) -> pd.DataFrame:
 
 
 def _load_gene_info(path: str) -> pd.DataFrame:
-    """Load the Ensembl v65 / Gencode v10 gene annotation."""
-    df = pd.read_csv(
-        path,
-        sep="\t",
-        header=None,
-        names=["ENSID", "chrom", "start", "end", "strand_num", "biotype",
-               "gene_name", "description"],
-    )
+    """Load the Ensembl v65 / Gencode v10 gene annotation.
+
+    Some lines have 10 tab-separated fields (empty gene_name + NA columns)
+    instead of 8. Read all fields and keep the first 8.
+    """
+    rows = []
+    with open(path) as f:
+        for line in f:
+            parts = line.rstrip("\n").split("\t")
+            # fields: ENSID, chrom, start, end, strand_num, biotype, gene_name, description
+            row = {
+                "ENSID": parts[0],
+                "chrom": parts[1],
+                "start": int(parts[2]),
+                "end": int(parts[3]),
+                "strand_num": int(parts[4]),
+                "biotype": parts[5],
+                "gene_name": parts[6] if len(parts) > 6 else "",
+            }
+            rows.append(row)
+    df = pd.DataFrame(rows)
     # Convert strand: 1 → "+", -1 → "-"
     df["strand"] = df["strand_num"].map({1: "+", -1: "-"})
     return df
@@ -166,7 +179,7 @@ def main() -> None:
     print(f"  Raw RPKM → {rpkm_out}")
 
     # ------------------------------------------------------------------
-    # 4. Apply log transformation → Actual_{cell_type} columns
+    # 4. Apply log transformation → {cell_type}_RNArpkm columns
     # ------------------------------------------------------------------
     # Filter to Xpresso gene list if provided (so z-score stats match)
     if args.xpresso_csv:
@@ -202,11 +215,11 @@ def main() -> None:
     eg_map = dict(zip(eg_names["epigenome_id"], eg_names["name"]))
     eg_map.update(_ROADMAP_CELL_NAMES)  # override with cleaner names
 
-    # Rename columns: E003 → Actual_H1, E118 → Actual_K562, etc.
+    # Rename columns: E003 → H1_RNArpkm, E123 → K562_RNArpkm, etc.
     renamed = {}
     for col in expr.columns:
         cell_name = eg_map.get(col, col)
-        renamed[col] = f"Actual_{cell_name}"
+        renamed[col] = f"{cell_name}_RNArpkm"
     expr_renamed = expr.rename(columns=renamed)
 
     # Also keep RPKM columns with original Roadmap IDs
@@ -217,6 +230,7 @@ def main() -> None:
     # ------------------------------------------------------------------
     result = gene_info[["ENSID", "chrom", "start", "end", "strand",
                         "biotype", "gene_name"]].copy()
+    result = result.drop_duplicates(subset=["ENSID"], keep="first")
     result = result.rename(columns={"gene_name": "Gene name"})
     result = result.merge(rpkm_renamed, left_on="ENSID", right_index=True, how="inner")
     result = result.merge(expr_renamed, left_on="ENSID", right_index=True, how="inner")
@@ -262,10 +276,10 @@ def main() -> None:
     print(f"\nDone! {len(result)} genes × {len(result.columns)} columns")
     print(f"  → {out_path}")
 
-    # Print available Actual_* columns
-    actual_cols = sorted([c for c in result.columns if c.startswith("Actual_")])
-    print(f"\n{len(actual_cols)} expression targets available:")
-    for c in actual_cols:
+    # Print available *_RNArpkm columns
+    expr_cols = sorted([c for c in result.columns if c.endswith("_RNArpkm")])
+    print(f"\n{len(expr_cols)} expression targets available:")
+    for c in expr_cols:
         print(f"  {c}")
 
 

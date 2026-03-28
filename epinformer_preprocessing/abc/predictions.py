@@ -1,7 +1,7 @@
 """
 Compute ABC scores for gene-enhancer pairs (Step 3).
 
-Pairs each gene with candidate enhancers within a genomic window, computes
+Pairs each gene with candidate enhancers within max_distance of TSS, computes
 contact scores (power-law and optional Hi-C), calculates ABC scores, and
 writes the final EnhancerPredictionsAllPutative.txt output.
 """
@@ -22,7 +22,7 @@ from .contact import load_hic, get_contacts_for_pairs
 # Public API
 # ---------------------------------------------------------------------------
 
-def _pair_chromosome(chrom, enh_group, gene_group, window):
+def _pair_chromosome(chrom, enh_group, gene_group, max_distance):
     """Build gene-enhancer pairs for a single chromosome (process worker)."""
     enh_sub = enh_group.copy()
     gene_sub = gene_group.copy()
@@ -31,7 +31,7 @@ def _pair_chromosome(chrom, enh_group, gene_group, window):
     cross = enh_sub.merge(gene_sub, on="_merge_key", suffixes=("", "_gene"))
     cross.drop(columns=["_merge_key"], inplace=True)
     cross["distance"] = (cross["element_mid"] - cross["tss"]).abs()
-    cross = cross[cross["distance"] <= window].copy()
+    cross = cross[cross["distance"] <= max_distance].copy()
     return cross
 
 
@@ -41,7 +41,7 @@ def predict_abc(
     output_dir: str,
     logger,
     hic_file: str = None,
-    window: int = 5_000_000,
+    max_distance: int = 2_500_000,
     gamma: float = 0.87,
     tss_slop: int = 500,
     hic_resolution: int = 5000,
@@ -62,7 +62,7 @@ def predict_abc(
         Logger instance for progress messages.
     hic_file : str, optional
         Path to a ``.hic`` file for Hi-C contact lookup.
-    window : int
+    max_distance : int
         Maximum distance (bp) for gene-enhancer pairing (default 5 Mb).
     gamma : float
         Power-law exponent for contact estimation (default 0.87).
@@ -102,9 +102,9 @@ def predict_abc(
         hic_data = load_hic(hic_file, resolution=hic_resolution)
 
     # ------------------------------------------------------------------
-    # 3. Build gene-enhancer pairs within the distance window
+    # 3. Build gene-enhancer pairs within max_distance of TSS
     # ------------------------------------------------------------------
-    _log(f"Building gene-enhancer pairs (window={window / 1e6:.0f}Mb) ...")
+    _log(f"Building gene-enhancer pairs (max_distance={max_distance / 1e6:.0f}Mb) ...")
 
     # Build per-chromosome pairing tasks
     enh_groups = {chrom: grp for chrom, grp in enhancers.groupby("chr")}
@@ -114,25 +114,25 @@ def predict_abc(
     pair_frames = []
     if n_threads <= 1 or len(chrom_list) <= 1:
         # Sequential path
-        for chrom in tqdm(chrom_list, desc="  Pairing chromosomes", leave=False):
-            cross = _pair_chromosome(chrom, enh_groups[chrom], gene_groups[chrom], window)
+        for chrom in tqdm(chrom_list, desc="  Pairing chromosomes", leave=False, ncols=80):
+            cross = _pair_chromosome(chrom, enh_groups[chrom], gene_groups[chrom], max_distance)
             if not cross.empty:
                 pair_frames.append(cross)
     else:
         # Parallel: one process per chromosome
         with ProcessPoolExecutor(max_workers=min(n_threads, len(chrom_list))) as pool:
             futures = {
-                chrom: pool.submit(_pair_chromosome, chrom, enh_groups[chrom], gene_groups[chrom], window)
+                chrom: pool.submit(_pair_chromosome, chrom, enh_groups[chrom], gene_groups[chrom], max_distance)
                 for chrom in chrom_list
             }
             for chrom, future in tqdm(futures.items(), total=len(futures),
-                                      desc="  Pairing chromosomes", leave=False):
+                                      desc="  Pairing chromosomes", leave=False, ncols=80):
                 cross = future.result()
                 if not cross.empty:
                     pair_frames.append(cross)
 
     if not pair_frames:
-        _log("WARNING: No gene-enhancer pairs found within the distance window.")
+        _log(f"WARNING: No gene-enhancer pairs found within {max_distance / 1e6:.1f}Mb of TSS.")
         # Write an empty output file
         pred_dir = os.path.join(output_dir, "Predictions")
         os.makedirs(pred_dir, exist_ok=True)

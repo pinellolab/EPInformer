@@ -416,7 +416,7 @@ class promoter_enhancer_dataset(Dataset):
             cage_expr = np.log10(self.expr_df.loc[sample_ensid][self.cell_type + '_CAGE_128*3_sum']+1)
             expr_tensor = torch.from_numpy(np.array([cage_expr])).float()
         elif self.expr_type == 'RNA':
-            rna_expr = self.expr_df.loc[sample_ensid]['Actual_' + self.cell_type]
+            rna_expr = self.expr_df.loc[sample_ensid][self.cell_type + '_RNArpkm']
             expr_tensor = torch.from_numpy(np.array([rna_expr])).float()
         else:
             assert False, 'label not exists!'
@@ -493,7 +493,7 @@ class promoter_enhancer_dataset_v2(Dataset):
         if self.expr_type == 'CAGE':
             expr = np.log10(self.expr_df.loc[sample_ensid, self.cell_type + '_CAGE_128*3_sum']+1)
         else:
-            expr = self.expr_df.loc[sample_ensid, 'Actual_' + self.cell_type]
+            expr = self.expr_df.loc[sample_ensid, self.cell_type + '_RNArpkm']
         pe_ohe = np.concatenate([prm_ohe, enh_ohe], axis=0)
         prm_feats = np.ones_like(enh_feats[[0]])
         if self.use_prm_signal and self.n_enh_feats == 3:
