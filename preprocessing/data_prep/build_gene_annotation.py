@@ -39,6 +39,13 @@ _ROADMAP_EXPR = "https://egg2.wustl.edu/roadmap/data/byDataType/rna/expression"
 _GENE_INFO_URL = f"{_ROADMAP_EXPR}/Ensembl_v65.Gencode_v10.ENSG.gene_info"
 _CHAIN_URL = "https://hgdownload.soe.ucsc.edu/goldenPath/hg19/liftOver/hg19ToHg38.over.chain.gz"
 
+# liftOver binary download URLs by platform
+_LIFTOVER_URLS = {
+    ("Darwin", "arm64"):  "https://hgdownload.soe.ucsc.edu/admin/exe/macOSX.arm64/liftOver",
+    ("Darwin", "x86_64"): "https://hgdownload.soe.ucsc.edu/admin/exe/macOSX.x86_64/liftOver",
+    ("Linux", "x86_64"):  "https://hgdownload.soe.ucsc.edu/admin/exe/linux.x86_64/liftOver",
+}
+
 # Gene types to include for each --gene-set option
 _GENE_SETS = {
     "pc": {"protein_coding"},
@@ -58,16 +65,30 @@ def _download(url: str, dest: str) -> str:
     return dest
 
 
-def _find_liftover(user_bin: str | None) -> str:
-    """Locate the liftOver binary."""
+def _find_liftover(user_bin: str | None, cache_dir: str) -> str:
+    """Locate the liftOver binary; auto-download if not found."""
     if user_bin and os.path.isfile(user_bin):
         return user_bin
     found = shutil.which("liftOver")
     if found:
         return found
-    print("ERROR: liftOver binary not found. Install from "
-          "https://hgdownload.soe.ucsc.edu/admin/exe/", file=sys.stderr)
-    sys.exit(1)
+    # Check cache
+    cached = os.path.join(cache_dir, "liftOver")
+    if os.path.isfile(cached) and os.access(cached, os.X_OK):
+        return cached
+    # Auto-download
+    import platform
+    key = (platform.system(), platform.machine())
+    url = _LIFTOVER_URLS.get(key)
+    if not url:
+        print(f"ERROR: No liftOver binary available for {key}. "
+              f"Download manually from https://hgdownload.soe.ucsc.edu/admin/exe/",
+              file=sys.stderr)
+        sys.exit(1)
+    print(f"  liftOver not found — downloading for {key[0]} {key[1]} ...")
+    _download(url, cached)
+    os.chmod(cached, 0o755)
+    return cached
 
 
 def _load_gene_info(path: str) -> list[dict]:
@@ -196,7 +217,7 @@ def main() -> None:
     os.makedirs(out_dir, exist_ok=True)
 
     # --- Locate tools ---
-    liftover_bin = _find_liftover(args.liftover_bin)
+    liftover_bin = _find_liftover(args.liftover_bin, cache_dir)
     print(f"Using liftOver: {liftover_bin}")
 
     # --- Download files ---
