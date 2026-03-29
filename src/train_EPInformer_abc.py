@@ -114,8 +114,13 @@ class promoter_enhancer_dataset(Dataset):
             enh_feats = np.zeros_like(np.concatenate([abs(enh_feats[:, [0]]), enh_feats[:, [3]], enh_feats[:, [-1]]], axis=1)[:,:1])
         else:
             enh_feats = np.concatenate([abs(enh_feats[:, [0]]), enh_feats[:, [3]], enh_feats[:, [-1]]], axis=1)[:,:self.n_enh_feats]
-        rna_feats = np.array(self.expr_df.loc[sample_ensid][['UTR5LEN_log10zscore','CDSLEN_log10zscore','INTRONLEN_log10zscore',
-                             'UTR3LEN_log10zscore','UTR5GC','CDSGC','UTR3GC', 'ORFEXONDENSITY']].values.astype(float)).flatten()
+        _all_rna_cols = ['UTR5LEN_log10zscore','CDSLEN_log10zscore','INTRONLEN_log10zscore',
+                         'UTR3LEN_log10zscore','UTR5GC','CDSGC','UTR3GC', 'ORFEXONDENSITY']
+        _rna_cols = [c for c in _all_rna_cols if c in self.expr_df.columns]
+        if _rna_cols:
+            rna_feats = np.array(self.expr_df.loc[sample_ensid][_rna_cols].values.astype(float)).flatten()
+        else:
+            rna_feats = np.zeros(len(_all_rna_cols), dtype=np.float64)
         if self.use_prm_signal:
             rna_feats = np.concatenate([rna_feats, prm_signal])
         if self.distance_thr is not None: 

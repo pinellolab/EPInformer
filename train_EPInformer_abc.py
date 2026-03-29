@@ -86,16 +86,24 @@ class promoter_enhancer_dataset(Dataset):
         del self.data_h5
 
         # Precompute per-gene expression features (avoids slow pandas .loc in workers)
-        rna_cols = ['UTR5LEN_log10zscore', 'CDSLEN_log10zscore', 'INTRONLEN_log10zscore',
-                    'UTR3LEN_log10zscore', 'UTR5GC', 'CDSGC', 'UTR3GC', 'ORFEXONDENSITY']
+        _all_rna_cols = ['UTR5LEN_log10zscore', 'CDSLEN_log10zscore', 'INTRONLEN_log10zscore',
+                         'UTR3LEN_log10zscore', 'UTR5GC', 'CDSGC', 'UTR3GC', 'ORFEXONDENSITY']
+        rna_cols = [c for c in _all_rna_cols if c in self.expr_df.columns]
+        self.has_rna_feats = len(rna_cols) > 0
+        if not self.has_rna_feats:
+            print("  No Xpresso feature columns found — rna_feats will be zeros")
         expr_col = _resolve_expr_col(self.expr_df, cell_type)
         rna_list = []
         expr_list = []
+        n_rna_dim = len(rna_cols) if rna_cols else len(_all_rna_cols)
         for ensid in self._ensid:
             row = self.expr_df.loc[ensid]
             if isinstance(row, pd.DataFrame):
                 row = row.iloc[0]
-            rna = row[rna_cols].values.astype(np.float64).flatten()
+            if rna_cols:
+                rna = row[rna_cols].values.astype(np.float64).flatten()
+            else:
+                rna = np.zeros(n_rna_dim, dtype=np.float64)
             if use_prm_signal:
                 rna = np.concatenate([rna, [0.0]])
             rna_list.append(rna)
@@ -263,11 +271,15 @@ class promoter_enhancer_dataset_legacy(Dataset):
             enh_feats = np.concatenate(
                 [abs(raw_feats[:, [0]]), raw_feats[:, [3]], raw_feats[:, [-1]]], axis=1)[:, :self.n_enh_feats]
 
-        # mRNA sequence features
-        rna_feats = np.array(self.expr_df.loc[sample_ensid][
-            ['UTR5LEN_log10zscore', 'CDSLEN_log10zscore', 'INTRONLEN_log10zscore',
-             'UTR3LEN_log10zscore', 'UTR5GC', 'CDSGC', 'UTR3GC', 'ORFEXONDENSITY']
-        ].values.astype(float)).flatten()
+        # mRNA sequence features (Xpresso) — use available columns or zeros
+        _all_rna_cols = ['UTR5LEN_log10zscore', 'CDSLEN_log10zscore', 'INTRONLEN_log10zscore',
+                         'UTR3LEN_log10zscore', 'UTR5GC', 'CDSGC', 'UTR3GC', 'ORFEXONDENSITY']
+        rna_cols = [c for c in _all_rna_cols if c in self.expr_df.columns]
+        if rna_cols:
+            rna_feats = np.array(self.expr_df.loc[sample_ensid][rna_cols]
+                                 .values.astype(float)).flatten()
+        else:
+            rna_feats = np.zeros(len(_all_rna_cols), dtype=np.float64)
 
         if self.use_prm_signal:
             rna_feats = np.concatenate([rna_feats, np.array([0.0])])
@@ -364,15 +376,23 @@ class promoter_enhancer_dataset_pecode(Dataset):
 
         # Expression and RNA features from CSV
         expr_df = pd.read_csv(expr_csv, index_col='gene_id')
-        rna_cols = ['UTR5LEN_log10zscore', 'CDSLEN_log10zscore', 'INTRONLEN_log10zscore',
-                    'UTR3LEN_log10zscore', 'UTR5GC', 'CDSGC', 'UTR3GC', 'ORFEXONDENSITY']
+        _all_rna_cols = ['UTR5LEN_log10zscore', 'CDSLEN_log10zscore', 'INTRONLEN_log10zscore',
+                         'UTR3LEN_log10zscore', 'UTR5GC', 'CDSGC', 'UTR3GC', 'ORFEXONDENSITY']
+        rna_cols = [c for c in _all_rna_cols if c in expr_df.columns]
+        self.has_rna_feats = len(rna_cols) > 0
+        if not self.has_rna_feats:
+            print("  No Xpresso feature columns found — rna_feats will be zeros")
+        n_rna_dim = len(rna_cols) if rna_cols else len(_all_rna_cols)
         expr_col = _resolve_expr_col(expr_df, cell_type)
         rna_list, expr_list = [], []
         for ensid in self._ensid:
             row = expr_df.loc[ensid]
             if isinstance(row, pd.DataFrame):
                 row = row.iloc[0]
-            rna = row[rna_cols].values.astype(np.float64).flatten()
+            if rna_cols:
+                rna = row[rna_cols].values.astype(np.float64).flatten()
+            else:
+                rna = np.zeros(n_rna_dim, dtype=np.float64)
             if use_prm_signal:
                 rna = np.concatenate([rna, [0.0]])
             rna_list.append(rna)
@@ -702,7 +722,14 @@ if __name__ == '__main__':
 
     for fi in fold_list:
         fold_i = 'fold_{}'.format(fi)
-        for use_rna_feats, rm_prm_seq in [(True, args.rm_prm_seq)]:
+        # Auto-detect RNA features from expression CSV
+        _rna_cols_check = ['UTR5LEN_log10zscore', 'CDSLEN_log10zscore', 'INTRONLEN_log10zscore',
+                           'UTR3LEN_log10zscore', 'UTR5GC', 'CDSGC', 'UTR3GC', 'ORFEXONDENSITY']
+        _expr_df_check = pd.read_csv(args.expr_csv, nrows=1)
+        _has_rna_feats = any(c in _expr_df_check.columns for c in _rna_cols_check)
+        if not _has_rna_feats:
+            print("No Xpresso feature columns in expression CSV — disabling rna_feats")
+        for use_rna_feats, rm_prm_seq in [(_has_rna_feats, args.rm_prm_seq)]:
             for cell in [cell_type]:
                 for n_enh_feats in [args.n_enh_feats]:
                     ds_kwargs = dict(

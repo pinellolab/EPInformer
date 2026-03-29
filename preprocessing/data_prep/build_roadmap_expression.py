@@ -42,8 +42,15 @@ import pandas as pd
 # ---------------------------------------------------------------------------
 _BASE = "https://egg2.wustl.edu/roadmap/data/byDataType/rna/expression"
 _RPKM_PC_URL = f"{_BASE}/57epigenomes.RPKM.pc.gz"
+_RPKM_NC_URL = f"{_BASE}/57epigenomes.RPKM.nc.gz"
 _GENE_INFO_URL = f"{_BASE}/Ensembl_v65.Gencode_v10.ENSG.gene_info"
 _EG_NAME_URL = f"{_BASE}/EG.name.txt"
+
+# Gene types to include for each --gene-set option
+_GENE_SETS = {
+    "pc": {"protein_coding"},
+    "pc_linc": {"protein_coding", "lincRNA"},
+}
 
 # Known Roadmap ID → common cell-type name mappings
 _ROADMAP_CELL_NAMES = {
@@ -149,6 +156,13 @@ def main() -> None:
         help="Directory to cache downloaded files (default: {output-dir}/.cache).",
     )
     parser.add_argument(
+        "--gene-set",
+        choices=list(_GENE_SETS.keys()),
+        default="pc",
+        help="Gene set to include: 'pc' (protein_coding only, ~20K) or "
+             "'pc_linc' (protein_coding + lincRNA, ~25K). Default: pc.",
+    )
+    parser.add_argument(
         "--log-transform",
         choices=["log10_xpresso", "log2", "none"],
         default="log10_xpresso",
@@ -166,6 +180,8 @@ def main() -> None:
     # ------------------------------------------------------------------
     print("Downloading Roadmap expression data ...")
     rpkm_path = _download(_RPKM_PC_URL, cache_dir)
+    if args.gene_set == "pc_linc":
+        rpkm_nc_path = _download(_RPKM_NC_URL, cache_dir)
     gene_info_path = _download(_GENE_INFO_URL, cache_dir)
     eg_name_path = _download(_EG_NAME_URL, cache_dir)
 
@@ -174,7 +190,16 @@ def main() -> None:
     # ------------------------------------------------------------------
     print("Loading RPKM matrix ...")
     rpkm = _load_rpkm(rpkm_path)
-    print(f"  {rpkm.shape[0]} genes × {rpkm.shape[1]} epigenomes")
+    print(f"  Protein-coding: {rpkm.shape[0]} genes × {rpkm.shape[1]} epigenomes")
+
+    if args.gene_set == "pc_linc":
+        rpkm_nc = _load_rpkm(rpkm_nc_path)
+        print(f"  Non-coding: {rpkm_nc.shape[0]} genes × {rpkm_nc.shape[1]} epigenomes")
+        # Concatenate pc + nc RPKM matrices
+        rpkm = pd.concat([rpkm, rpkm_nc], axis=0)
+        # Remove any duplicate ENSIDs (keep first = protein-coding)
+        rpkm = rpkm[~rpkm.index.duplicated(keep="first")]
+        print(f"  Combined: {rpkm.shape[0]} genes")
 
     gene_info = _load_gene_info(gene_info_path)
     eg_names = _load_eg_names(eg_name_path)
@@ -239,12 +264,15 @@ def main() -> None:
     rpkm_renamed = rpkm.rename(columns={c: f"RPKM_{c}" for c in rpkm.columns})
 
     # ------------------------------------------------------------------
-    # 5. Merge with gene info
+    # 5. Merge with gene info (filtered by gene set)
     # ------------------------------------------------------------------
+    allowed_types = _GENE_SETS[args.gene_set]
     result = gene_info[["ENSID", "chrom", "start", "end", "strand",
                         "biotype", "gene_name"]].copy()
+    result = result[result["biotype"].isin(allowed_types)]
     result = result.drop_duplicates(subset=["ENSID"], keep="first")
     result = result.rename(columns={"gene_name": "Gene name"})
+    print(f"  Gene info filtered to {allowed_types}: {len(result)} genes")
     result = result.merge(rpkm_renamed, left_on="ENSID", right_index=True, how="inner")
     result = result.merge(expr_renamed, left_on="ENSID", right_index=True, how="inner")
 

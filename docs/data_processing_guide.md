@@ -54,26 +54,57 @@ The pipeline needs these reference files (hg38):
 
 | File | Description | Default path |
 |------|-------------|-------------|
-| hg38 FASTA | Reference genome | `data_EPInformer/hg38.fa` |
-| Gene bounds BED | Collapsed gene boundaries | `data/reference/hg38/CollapsedGeneBounds.Ensembl_v65.Gencode_v10.hg38.bed` |
+| hg38 FASTA | Reference genome | `data/reference/hg38/hg38.fa` |
+| Gene bounds BED | Collapsed gene boundaries | `data/reference/hg38/CollapsedGeneBounds.Ensembl_v65.hg38.pc.bed` |
 | Chromosome sizes | Chromosome lengths | `data/reference/hg38/GRCh38_EBV.chrom.sizes.tsv` |
 | Expression CSV | Gene expression values | `data/roadmap_expression/roadmap_expression_all.csv` |
 
-To download ABC reference files (gene bounds, TSS, chrom sizes):
+To download ABC reference files (chrom sizes, quantile normalization reference):
 
 ```bash
 bash preprocessing/data_prep/download_abc_reference.sh
 ```
 
-### 2.2 Build expression CSV
+### 2.2 Build gene annotation BED
 
-The expression CSV contains normalized RNA-seq RPKM for 57 Roadmap epigenomes. Build it from source:
+Build a hg38 gene annotation BED from Roadmap's Ensembl v65 / Gencode v10 gene_info (lifts over hg19 coordinates to hg38). Requires the `liftOver` binary on PATH.
 
 ```bash
+# Protein-coding genes only (~20K)
+python preprocessing/data_prep/build_gene_annotation.py \
+    --gene-set pc \
+    --output-dir data/reference/hg38
+
+# Protein-coding + lincRNA (~25K)
+python preprocessing/data_prep/build_gene_annotation.py \
+    --gene-set pc_linc \
+    --output-dir data/reference/hg38
+```
+
+This produces BED files like `CollapsedGeneBounds.Ensembl_v65.hg38.pc.bed` matching the format used by the ABC pipeline.
+
+### 2.3 Build expression CSV
+
+The expression CSV contains normalized RNA-seq RPKM for 57 Roadmap epigenomes. Normalization: `log10(RPKM + 0.1) -> z-score` per cell type.
+
+```bash
+# Protein-coding only (~20K genes, no Xpresso features)
+python preprocessing/data_prep/build_roadmap_expression.py \
+    --gene-set pc \
+    --output-dir data/roadmap_expression
+
+# Protein-coding + lincRNA (~25K genes)
+python preprocessing/data_prep/build_roadmap_expression.py \
+    --gene-set pc_linc \
+    --output-dir data/roadmap_expression
+
+# With Xpresso features (18,377 genes — for compatibility with existing models)
 python preprocessing/data_prep/build_roadmap_expression.py \
     --xpresso-csv data/GM12878_K562_18377_gene_expr_fromXpresso.csv \
     --output-dir data/roadmap_expression
 ```
+
+When `--xpresso-csv` is omitted, the output CSV will not have Xpresso gene-structural features (UTR length, GC content, etc.). The training script auto-detects this and disables `rna_feats` accordingly.
 
 This produces `data/roadmap_expression/roadmap_expression_all.csv` with expression columns for each cell type.
 

@@ -53,9 +53,19 @@ _DEFAULT_K562_H3_OUT = (
 
 
 def _apply_tss_column(cage_xpresso_df: pd.DataFrame, tss_column: str) -> pd.DataFrame:
-    """Rename alternate TSS column (e.g. TSS_xpresso) to ``TSS`` for downstream code."""
+    """Rename alternate TSS column (e.g. TSS_xpresso) to ``TSS`` for downstream code.
+
+    Falls back to gene ``start`` coordinate if the requested TSS column is missing
+    (e.g. when using pure Roadmap expression without Xpresso features).
+    """
     if tss_column != "TSS":
         if tss_column not in cage_xpresso_df.columns:
+            if "start" in cage_xpresso_df.columns:
+                print(f"  WARNING: TSS column {tss_column!r} not found; "
+                      f"using gene 'start' as TSS fallback")
+                cage_xpresso_df = cage_xpresso_df.copy()
+                cage_xpresso_df["TSS"] = cage_xpresso_df["start"]
+                return cage_xpresso_df
             raise ValueError(
                 f"TSS column {tss_column!r} not found in gene expression CSV; "
                 f"have: {list(cage_xpresso_df.columns)[:20]}..."
@@ -877,12 +887,20 @@ def obtain_PE_withSignals(
                 f"{[c for c in cage_xpresso_df.columns if c.endswith('_RPKM') or c.startswith('Actual_')]}"
             )
 
-    base_cols = [
-        "ENSID", "chrom", "start", "end", "strand", "TSS", "Gene name",
-        actual_col,
+    # Xpresso feature columns — only include those present in the CSV
+    _xpresso_cols = [
         "UTR5LEN_log10zscore", "CDSLEN_log10zscore", "INTRONLEN_log10zscore",
         "UTR3LEN_log10zscore", "UTR5GC", "CDSGC", "UTR3GC", "ORFEXONDENSITY",
     ]
+    xpresso_cols = [c for c in _xpresso_cols if c in cage_xpresso_df.columns]
+    if not xpresso_cols:
+        print("  Note: no Xpresso feature columns found in expression CSV "
+              "(pure Roadmap mode)")
+
+    base_cols = [
+        "ENSID", "chrom", "start", "end", "strand", "TSS", "Gene name",
+        actual_col,
+    ] + xpresso_cols
     cage_xpresso_df = cage_xpresso_df[base_cols]
 
     promoter_enhancer_df = _map_symbol_to_ensid(promoter_enhancer_df, cage_xpresso_df)
@@ -900,9 +918,7 @@ def obtain_PE_withSignals(
         "normalized_dhs", "name", "distance", "distance_relative",
         "ENSID", "TSS", "strand", "Gene name",
         actual_col,
-        "UTR5LEN_log10zscore", "CDSLEN_log10zscore", "INTRONLEN_log10zscore",
-        "UTR3LEN_log10zscore", "UTR5GC", "CDSGC", "UTR3GC", "ORFEXONDENSITY",
-    ]
+    ] + xpresso_cols
     gene_enhancer_expr_df = gene_enhancer_expr_df[merge_cols]
 
     # Report gene matching
