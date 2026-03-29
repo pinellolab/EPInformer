@@ -8,7 +8,15 @@ annotation source (Roadmap Epigenomics).
 
 Requires:
   - liftOver binary (UCSC) on PATH or at --liftover-bin
-  - hg19ToHg38.over.chain(.gz) — auto-downloaded if not found
+  - hg19ToHg38.over.chain — either ``hg19ToHg38.over.chain.gz`` or uncompressed
+    ``hg19ToHg38.over.chain`` in the cache; auto-downloaded as ``.gz`` if neither exists
+
+Air-gapped / no outbound HTTP: place files under ``{output-dir}/.liftover_cache/`` (or
+``--cache-dir``) with the same names the script expects, or pass ``--liftover-bin``,
+``--chain-file``, and/or ``--gene-info-file``. The gene_info file is also detected if
+already present under ``data/roadmap_expression/.cache/`` (Roadmap download cache).
+Otherwise download liftOver, gene_info, and the chain file on a machine with internet,
+then copy them into the cache directory.
 
 Usage::
 
@@ -29,14 +37,15 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import urllib.error
 import urllib.request
-from pathlib import Path
 
 # ---------------------------------------------------------------------------
 # URLs
 # ---------------------------------------------------------------------------
 _ROADMAP_EXPR = "https://egg2.wustl.edu/roadmap/data/byDataType/rna/expression"
-_GENE_INFO_URL = f"{_ROADMAP_EXPR}/Ensembl_v65.Gencode_v10.ENSG.gene_info"
+_GENE_INFO_FILENAME = "Ensembl_v65.Gencode_v10.ENSG.gene_info"
+_GENE_INFO_URL = f"{_ROADMAP_EXPR}/{_GENE_INFO_FILENAME}"
 _CHAIN_URL = "https://hgdownload.soe.ucsc.edu/goldenPath/hg19/liftOver/hg19ToHg38.over.chain.gz"
 
 # liftOver binary download URLs by platform
@@ -53,29 +62,133 @@ _GENE_SETS = {
 }
 
 
-def _download(url: str, dest: str) -> str:
+def _print_download_failure(
+    url: str,
+    dest: str,
+    err: BaseException,
+    *,
+    extra_hint: str | None = None,
+) -> None:
+    dest_abs = os.path.abspath(dest)
+    print("\nERROR: Download failed (no network, firewall, or remote unreachable).", file=sys.stderr)
+    print(f"  URL: {url}", file=sys.stderr)
+    print(f"  Error: {err}", file=sys.stderr)
+    print(
+        "\nOffline fix: on a machine with internet, download the URL above, copy the file to:",
+        file=sys.stderr,
+    )
+    print(f"  {dest_abs}", file=sys.stderr)
+    print("Then re-run; existing files in the cache are reused without downloading.", file=sys.stderr)
+    if os.path.basename(dest_abs) == "liftOver":
+        print(
+            "\nAfter copying the binary to that path, make it executable, then re-run:\n"
+            f"  chmod +x {dest_abs}\n"
+            "\nOr point at a liftOver already on this system:\n"
+            "  --liftover-bin /path/to/liftOver\n",
+            file=sys.stderr,
+        )
+    elif extra_hint:
+        print(extra_hint, file=sys.stderr)
+    sys.exit(1)
+
+
+def _download(url: str, dest: str, *, extra_hint: str | None = None) -> str:
     """Download a file if not already cached."""
+    dest = os.path.abspath(os.path.expanduser(dest))
     if os.path.isfile(dest):
         print(f"  Cached: {dest}")
         return dest
-    os.makedirs(os.path.dirname(dest), exist_ok=True)
+    parent = os.path.dirname(dest)
+    if parent:
+        os.makedirs(parent, exist_ok=True)
     print(f"  Downloading: {url}")
-    urllib.request.urlretrieve(url, dest)
+    try:
+        urllib.request.urlretrieve(url, dest)
+    except (urllib.error.URLError, OSError) as e:
+        if os.path.isfile(dest):
+            try:
+                os.unlink(dest)
+            except OSError:
+                pass
+        _print_download_failure(url, dest, e, extra_hint=extra_hint)
     print(f"  Saved: {dest}")
     return dest
 
 
+def _resolve_chain_file(cache_dir: str, user_chain: str | None) -> str:
+    """Return path to hg19→hg38 chain: user path, or cached .gz / uncompressed, or download."""
+    if user_chain:
+        if not os.path.isfile(user_chain):
+            print(f"ERROR: --chain-file not found: {user_chain}", file=sys.stderr)
+            sys.exit(1)
+        return os.path.abspath(user_chain)
+    os.makedirs(cache_dir, exist_ok=True)
+    gz = os.path.join(cache_dir, "hg19ToHg38.over.chain.gz")
+    plain = os.path.join(cache_dir, "hg19ToHg38.over.chain")
+    if os.path.isfile(gz):
+        print(f"  Cached: {gz}")
+        return gz
+    if os.path.isfile(plain):
+        print(f"  Cached: {plain}")
+        return plain
+    return _download(_CHAIN_URL, gz)
+
+
+def _resolve_gene_info(cache_dir: str, user_path: str | None) -> str:
+    """Return path to gene_info: user path, cache file, Roadmap cache dirs, or download."""
+    if user_path:
+        if not os.path.isfile(user_path):
+            print(f"ERROR: --gene-info-file not found: {user_path}", file=sys.stderr)
+            sys.exit(1)
+        return os.path.abspath(user_path)
+    cache_dir = os.path.abspath(cache_dir)
+    primary = os.path.join(cache_dir, _GENE_INFO_FILENAME)
+    if os.path.isfile(primary):
+        print(f"  Cached: {primary}")
+        return primary
+    # Same file may already exist from build_roadmap_expression / manual staging
+    for rel in (
+        os.path.join("data", "roadmap_expression", ".cache", _GENE_INFO_FILENAME),
+        os.path.join("data", "roadmap_expression", _GENE_INFO_FILENAME),
+    ):
+        alt = os.path.abspath(rel)
+        if os.path.isfile(alt):
+            print(f"  Using existing gene_info: {alt}")
+            return alt
+    return _download(_GENE_INFO_URL, primary)
+
+
 def _find_liftover(user_bin: str | None, cache_dir: str) -> str:
     """Locate the liftOver binary; auto-download if not found."""
-    if user_bin and os.path.isfile(user_bin):
-        return user_bin
+    if user_bin:
+        if not os.path.isfile(user_bin):
+            print(f"ERROR: --liftover-bin not found: {user_bin}", file=sys.stderr)
+            sys.exit(1)
+        if not os.access(user_bin, os.X_OK):
+            print(f"ERROR: --liftover-bin is not executable: {user_bin}", file=sys.stderr)
+            sys.exit(1)
+        return os.path.abspath(user_bin)
     found = shutil.which("liftOver")
     if found:
         return found
-    # Check cache
+    # Check cache (fix permissions if copied without +x)
     cached = os.path.join(cache_dir, "liftOver")
-    if os.path.isfile(cached) and os.access(cached, os.X_OK):
-        return cached
+    if os.path.isfile(cached):
+        if not os.access(cached, os.X_OK):
+            try:
+                os.chmod(cached, 0o755)
+            except OSError as e:
+                print(f"ERROR: could not chmod +x cached liftOver: {cached}\n  {e}",
+                      file=sys.stderr)
+                sys.exit(1)
+        if os.access(cached, os.X_OK):
+            return cached
+        print(
+            f"ERROR: cached liftOver is not executable: {cached}\n"
+            f"  Run: chmod +x {cached}",
+            file=sys.stderr,
+        )
+        sys.exit(1)
     # Auto-download
     import platform
     key = (platform.system(), platform.machine())
@@ -134,14 +247,23 @@ def _run_liftover(
     try:
         cmd = [liftover_bin, in_bed, chain_file, out_bed, unmapped]
         result = subprocess.run(cmd, capture_output=True, text=True)
-        if result.returncode != 0:
-            print(f"liftOver stderr: {result.stderr}", file=sys.stderr)
+        if result.returncode != 0 or not os.path.isfile(out_bed):
+            print("ERROR: liftOver failed or produced no output BED.", file=sys.stderr)
+            if result.stdout:
+                print(f"liftOver stdout:\n{result.stdout}", file=sys.stderr)
+            if result.stderr:
+                print(f"liftOver stderr:\n{result.stderr}", file=sys.stderr)
+            if not os.path.isfile(out_bed):
+                print(f"Missing expected output: {out_bed}", file=sys.stderr)
+            sys.exit(1)
 
         # Parse lifted coordinates
         lifted = {}
         with open(out_bed) as f:
             for line in f:
                 parts = line.rstrip("\n").split("\t")
+                if len(parts) < 6:
+                    continue
                 idx = int(parts[3])
                 lifted[idx] = {
                     "chrom": parts[0],
@@ -152,10 +274,11 @@ def _run_liftover(
 
         # Count unmapped
         n_unmapped = 0
-        with open(unmapped) as f:
-            for line in f:
-                if not line.startswith("#"):
-                    n_unmapped += 1
+        if os.path.isfile(unmapped):
+            with open(unmapped) as f:
+                for line in f:
+                    if not line.startswith("#"):
+                        n_unmapped += 1
 
         print(f"  Lifted: {len(lifted)}/{len(genes)} genes "
               f"({n_unmapped} unmapped)")
@@ -210,10 +333,17 @@ def main() -> None:
         default=None,
         help="Path to hg19ToHg38.over.chain(.gz). Default: auto-download.",
     )
+    parser.add_argument(
+        "--gene-info-file",
+        default=None,
+        help=f"Path to {_GENE_INFO_FILENAME}. Default: cache dir or data/roadmap_expression/.cache/, "
+             "else download.",
+    )
     args = parser.parse_args()
 
     out_dir = os.path.abspath(args.output_dir)
     cache_dir = args.cache_dir or os.path.join(out_dir, ".liftover_cache")
+    cache_dir = os.path.abspath(os.path.expanduser(cache_dir))
     os.makedirs(out_dir, exist_ok=True)
 
     # --- Locate tools ---
@@ -222,16 +352,9 @@ def main() -> None:
 
     # --- Download files ---
     print("Downloading reference files ...")
-    gene_info_path = _download(
-        _GENE_INFO_URL,
-        os.path.join(cache_dir, "Ensembl_v65.Gencode_v10.ENSG.gene_info"),
-    )
+    gene_info_path = _resolve_gene_info(cache_dir, args.gene_info_file)
 
-    if args.chain_file and os.path.isfile(args.chain_file):
-        chain_file = args.chain_file
-    else:
-        chain_file = os.path.join(cache_dir, "hg19ToHg38.over.chain.gz")
-        _download(_CHAIN_URL, chain_file)
+    chain_file = _resolve_chain_file(cache_dir, args.chain_file)
 
     # --- Load and filter genes ---
     print("Loading gene annotations ...")

@@ -18,6 +18,14 @@ We also provide information and instructions for how to train different versions
 
 EPInformer requires Python 3.6+ and Python packages PyTorch (>=2.1). You can follow PyTorch installation steps [here](https://pytorch.org/get-started/locally/).
 
+Building hg38 gene annotation BEDs from Roadmap coordinates (`preprocessing/data_prep/build_gene_annotation.py`) requires the UCSC **liftOver** executable. Install it with Bioconda (package name `ucsc-liftover`):
+
+```
+conda install -c conda-forge -c bioconda ucsc-liftover
+```
+
+Alternatively, download a `liftOver` binary for your platform from [UCSC](https://hgdownload.soe.ucsc.edu/admin/exe/) and add it to your `PATH`, or pass `--liftover-bin` to the script.
+
 ### Setup
 
 EPInformer requires ABC enhancer-gene data for training and predicting gene expression. You can obtain the ABC data from [ENCODE](https://www.encodeproject.org/search/?type=Annotation&annotation_type=element+gene+regulatory+interaction+predictions&software_used.software.name=abc-enhancer-gene-prediction-encode_v1) or by running the ABC pipeline available on their [GitHub](https://github.com/broadinstitute/ABC-Enhancer-Gene-Prediction) acquire cell-type-specific gene-enhancer links. For K562 and GM12878 cell lines, you can download the training resource of EPInformer from [Zenodo](https://zenodo.org/records/13232430) by running the command: 
