@@ -56,7 +56,18 @@ run_abc_pipeline(
 )
 "
 
+# --- Build gene annotation BED from Roadmap Ensembl v65 (hg19 → hg38 liftover) ---
+python preprocessing/data_prep/build_gene_annotation.py \
+    --gene-set pc --output-dir data/reference/hg38        # protein-coding (~20K)
+python preprocessing/data_prep/build_gene_annotation.py \
+    --gene-set pc_linc --output-dir data/reference/hg38   # + lincRNA (~25K)
+
 # --- Build Roadmap expression for all 57 epigenomes ---
+# Pure Roadmap (no Xpresso features — rna_feats auto-disabled at training time)
+python preprocessing/data_prep/build_roadmap_expression.py \
+    --gene-set pc --output-dir data/roadmap_expression
+
+# With Xpresso features (18,377 genes, for compatibility with existing models)
 python preprocessing/data_prep/build_roadmap_expression.py \
     --xpresso-csv data/GM12878_K562_18377_gene_expr_fromXpresso.csv \
     --output-dir data/roadmap_expression
@@ -134,11 +145,14 @@ Raw Data (FASTA, BigWig signals, CSV expression, ABC links)
 - Key flags: `--min-distance` (default 0), `--max-distance` (default 100000), `--n-enhancer` (default 60), `--include-self-promoter`, `--abc-all-putative`
 - `--include-self-promoter` injects near-TSS self-promoter elements (from ABC `isSelfPromoter` flag) at slot 0 of each gene's enhancer list with real ABC features (activity, contact, DHS, distance). This is critical for matching legacy performance (~0.81 vs ~0.63 Pearson R without).
 
-**`preprocessing/data_prep/build_roadmap_expression.py`** — Downloads Roadmap Epigenomics RNA-seq RPKM for all 57 epigenomes and builds expression CSVs. Applies `log10(RPKM + 0.1) → z-score per cell type` (Xpresso convention). Outputs `roadmap_expression_all.csv` with columns: `gene_id`, `ENSID`, `Gene name`, `Actual_{cell_type}`, plus Xpresso sequence features. Key Roadmap ID mappings: E123=K562, E116=GM12878, E118=HepG2, E003=H1, E122=HUVEC, E127=NHEK.
+**`preprocessing/data_prep/build_gene_annotation.py`** — Builds hg38 gene annotation BED from Roadmap's Ensembl v65 gene_info by lifting over hg19 coordinates. Supports `--gene-set pc` (protein-coding, ~20K) or `--gene-set pc_linc` (+ lincRNA, ~25K). Requires `liftOver` binary on PATH.
+
+**`preprocessing/data_prep/build_roadmap_expression.py`** — Downloads Roadmap Epigenomics RNA-seq RPKM for all 57 epigenomes and builds expression CSVs. Applies `log10(RPKM + 0.1) → z-score per cell type`. Supports `--gene-set pc` (default, protein-coding) or `--gene-set pc_linc` (+ lincRNA, downloads `57epigenomes.RPKM.nc.gz`). When `--xpresso-csv` is omitted, outputs pure Roadmap expression without Xpresso gene-structural features — the training script auto-detects this and disables `rna_feats`. Key Roadmap ID mappings: E123=K562, E116=GM12878, E118=HepG2, E003=H1, E122=HUVEC, E127=NHEK.
 
 **`train_EPInformer_abc.py`** — Training script with two dataset classes:
 - `promoter_enhancer_dataset`: For new factored HDF5 (`gene_enh_idx` referencing shared `enhancer_seq` pool). Supports `--rm_self_promoter` to filter out self-promoter elements (distance < 1kb) at training time.
 - `promoter_enhancer_dataset_legacy`: For legacy HDF5 with pre-computed `promoter_ohe` and `pe_ohe` arrays. Loads promoter from HDF5 with zero-padding (fast path).
+- Auto-detects Xpresso feature columns in expression CSV; if absent, sets `useFeat=False` (model skips `rna_feats` branch). Works with both Xpresso-merged and pure Roadmap CSVs.
 
 ### Gene ID Matching
 
