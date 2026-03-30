@@ -42,19 +42,27 @@ pip install pyranges pyfaidx kipoiseq openpyxl tangermeme h5py pyBigWig
 sh ./download_data.sh
 
 # --- ABC Pipeline (from BAM/HiC → enhancer-gene predictions) ---
-# Run full ABC pipeline for a cell type
+# Run full ABC pipeline for a cell type (with Hi-C)
 python -c "
 from preprocessing.abc import run_abc_pipeline
 run_abc_pipeline(
-    cell_type='K562',
-    dnase_bam='./data/K562/DNase/ENCFF257HEE.bam',
+    accessibility_bam='./data/K562/DNase/ENCFF257HEE.bam',
     h3k27ac_bam='./data/K562/H3K27ac/ENCFF232RQF.bam',
     hic_file='./data/K562/HiC/ENCFF621AIY.hic',
-    fasta='./data_EPInformer/hg38.fa',
     output_dir='./abc_output/K562',
+    cell_type='K562',
+    preset='K562',
+    max_distance=1_000_000,
+    include_promoter_region=False,
     max_encoder_peaks=100000,
 )
 "
+
+# --- Batch pipeline (config-driven, recommended) ---
+# Runs Stage 1 (ABC links) + Stage 2 (HDF5 encoding) from YAML config
+python run_pipeline.py --config config/config.yaml --samples K562 --stages both
+# Dry run to validate config without running
+python run_pipeline.py --config config/config.yaml --dry-run
 
 # --- Build gene annotation BED from Roadmap Ensembl v65 (hg19 → hg38 liftover) ---
 python preprocessing/data_prep/build_gene_annotation.py \
@@ -143,7 +151,9 @@ Raw Data (FASTA, BigWig signals, CSV expression, ABC links)
 - `hdf5.py`: HDF5 I/O. Structure: `seq_code` (N, 1+n_enh, L, 4), `activity`, `dhs`, `distance`, `contact`, `seq_signal`
 - `links.py`: Encodes enhancer-gene links with ABC scores
 - `pipelines_legacy.py`: Legacy cell-type-specific preprocessing pipelines. Gene matching uses `_map_symbol_to_ensid()` which auto-detects whether `TargetGene` contains ENSIDs or gene symbols — if ENSIDs (>50% match), uses them directly; otherwise maps symbols → ENSID via expression CSV `Gene name` column. Enhancers are sorted by absolute distance to TSS (nearest first) and capped at 60 per gene. No minimum distance filter by default (all enhancers including ≤1kb are kept).
-- `abc/`: Streamlined ABC pipeline (candidates → neighborhoods → contact → predictions → encoder data). Entry point: `run_abc_pipeline()` in `__init__.py`. Supports cell-type presets (K562, GM12878, etc.) and `max_encoder_peaks` filtering. MACS2 settings match original Broad ABC pipeline (`-p 0.1`, `--nomodel`, `--shift -75`, `--extsize 150`). Presets use `XpressoGeneBounds.hg38.bed` (18,377 genes). `TargetGene` outputs ENSID with `TargetGeneSymbol` for gene symbols. Default `max_distance=1MB`.
+- `abc/`: Streamlined ABC pipeline (candidates → neighborhoods → contact → predictions → encoder data). Entry point: `run_abc_pipeline()` in `__init__.py`. Supports cell-type presets (K562, GM12878, etc.) and `max_encoder_peaks` filtering. MACS2 settings match original Broad ABC pipeline (`-p 0.1`, `--nomodel`, `--shift -75`, `--extsize 150`). Presets use `XpressoGeneBounds.hg38.bed` (18,377 genes). `TargetGene` outputs ENSID with `TargetGeneSymbol` for gene symbols. Default `max_distance=1MB`. Hi-C processing matches the original Broad ABC pipeline: SCALE normalization via `hicstraw.HiCFile`, doubly-stochastic correction, diagonal bin correction (`tss_hic_contribution=100`), power-law formula `exp(scale - gamma*log(dist+1))` with 5kb min clip, power-law scaling (`hic * reference/observed`), pseudocount (`min(powerlaw, powerlaw_at_5kb)`), and QC (replace genes with insufficient Hi-C coverage). Self-promoter ABC scores are NOT overridden to 1.0.
+
+**`run_pipeline.py`** — Config-driven batch orchestrator. Reads a YAML config (`config/config.yaml`) and TSV sample table (`config/samples.tsv`), runs Stage 1 (ABC links via `run_abc_pipeline()`) and Stage 2 (HDF5 encoding via `obtain_PE_withSignals()`). Supports `--stages links|encoding|both`, `--samples` filter, `--dry-run`. Hi-C parameters (`hic_gamma`, `hic_scale`, etc.) are read from `abc_params` in the YAML config.
 
 **`src/scripts/`** — Training utilities:
 - `utils.py`: Data processing and normalization

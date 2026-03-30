@@ -185,9 +185,9 @@ class EPInformer_abc(nn.Module):
         attn_mask = (~np.identity(self.n_enhancer+1).astype(bool))
         attn_mask[:, 0] = False
         attn_mask[0, :] = False
-        attn_mask = torch.from_numpy(attn_mask)
-        attn_mask.masked_fill(attn_mask, float('-inf'))
-        self.attn_mask = attn_mask
+        attn_mask = torch.from_numpy(attn_mask).float()
+        attn_mask = attn_mask.masked_fill(attn_mask.bool(), float('-inf'))
+        self.register_buffer('attn_mask', attn_mask)
         if self.useBN:
             self.conv_out = nn.Sequential(
                 nn.Conv2d(in_channels = 128, out_channels=64, kernel_size=(1, 3), dilation=(1, 2)),
@@ -254,7 +254,7 @@ class EPInformer_abc(nn.Module):
         attn_list = []
         # p_embed_list = []
         for i in range(self.n_encoder):
-            pe_flatten_embed, attn = self.attn_encoder[i](pe_flatten_embed, enhancers_padding_mask=enhancers_padding_mask, attn_mask=self.attn_mask.to(self.device))
+            pe_flatten_embed, attn = self.attn_encoder[i](pe_flatten_embed, enhancers_padding_mask=enhancers_padding_mask, attn_mask=self.attn_mask)
             attn_list.append(attn.unsqueeze(0))
         # p_embed_list = []
         # set the first enhancer feature to be the promoter
@@ -321,9 +321,9 @@ class EPInformer_abc_dist(nn.Module):
         attn_mask = (~np.identity(self.n_enhancer+1).astype(bool))
         attn_mask[:, 0] = False
         attn_mask[0, :] = False
-        attn_mask = torch.from_numpy(attn_mask)
-        attn_mask.masked_fill(attn_mask, float('-inf'))
-        self.attn_mask = attn_mask
+        attn_mask = torch.from_numpy(attn_mask).float()
+        attn_mask = attn_mask.masked_fill(attn_mask.bool(), float('-inf'))
+        self.register_buffer('attn_mask', attn_mask)
         if self.useBN:
             self.conv_out = nn.Sequential(
                 nn.Conv2d(in_channels = 128, out_channels=64, kernel_size=(1, 3), dilation=(1, 2)),
@@ -393,7 +393,7 @@ class EPInformer_abc_dist(nn.Module):
         # pe_flatten_embed = self.add_pos_conv(torch.concat([pe_flatten_embed, enh_feats], axis=-1).permute(0,2,1)).permute(0,2,1)
         attn_list = []
         for i in range(self.n_encoder):
-            pe_flatten_embed, attn = self.attn_encoder[i](pe_flatten_embed, enhancers_padding_mask=enhancers_padding_mask, attn_mask=self.attn_mask.to(self.device))
+            pe_flatten_embed, attn = self.attn_encoder[i](pe_flatten_embed, enhancers_padding_mask=enhancers_padding_mask, attn_mask=self.attn_mask)
             attn_list.append(attn.unsqueeze(0))
         # e_embed_list = []
         # feat_w_list = []
@@ -539,7 +539,7 @@ class EPInformer_abc_v2(nn.Module):
             for j in range(self.n_extraFeat):
                 pe_flatten_embed = enh_feat_embeds[j] * pe_flatten_embed
             # pe_flatten_embed = pe_flatten_embed * enh_feat_embeds
-            pe_flatten_embed, attn = self.attn_encoder[i](pe_flatten_embed, enhancers_padding_mask=enhancers_padding_mask, attn_mask=self.attn_mask.to(self.device))
+            pe_flatten_embed, attn = self.attn_encoder[i](pe_flatten_embed, enhancers_padding_mask=enhancers_padding_mask, attn_mask=self.attn_mask)
             attn_list.append(attn.unsqueeze(0))
         p_embed = pe_flatten_embed[:,0,:]
         if rna_feats is not None:
@@ -574,10 +574,9 @@ class EPInformer_v1(nn.Module):
         attn_mask = (~np.identity(self.n_enhancer+1).astype(bool))
         attn_mask[:, 0] = False
         attn_mask[0, :] = False
-        attn_mask = torch.from_numpy(attn_mask)
-        attn_mask.masked_fill(attn_mask, float('-inf'))
-        # attn_mask.to(self.device)
-        self.attn_mask = attn_mask# .to(self.device)
+        attn_mask = torch.from_numpy(attn_mask).float()
+        attn_mask = attn_mask.masked_fill(attn_mask.bool(), float('-inf'))
+        self.register_buffer('attn_mask', attn_mask)
         if self.useBN:
             self.conv_out = nn.Sequential(
                 nn.Conv2d(in_channels = 128, out_channels=64, kernel_size=(1, 3), dilation=(1, 2)),
@@ -648,7 +647,7 @@ class EPInformer_v1(nn.Module):
             pe_flatten_embed = self.add_pos_conv(torch.concat([pe_flatten_embed, enh_feats], axis=-1).permute(0,2,1)).permute(0,2,1)
         attn_list = []
         for i in range(self.n_encoder):
-            pe_flatten_embed, attn = self.attn_encoder[i](pe_flatten_embed, enhancers_padding_mask=enhancers_padding_mask, attn_mask=self.attn_mask.to(self.device))
+            pe_flatten_embed, attn = self.attn_encoder[i](pe_flatten_embed, enhancers_padding_mask=enhancers_padding_mask, attn_mask=self.attn_mask)
             attn_list.append(attn.unsqueeze(0))
         p_embed = torch.flatten(pe_flatten_embed[:,0,:], start_dim=1)
         if self.useFeat:
@@ -679,9 +678,9 @@ class EPInformer_v2(nn.Module):
         attn_mask = (~np.identity(self.n_enhancer+1).astype(bool))
         attn_mask[:, 0] = False
         attn_mask[0, :] = False
-        attn_mask = torch.from_numpy(attn_mask)
-        attn_mask.masked_fill(attn_mask, float('-inf'))
-        self.attn_mask = attn_mask
+        attn_mask = torch.from_numpy(attn_mask).float()
+        attn_mask = attn_mask.masked_fill(attn_mask.bool(), float('-inf'))
+        self.register_buffer('attn_mask', attn_mask)
         if self.useBN:
             self.conv_out = nn.Sequential(
                 nn.Conv2d(in_channels = 128, out_channels=64, kernel_size=(1, 3), dilation=(1, 2)),
@@ -744,7 +743,7 @@ class EPInformer_v2(nn.Module):
             pe_flatten_embed = self.add_pos_conv(torch.concat([pe_flatten_embed, enh_feats], axis=-1).permute(0,2,1)).permute(0,2,1)
         attn_list = []
         for i in range(self.n_encoder):
-            pe_flatten_embed, attn = self.attn_encoder[i](pe_flatten_embed, enhancers_padding_mask=enhancers_padding_mask, attn_mask=self.attn_mask.to(self.device))
+            pe_flatten_embed, attn = self.attn_encoder[i](pe_flatten_embed, enhancers_padding_mask=enhancers_padding_mask, attn_mask=self.attn_mask)
             attn_list.append(attn.unsqueeze(0))
         # Guide attention module
 
@@ -786,9 +785,9 @@ class EPInformer_abc_dist_v2(nn.Module):
         attn_mask = (~np.identity(self.n_enhancer+1).astype(bool))
         attn_mask[:, 0] = False
         attn_mask[0, :] = False
-        attn_mask = torch.from_numpy(attn_mask)
-        attn_mask.masked_fill(attn_mask, float('-inf'))
-        self.attn_mask = attn_mask
+        attn_mask = torch.from_numpy(attn_mask).float()
+        attn_mask = attn_mask.masked_fill(attn_mask.bool(), float('-inf'))
+        self.register_buffer('attn_mask', attn_mask)
         if self.useBN:
             self.conv_out = nn.Sequential(
                 nn.Conv2d(in_channels = 128, out_channels=64, kernel_size=(1, 3), dilation=(1, 2)),
@@ -855,7 +854,7 @@ class EPInformer_abc_dist_v2(nn.Module):
             pe_flatten_embed[:, 1:, :] = self.add_pos_conv(torch.concat([pe_flatten_embed[:, 1:, :], enh_feats[:, 1:, :]], axis=-1).permute(0,2,1)).permute(0,2,1)
         attn_list = []
         for i in range(self.n_encoder):
-            pe_flatten_embed, attn = self.attn_encoder[i](pe_flatten_embed, enhancers_padding_mask=enhancers_padding_mask, attn_mask=self.attn_mask.to(self.device))
+            pe_flatten_embed, attn = self.attn_encoder[i](pe_flatten_embed, enhancers_padding_mask=enhancers_padding_mask, attn_mask=self.attn_mask)
             attn_list.append(attn.unsqueeze(0))
 
         feats_w = None

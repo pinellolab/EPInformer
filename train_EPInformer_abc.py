@@ -21,6 +21,24 @@ import torch.utils.data as data_utils
 from torch.utils.data import Subset, Dataset, DataLoader
 warnings.filterwarnings('ignore')
 
+# Workaround for numpy 2.x + torch < 2.4 incompatibility
+# torch.from_numpy fails with "expected np.ndarray (got numpy.ndarray)"
+_NP_TO_TORCH_DTYPE = {
+    np.float32: torch.float32, np.float64: torch.float64,
+    np.int32: torch.int32, np.int64: torch.int64, np.bool_: torch.bool,
+}
+_orig_from_numpy = torch.from_numpy
+def _from_numpy_compat(arr):
+    try:
+        return _orig_from_numpy(arr)
+    except TypeError:
+        arr = np.ascontiguousarray(arr)
+        td = _NP_TO_TORCH_DTYPE.get(arr.dtype.type)
+        if td is None:
+            raise
+        return torch.frombuffer(arr, dtype=td).reshape(arr.shape)
+torch.from_numpy = _from_numpy_compat
+
 from dataclasses import dataclass
 from scipy.stats import pearsonr
 
@@ -60,7 +78,7 @@ class promoter_enhancer_dataset(Dataset):
     def __init__(self, h5_path, expr_csv, cell_type='K562', expr_type='RNA',
                  n_enh_feats=3, disable_enh=False, distance_thr=None,
                  max_n_enh=60, use_prm_signal=False, rm_prm_seq=False,
-                 rm_self_promoter=False):
+                 rm_self_promoter=False, promoter_activity_df=None):
         self.data_h5 = h5py.File(h5_path, 'r')
         self.expr_df = pd.read_csv(expr_csv, index_col='gene_id')
         self.cell_type = cell_type
@@ -72,6 +90,7 @@ class promoter_enhancer_dataset(Dataset):
         self.use_prm_signal = use_prm_signal
         self.rm_prm_seq = rm_prm_seq
         self.rm_self_promoter = rm_self_promoter
+        self.promoter_activity_df = promoter_activity_df
 
         # Preload all data into shared-memory tensors (zero-copy across DataLoader workers)
         print('Loading HDF5 data into shared memory...')
@@ -113,21 +132,68 @@ class promoter_enhancer_dataset(Dataset):
             if isinstance(row, pd.DataFrame):
                 row = row.iloc[0]
             if rna_cols:
-                rna = row[rna_cols].values.astype(np.float64).flatten()
+                rna = row[rna_cols].values.astype(np.float32).flatten()
             else:
-                rna = np.zeros(n_rna_dim, dtype=np.float64)
+                rna = np.zeros(n_rna_dim, dtype=np.float32)
             if use_prm_signal:
-                rna = np.concatenate([rna, [0.0]])
+                prm_act = 0.0
+                if promoter_activity_df is not None and ensid in promoter_activity_df.index:
+                    prm_act = float(np.log(1 + promoter_activity_df.loc[ensid, 'promoter_activity']))
+                rna = np.concatenate([rna, [prm_act]])
             rna_list.append(rna)
             if expr_type == 'CAGE':
                 expr_list.append(float(np.log10(row[cell_type + '_CAGE_128*3_sum'] + 1)))
             else:
                 expr_list.append(float(row[expr_col]))
-        self._rna_feats = torch.from_numpy(np.array(rna_list)).share_memory_()
-        self._expr = torch.from_numpy(np.array(expr_list, dtype=np.float64)).share_memory_()
+        self._rna_feats = torch.from_numpy(np.array(rna_list, dtype=np.float32)).share_memory_()
+        self._expr = torch.from_numpy(np.array(expr_list, dtype=np.float32)).share_memory_()
         del self.expr_df  # free memory; no longer needed after precomputation
 
-        print(f'Loaded: {len(self._ensid)} genes, {self._enhancer_seq.shape[0]} enhancers')
+        # Precompute per-gene promoter signal for pe_feats injection
+        self._prm_signal = None
+        if use_prm_signal and promoter_activity_df is not None:
+            prm_sig_list = []
+            for ensid in self._ensid:
+                if ensid in promoter_activity_df.index:
+                    prm_sig_list.append(float(np.log(1 + promoter_activity_df.loc[ensid, 'promoter_activity'])))
+                else:
+                    prm_sig_list.append(0.0)
+            self._prm_signal = torch.tensor(prm_sig_list, dtype=torch.float32)
+
+        # Pre-compute pe_ohe and pe_feats for all genes (avoids per-sample numpy work)
+        print('Pre-computing pe_ohe and pe_feats for all genes...')
+        N = len(self._ensid)
+        L = self._promoter_seq.shape[1]
+        self._pe_ohe = torch.zeros((N, 1 + self.max_n_enh, L, 4), dtype=torch.float32).share_memory_()
+        self._pe_ohe[:, 0] = self._promoter_seq.float()
+        for i in range(N):
+            enh_indices = self._gene_enh_idx[i]
+            valid_mask = enh_indices >= 0
+            if valid_mask.any():
+                self._pe_ohe[i, 1:][valid_mask] = self._enhancer_seq[enh_indices[valid_mask]].float()
+
+        # Build pe_feats: slot 0 = ones (promoter), slots 1..n_enh = [abs(dist), activity, contact]
+        abs_dist = self._distance.abs().float()
+        activity_f = self._activity.float()
+        contact_f = self._contact.float()
+        if self.n_enh_feats == 0:
+            enh_feats_all = torch.zeros((N, self.max_n_enh, 1), dtype=torch.float32)
+        else:
+            enh_feats_all = torch.stack([abs_dist, activity_f, contact_f], dim=2)[:, :, :self.n_enh_feats]
+        prm_feats = torch.ones((N, 1, enh_feats_all.shape[2]), dtype=torch.float32)
+        # Inject promoter activity into pe_feats[0, 1] (matches legacy behavior)
+        if use_prm_signal and self._prm_signal is not None and self.n_enh_feats >= 2:
+            prm_feats[:, 0, 1] = self._prm_signal
+        self._pe_feats = torch.cat([prm_feats, enh_feats_all], dim=1).share_memory_()
+
+        # Store raw distance for distance_thr / rm_self_promoter filtering in __getitem__
+        self._raw_distance = self._distance.float()
+
+        # Free arrays no longer needed
+        del self._promoter_seq, self._gene_enh_idx, self._enhancer_seq
+        del self._distance, self._activity, self._contact
+
+        print(f'Loaded: {len(self._ensid)} genes, pe_ohe: {self._pe_ohe.nbytes/1e9:.1f} GB')
 
     def __len__(self):
         return len(self._ensid)
@@ -135,62 +201,36 @@ class promoter_enhancer_dataset(Dataset):
     def __getitem__(self, idx):
         sample_ensid = self._ensid[idx]
 
-        # Promoter sequence (shared-memory tensor → numpy)
-        prm_seq = self._promoter_seq[idx].numpy().astype(np.float64)  # (L, 4)
+        pe_ohe = self._pe_ohe[idx]      # (1+n_enh, L, 4) float32 tensor
+        pe_feats = self._pe_feats[idx]   # (1+n_enh, n_feats) float32 tensor
+        rna_feats = self._rna_feats[idx] # (n_rna,) float32 tensor
+        expr = self._expr[idx]           # scalar float32 tensor
 
-        # Gather enhancer sequences by index (torch indexing on shared memory)
-        enh_indices = self._gene_enh_idx[idx]  # (n_enh,)
-        valid_mask = enh_indices >= 0
-        L = prm_seq.shape[0]
-        enh_seqs = np.zeros((self.max_n_enh, L, 4), dtype=np.float64)
-        if valid_mask.any():
-            enh_seqs[valid_mask.numpy()] = self._enhancer_seq[enh_indices[valid_mask]].numpy()
-
-        # Stack promoter + enhancers
-        pe_ohe = np.concatenate([prm_seq[np.newaxis], enh_seqs], axis=0)  # (1+n_enh, L, 4)
-
-        # Build enhancer features: [abs(distance), activity, contact]
-        dist = self._distance[idx].numpy()
-        activity = self._activity[idx].numpy()
-        contact = self._contact[idx].numpy()
-
-        if self.n_enh_feats == 0:
-            enh_feats = np.zeros((dist.shape[0], 1), dtype=np.float32)
-        else:
-            enh_feats = np.stack([np.abs(dist), activity, contact], axis=1)[:, :self.n_enh_feats]
-
-        # Precomputed mRNA sequence features + expression
-        rna_feats = self._rna_feats[idx].numpy()
-
-        # Distance thresholding
+        # Distance thresholding (only when needed)
         if self.distance_thr is not None:
-            n_enh = pe_ohe.shape[0] - 1
-            enh_ohe = pe_ohe[1:]
-            enh_ohe_new = np.zeros((self.max_n_enh, pe_ohe.shape[1], 4), dtype=np.float32)
-            enh_feats_new = np.zeros((self.max_n_enh, enh_feats.shape[-1]), dtype=np.float32)
+            dist = self._raw_distance[idx]  # (n_enh,)
+            n_feat = pe_feats.shape[1]
+            L = pe_ohe.shape[1]
+            enh_ohe_new = torch.zeros((self.max_n_enh, L, 4), dtype=torch.float32)
+            enh_feats_new = torch.zeros((self.max_n_enh, n_feat), dtype=torch.float32)
             min_d = 1000 if (self.rm_prm_seq or self.rm_self_promoter) else 0
             new_i = 0
-            for i in range(n_enh):
-                d = abs(dist[i]) if i < len(dist) else 0
+            for i in range(min(self.max_n_enh, dist.shape[0])):
+                d = abs(dist[i].item())
                 if d <= self.distance_thr and d >= min_d:
-                    enh_ohe_new[new_i] = enh_ohe[i]
-                    enh_feats_new[new_i] = enh_feats[i]
+                    enh_ohe_new[new_i] = pe_ohe[1 + i]
+                    enh_feats_new[new_i] = pe_feats[1 + i]
                     new_i += 1
                 if new_i >= self.max_n_enh:
                     break
-            pe_ohe = np.concatenate([pe_ohe[[0]], enh_ohe_new], axis=0)
-            enh_feats = enh_feats_new
+            pe_ohe = torch.cat([pe_ohe[:1], enh_ohe_new], dim=0)
+            pe_feats = torch.cat([pe_feats[:1], enh_feats_new], dim=0)
 
         if self.disable_enh:
+            pe_ohe = pe_ohe.clone()
             pe_ohe[1:] = 0
-            enh_feats[:] = 0
-
-        # Expression target (precomputed)
-        expr = self._expr[idx].item()
-
-        # Promoter features row (ones) prepended to enhancer features
-        prm_feats = np.ones_like(enh_feats[[0]])
-        pe_feats = np.concatenate([prm_feats, enh_feats], axis=0)
+            pe_feats = pe_feats.clone()
+            pe_feats[1:] = 0
 
         return pe_ohe, rna_feats, pe_feats, expr, sample_ensid
 
@@ -211,7 +251,7 @@ class promoter_enhancer_dataset_legacy(Dataset):
     def __init__(self, h5_path, expr_csv, cell_type='K562', expr_type='RNA',
                  n_enh_feats=3, disable_enh=False, distance_thr=None,
                  max_n_enh=60, use_prm_signal=False, rm_prm_seq=False,
-                 use_h5_expr=False):
+                 use_h5_expr=False, promoter_activity_df=None):
         self.expr_df = pd.read_csv(expr_csv, index_col='gene_id')
         self.cell_type = cell_type
         self.n_enh_feats = n_enh_feats
@@ -222,6 +262,7 @@ class promoter_enhancer_dataset_legacy(Dataset):
         self.use_prm_signal = use_prm_signal
         self.rm_prm_seq = rm_prm_seq
         self.use_h5_expr = use_h5_expr
+        self.promoter_activity_df = promoter_activity_df
         if use_h5_expr and expr_type != 'RNA':
             raise ValueError('use_h5_expr is only supported with expr_type RNA')
         self._expr_col = None if use_h5_expr else _resolve_expr_col(self.expr_df, cell_type)
@@ -294,7 +335,10 @@ class promoter_enhancer_dataset_legacy(Dataset):
             rna_feats = np.zeros(len(_all_rna_cols), dtype=np.float64)
 
         if self.use_prm_signal:
-            rna_feats = np.concatenate([rna_feats, np.array([0.0])])
+            prm_act = 0.0
+            if self.promoter_activity_df is not None and sample_ensid in self.promoter_activity_df.index:
+                prm_act = float(np.log(1 + self.promoter_activity_df.loc[sample_ensid, 'promoter_activity']))
+            rna_feats = np.concatenate([rna_feats, np.array([prm_act])])
 
         # Distance thresholding — filter to nearest max_n_enh enhancers
         if self.distance_thr is not None:
@@ -331,7 +375,13 @@ class promoter_enhancer_dataset_legacy(Dataset):
             expr = float(self.expr_df.loc[sample_ensid, self._expr_col])
 
         pe_ohe = np.concatenate([prm_ohe, enh_ohe], axis=0)
-        pe_feats = np.concatenate([np.zeros_like(enh_feats[[0]]), enh_feats], axis=0)
+        prm_feat_slot = np.ones_like(enh_feats[[0]])
+        if self.use_prm_signal and self.n_enh_feats >= 2:
+            prm_act = 0.0
+            if self.promoter_activity_df is not None and sample_ensid in self.promoter_activity_df.index:
+                prm_act = float(np.log(1 + self.promoter_activity_df.loc[sample_ensid, 'promoter_activity']))
+            prm_feat_slot[0, 1] = prm_act
+        pe_feats = np.concatenate([prm_feat_slot, enh_feats], axis=0)
 
         return pe_ohe, rna_feats, pe_feats, expr, sample_ensid
 
@@ -350,7 +400,7 @@ class promoter_enhancer_dataset_pecode(Dataset):
     def __init__(self, h5_path, expr_csv, cell_type='K562', expr_type='RNA',
                  n_enh_feats=3, disable_enh=False, distance_thr=None,
                  max_n_enh=60, use_prm_signal=False, rm_prm_seq=False,
-                 rm_self_promoter=False):
+                 rm_self_promoter=False, promoter_activity_df=None):
         self.cell_type = cell_type
         self.n_enh_feats = n_enh_feats
         self.expr_type = expr_type
@@ -365,25 +415,30 @@ class promoter_enhancer_dataset_pecode(Dataset):
         f = h5py.File(h5_path, 'r')
         self._ensid = [e.decode() if isinstance(e, bytes) else e for e in f['ensid'][:]]
         pe_code = f['pe_code'][:].astype(np.float32)  # (N, 1+n_enh, 2000, 4)
-        activity = f['activity'][:].astype(np.float64)  # (N, 1+n_enh)
-        distance = f['distance'][:].astype(np.float64)  # (N, 1+n_enh)
-        hic = f['hic'][:].astype(np.float64)            # (N, 1+n_enh)
+        activity = f['activity'][:].astype(np.float32)  # (N, 1+n_enh)
+        distance = f['distance'][:].astype(np.float32)  # (N, 1+n_enh)
+        hic = f['hic'][:].astype(np.float32)            # (N, 1+n_enh)
         f.close()
 
         n_enh_in_file = pe_code.shape[1] - 1  # exclude promoter slot
         n_enh = min(n_enh_in_file, max_n_enh)
 
         # Split into promoter (slot 0) and enhancers (slots 1..n_enh)
-        self._pe_ohe = torch.from_numpy(pe_code[:, :1+n_enh]).share_memory_()
+        self._pe_ohe = torch.from_numpy(pe_code[:, :1+n_enh].astype(np.float32)).share_memory_()
         # Build features: [abs(distance), activity, hic]
         dist_feat = np.abs(distance[:, 1:1+n_enh, np.newaxis])
         act_feat = activity[:, 1:1+n_enh, np.newaxis]
         hic_feat = hic[:, 1:1+n_enh, np.newaxis]
         enh_feats = np.concatenate([dist_feat, act_feat, hic_feat], axis=-1)[:, :, :n_enh_feats]
         # Prepend promoter placeholder features
-        prm_feats = np.ones((enh_feats.shape[0], 1, enh_feats.shape[2]))
+        prm_feats = np.ones((enh_feats.shape[0], 1, enh_feats.shape[2]), dtype=np.float32)
+        # Inject promoter activity into pe_feats[0, 1] (matches legacy behavior)
+        if use_prm_signal and promoter_activity_df is not None and n_enh_feats >= 2:
+            for i, ensid in enumerate(self._ensid):
+                if ensid in promoter_activity_df.index:
+                    prm_feats[i, 0, 1] = float(np.log(1 + promoter_activity_df.loc[ensid, 'promoter_activity']))
         self._pe_feats = torch.from_numpy(
-            np.concatenate([prm_feats, enh_feats], axis=1).astype(np.float64)
+            np.concatenate([prm_feats, enh_feats], axis=1).astype(np.float32)
         ).share_memory_()
 
         # Expression and RNA features from CSV
@@ -402,18 +457,21 @@ class promoter_enhancer_dataset_pecode(Dataset):
             if isinstance(row, pd.DataFrame):
                 row = row.iloc[0]
             if rna_cols:
-                rna = row[rna_cols].values.astype(np.float64).flatten()
+                rna = row[rna_cols].values.astype(np.float32).flatten()
             else:
-                rna = np.zeros(n_rna_dim, dtype=np.float64)
+                rna = np.zeros(n_rna_dim, dtype=np.float32)
             if use_prm_signal:
-                rna = np.concatenate([rna, [0.0]])
+                prm_act = 0.0
+                if promoter_activity_df is not None and ensid in promoter_activity_df.index:
+                    prm_act = float(np.log(1 + promoter_activity_df.loc[ensid, 'promoter_activity']))
+                rna = np.concatenate([rna, [prm_act]])
             rna_list.append(rna)
             if expr_type == 'CAGE':
                 expr_list.append(float(np.log10(row[cell_type + '_CAGE_128*3_sum'] + 1)))
             else:
                 expr_list.append(float(row[expr_col]))
-        self._rna_feats = torch.from_numpy(np.array(rna_list)).share_memory_()
-        self._expr = torch.from_numpy(np.array(expr_list, dtype=np.float64)).share_memory_()
+        self._rna_feats = torch.from_numpy(np.array(rna_list, dtype=np.float32)).share_memory_()
+        self._expr = torch.from_numpy(np.array(expr_list, dtype=np.float32)).share_memory_()
         del expr_df
 
         print(f'Loaded: {len(self._ensid)} genes, {n_enh} enhancers/gene, '
@@ -514,7 +572,9 @@ def train(net, training_dataset, fold_i, saved_model_path='./models/', learning_
                 value.requires_grad = False
 
     print("fold", fold_i, "training data:", len(train_ds), "validated data:", len(valid_ds), 'total data:', len(training_dataset))
-    trainloader = data_utils.DataLoader(train_ds, batch_size=batch_size, shuffle=True, num_workers=4, pin_memory=True, drop_last=True, persistent_workers=True)
+    _is_mps = (device == 'mps')
+    _num_workers = 2 if _is_mps else 4
+    trainloader = data_utils.DataLoader(train_ds, batch_size=batch_size, shuffle=True, num_workers=_num_workers, pin_memory=(not _is_mps), drop_last=True, persistent_workers=True)
     es_patience = early_stop_patience if early_stop_patience > 0 else 10**9
     if early_stop_patience <= 0:
         print('Early stopping disabled (early_stop_patience=0); training for full EPOCHS.')
@@ -536,15 +596,15 @@ def train(net, training_dataset, fold_i, saved_model_path='./models/', learning_
         running_loss = 0
         loss_e = 0
         for data in tqdm(trainloader, ncols=80):
-            optimizer.zero_grad()
+            optimizer.zero_grad(set_to_none=True)
             pe_seqs, rna_feats, enh_feats, y_expr, eid = data
-            pe_seqs = pe_seqs.float().to(device)
+            pe_seqs = pe_seqs.to(device, non_blocking=True)
             if net.useFeat:
-                rna_feats = rna_feats.float().to(device)
+                rna_feats = rna_feats.to(device, non_blocking=True)
             else:
                 rna_feats = None
-            enh_feats = enh_feats.float().to(device)
-            y_expr = y_expr.float().to(device)
+            enh_feats = enh_feats.to(device, non_blocking=True)
+            y_expr = y_expr.to(device, non_blocking=True)
             pred_expr, _ = net(pe_seqs, enh_feats=enh_feats, rna_feats=rna_feats)
             loss_expr = L_expr(pred_expr, y_expr)
             loss_e += loss_expr.item()
@@ -580,7 +640,9 @@ def train(net, training_dataset, fold_i, saved_model_path='./models/', learning_
     return lrs
 
 def validate(net, valid_ds, batch_size=16, device='cuda'):
-    validloader = data_utils.DataLoader(valid_ds, batch_size=batch_size, pin_memory=True, num_workers=4, persistent_workers=True)
+    _is_mps = (device == 'mps')
+    _num_workers = 2 if _is_mps else 4
+    validloader = data_utils.DataLoader(valid_ds, batch_size=batch_size, pin_memory=(not _is_mps), num_workers=_num_workers, persistent_workers=True)
     net.eval()
     L_expr = nn.SmoothL1Loss()
     with torch.no_grad():
@@ -589,13 +651,13 @@ def validate(net, valid_ds, batch_size=16, device='cuda'):
         loss_e = 0
         for data in tqdm(validloader, ncols=80):
             pe_seqs, rna_feats, enh_feats, y_expr, eid = data
-            pe_seqs = pe_seqs.float().to(device)
+            pe_seqs = pe_seqs.to(device, non_blocking=True)
             if net.useFeat:
-                rna_feats = rna_feats.float().to(device)
+                rna_feats = rna_feats.to(device, non_blocking=True)
             else:
                 rna_feats = None
-            enh_feats = enh_feats.float().to(device)
-            y_expr = y_expr.float().to(device)
+            enh_feats = enh_feats.to(device, non_blocking=True)
+            y_expr = y_expr.to(device, non_blocking=True)
             pred_expr, _ = net(pe_seqs, enh_feats=enh_feats, rna_feats=rna_feats)
             outputs = list(pred_expr.flatten().cpu().detach().numpy())
             labels = list(y_expr.flatten().cpu().detach().numpy())
@@ -615,7 +677,9 @@ def validate(net, valid_ds, batch_size=16, device='cuda'):
     return mse, r_value**2, peasonr
 
 def test(net, test_ds, fold_i, model_name=None, saved_model_path=None, batch_size=64, device='cuda', model_type='best'):
-    testloader = data_utils.DataLoader(test_ds, batch_size=batch_size, pin_memory=True, num_workers=4)
+    _is_mps = (device == 'mps')
+    _num_workers = 2 if _is_mps else 4
+    testloader = data_utils.DataLoader(test_ds, batch_size=batch_size, pin_memory=(not _is_mps), num_workers=_num_workers)
     if saved_model_path is not None:
         checkpoint = torch.load(saved_model_path + "/fold_" + str(fold_i) + "_best_" + model_name + "_checkpoint.pt", weights_only=False)
         net.load_state_dict(checkpoint['model_state_dict'])
@@ -627,13 +691,13 @@ def test(net, test_ds, fold_i, model_name=None, saved_model_path=None, batch_siz
         ensid_list = []
         for data in testloader:
             pe_seqs, rna_feats, enh_feats, y_expr, eid = data
-            pe_seqs = pe_seqs.float().to(device)
+            pe_seqs = pe_seqs.to(device, non_blocking=True)
             if net.useFeat:
-                rna_feats = rna_feats.float().to(device)
+                rna_feats = rna_feats.to(device, non_blocking=True)
             else:
                 rna_feats = None
-            enh_feats = enh_feats.float().to(device)
-            y_expr = y_expr.float().to(device)
+            enh_feats = enh_feats.to(device, non_blocking=True)
+            y_expr = y_expr.to(device, non_blocking=True)
             pred_expr, _ = net(pe_seqs, enh_feats=enh_feats, rna_feats=rna_feats)
             outputs = list(pred_expr.flatten().cpu().detach().numpy())
             labels = list(y_expr.flatten().cpu().detach().numpy())
@@ -680,11 +744,26 @@ if __name__ == '__main__':
                         help='stop if validation R² does not improve for this many epochs; 0 disables early stopping')
     parser.add_argument('--batch_size', type=int, default=50, help='batch size')
     parser.add_argument('--rm_self_promoter', action='store_true', help='remove self-promoter elements (distance < 1000bp) at training time')
+    parser.add_argument('--gene_list', type=str, default=None,
+                        help='GeneList.txt from ABC Neighborhoods (required for --use_prm_signal; provides DHS/H3K27ac promoter activity)')
     parser.add_argument('--folds', type=int, nargs='+', default=None, help='fold indices to run (default: 1..12)')
     parser.add_argument('--fold', type=int, default=None, help='if set (1–12), train/test only this fold (overrides --folds default)')
+    parser.add_argument('--device', type=str, default=None, choices=['cuda', 'mps', 'cpu'],
+                        help='force device (default: auto-detect cuda > mps > cpu)')
     args = parser.parse_args()
     if args.early_stop_patience < 0:
         raise SystemExit('--early_stop_patience must be >= 0')
+    if args.use_prm_signal and args.gene_list is None:
+        raise SystemExit('--gene_list is required when --use_prm_signal is set')
+
+    # Load promoter activity from GeneList.txt (for --use_prm_signal)
+    promoter_activity_df = None
+    if args.use_prm_signal and args.gene_list:
+        promoter_activity_df = pd.read_csv(args.gene_list, sep='\t', index_col='name')
+        promoter_activity_df['promoter_activity'] = np.sqrt(
+            promoter_activity_df['DHS.RPKM.TSS1Kb'] * promoter_activity_df['H3K27ac.RPKM.TSS1Kb']
+        )
+        print(f'Loaded promoter activity for {len(promoter_activity_df)} genes from {args.gene_list}')
 
     split_df = pd.read_csv(args.split_csv, index_col=0)
 
@@ -701,7 +780,13 @@ if __name__ == '__main__':
             raise SystemExit('each fold index must be between 1 and 12')
 
     os.environ["CUDA_VISIBLE_DEVICES"] = str(args.cuda_id)
-    device = 'cuda' if torch.cuda.is_available() else ('mps' if torch.backends.mps.is_available() else 'cpu')
+    if args.device is not None:
+        device = args.device
+    else:
+        device = 'cuda' if torch.cuda.is_available() else ('mps' if torch.backends.mps.is_available() else 'cpu')
+    if device == 'mps':
+        # Reduce MPS memory overhead by allowing medium-precision matmuls
+        torch.set_float32_matmul_precision('medium')
 
     results = []
     fold_metrics = []
@@ -750,6 +835,7 @@ if __name__ == '__main__':
                         n_enh_feats=n_enh_feats, distance_thr=dist_thr,
                         max_n_enh=max_n_enh, use_prm_signal=use_prm_signal,
                         rm_prm_seq=rm_prm_seq,
+                        promoter_activity_df=promoter_activity_df,
                     )
                     if h5_format == 'legacy':
                         ds = promoter_enhancer_dataset_legacy(
@@ -813,6 +899,7 @@ if __name__ == '__main__':
                         'h5_path': args.h5_path,
                         'split_csv': args.split_csv,
                         'use_h5_expr': args.use_h5_expr,
+                        'gene_list': args.gene_list,
                     }
                     train(model, train_ds, valid_dataset=valid_ds, learning_rate=lr, EPOCHS=args.epochs, model_name=model.name, fold_i=fi, batch_size=batch_size, device=device, saved_model_path=saved_model_path, hparams=hparams, early_stop_patience=args.early_stop_patience)
                     # Test

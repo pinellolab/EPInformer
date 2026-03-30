@@ -161,6 +161,13 @@ def run_links_stage(sample: dict, cfg: dict, dry_run: bool = False) -> dict:
         include_self_promoter=abc.get("include_self_promoter", False),
         include_promoter_region=abc.get("include_promoter_region", False),
         n_threads=abc.get("n_threads", 1),
+        # Hi-C processing params
+        hic_gamma=abc.get("hic_gamma", 1.024238616787792),
+        hic_scale=abc.get("hic_scale", 5.9594510043736655),
+        hic_gamma_reference=abc.get("hic_gamma_reference", 0.87),
+        hic_pseudocount_distance=abc.get("hic_pseudocount_distance", 5000),
+        scale_hic_using_powerlaw=abc.get("scale_hic_using_powerlaw", True),
+        tss_hic_contribution=abc.get("tss_hic_contribution", 100.0),
         dry_run=dry_run,
     )
 

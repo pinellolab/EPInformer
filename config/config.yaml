@@ -4,9 +4,9 @@ samples_table: samples.tsv
 # ---- Shared reference files ----
 reference:
   fasta: ./data/reference/hg38/hg38.fa
-  gene_bed: ./data/reference/hg38/CollapsedGeneBounds.hg38.bed
+  gene_bed: ./data/reference/hg38/XpressoGeneBounds.hg38.bed
   chrom_sizes: ./data/reference/hg38/GRCh38_EBV.chrom.sizes.tsv
-  expression_csv: ./data/roadmap_expression/roadmap_expression_all.csv
+  expression_csv: ./data/GM12878_K562_18377_gene_expr_fromXpresso_with_sequence_strand.csv
   blacklist: null
 
 # ---- Element-gene link parameters (Stage 1: BAM -> predictions) ----
@@ -22,6 +22,13 @@ abc_params:
   include_self_promoter: false
   include_promoter_region: false
   n_threads: 12  # keep in sync with slurm/run_pipeline_cpu.slurm #SBATCH --cpus-per-task
+  # Hi-C processing (Broad ABC defaults)
+  hic_gamma: 1.024238616787792
+  hic_scale: 5.9594510043736655
+  hic_gamma_reference: 0.87
+  hic_pseudocount_distance: 5000
+  scale_hic_using_powerlaw: true
+  tss_hic_contribution: 100.0
 
 # ---- Encoding parameters (Stage 2: predictions -> HDF5) ----
 preprocessing_params:
