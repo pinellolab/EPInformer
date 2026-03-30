@@ -110,14 +110,16 @@ This produces `data/roadmap_expression/roadmap_expression_all.csv` with expressi
 
 **Expression column names** (use these in the `expression_column` field of your sample table):
 
-| Cell type | Expression column |
-|-----------|-------------------|
-| K562 | `K562_RPKM` |
-| GM12878 | `GM12878_RPKM` |
-| HepG2 | `HepG2_RPKM` |
-| H1 | `H1_RPKM` |
-| HUVEC | `HUVEC_RPKM` |
-| NHEK | `NHEK_RPKM` |
+| Cell type | Roadmap CSV | Xpresso CSV |
+|-----------|-------------|-------------|
+| K562 | `K562_RPKM` | `Actual_K562` |
+| GM12878 | `GM12878_RPKM` | `Actual_GM12878` |
+| HepG2 | `HepG2_RPKM` | `Actual_HepG2` |
+| H1 | `H1_RPKM` | `Actual_H1` |
+| HUVEC | `HUVEC_RPKM` | `Actual_HUVEC` |
+| NHEK | `NHEK_RPKM` | `Actual_NHEK` |
+
+> **Important:** The column name must match the expression CSV you are using. Roadmap expression CSVs use `{cell}_RPKM`; Xpresso CSVs (`GM12878_K562_18377_gene_expr_fromXpresso.csv`) use `Actual_{cell}`.
 
 ---
 
@@ -195,7 +197,7 @@ A tab-separated file with one row per cell type:
 | `assay` | yes | `dnase` or `atac` |
 | `h3k27ac_bam` | no | H3K27ac ChIP-seq BAM |
 | `hic_file` | no | `.hic` contact matrix |
-| `expression_column` | no | Column name in expression CSV (e.g., `K562_RPKM`) |
+| `expression_column` | no | Column name in expression CSV (e.g., `K562_RPKM` for Roadmap, `Actual_K562` for Xpresso) |
 | `qnorm_ref` | no | Quantile normalization reference |
 | `peaks_file` | no | Pre-called narrowPeak file (skips MACS2 peak calling) |
 | `preset` | no | Cell-type preset: `K562`, `GM12878`, `H1`, `HUVEC`, `NHEK` |
@@ -206,8 +208,8 @@ Example:
 
 ```tsv
 cell_type	accessibility_bam	assay	h3k27ac_bam	hic_file	expression_column	preset
-K562	./data/K562/DNase/ENCFF257HEE.bam	dnase	./data/K562/H3K27ac/ENCFF232RQF.bam	./data/K562/HiC/ENCFF621AIY.hic	K562_RPKM	K562
-GM12878	./data/GM12878/DNase/sample.bam	dnase	./data/GM12878/H3K27ac/sample.bam		GM12878_RPKM	GM12878
+K562	./data/K562/DNase/ENCFF257HEE.bam	dnase	./data/K562/H3K27ac/ENCFF232RQF.bam	./data/K562/HiC/ENCFF621AIY.hic	Actual_K562	K562
+GM12878	./data/GM12878/DNase/sample.bam	dnase	./data/GM12878/H3K27ac/sample.bam		Actual_GM12878	GM12878
 ```
 
 Empty cells in optional columns are treated as unset.
@@ -342,7 +344,7 @@ Solution: `conda install -c bioconda pybedtools`
 KeyError: No expression column found
 ```
 
-Check that your `expression_column` in the sample table matches a column in the expression CSV (e.g., `K562_RPKM`). See the expression column table in Step 2.
+Check that your `expression_column` in the sample table matches a column in the expression CSV. Roadmap CSVs use `K562_RPKM`; Xpresso CSVs use `Actual_K562`. See the expression column table in Step 2.
 
 ### MACS2 peak calling fails or is slow
 
