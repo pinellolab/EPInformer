@@ -73,8 +73,18 @@ python preprocessing/data_prep/build_roadmap_expression.py \
     --output-dir data/roadmap_expression
 
 # --- Preprocessing (ABC outputs → HDF5 for training) ---
-# Generic cell type (uses run_preprocessing.py)
-python run_preprocessing.py with-signals --no-bigwig \
+# With Xpresso expression (18,377 genes, recommended for apple-to-apple comparison)
+python run_preprocessing.py --no-bigwig \
+    --cell-type K562 \
+    --gene-expr-csv data/GM12878_K562_18377_gene_expr_fromXpresso_with_sequence_strand.csv \
+    --predictions ./abc_output/K562/Predictions/EnhancerPredictionsAllPutative.txt \
+    --enhancer-list ./abc_output/K562/EnhancerList.txt \
+    --output-dir ./training_data/K562_run \
+    --include-self-promoter \
+    --fasta /path/to/hg38.fa
+
+# With Roadmap expression (pure Roadmap, no Xpresso features)
+python run_preprocessing.py --no-bigwig \
     --cell-type K562 \
     --gene-expr-csv data/roadmap_expression/roadmap_expression_all.csv \
     --predictions ./abc_output/K562/Predictions/EnhancerPredictionsAllPutative.txt \
@@ -96,13 +106,13 @@ python run_k562_preprocessing.py with-signals \
 # --- Train model ---
 python -u train_EPInformer_abc.py \
     --model_type EPInformer-abc --n_enh_feats 3 \
-    --h5_path ./training_data/k562_run/samples.h5 \
-    --epochs 2 --output_dir ./EPInformer_models/
+    --h5_path ./training_data/K562_run/K562_samples.h5 \
+    --epochs 2 --output_dir ./EPInformer_models/K562_test
 
 # Train with self-promoter removed at training time
 python -u train_EPInformer_abc.py \
     --model_type EPInformer-abc --n_enh_feats 3 \
-    --h5_path ./training_data/k562_run/samples.h5 \
+    --h5_path ./training_data/K562_run/K562_samples.h5 \
     --rm_self_promoter --epochs 2 --output_dir ./EPInformer_models_noselfprm/
 ```
 
@@ -132,8 +142,8 @@ Raw Data (FASTA, BigWig signals, CSV expression, ABC links)
 - `extract.py`: Extracts promoter-enhancer sequences and signals from FASTA/BigWig files
 - `hdf5.py`: HDF5 I/O. Structure: `seq_code` (N, 1+n_enh, L, 4), `activity`, `dhs`, `distance`, `contact`, `seq_signal`
 - `links.py`: Encodes enhancer-gene links with ABC scores
-- `pipelines_legacy.py`: Legacy cell-type-specific preprocessing pipelines. Gene matching uses `_map_symbol_to_ensid()` to convert ABC gene symbols (TargetGene) → ENSID before merging with expression CSV.
-- `abc/`: Streamlined ABC pipeline (candidates → neighborhoods → contact → predictions → encoder data). Entry point: `run_abc_pipeline()` in `__init__.py`. Supports cell-type presets (K562, GM12878, etc.) and `max_encoder_peaks` filtering.
+- `pipelines_legacy.py`: Legacy cell-type-specific preprocessing pipelines. Gene matching uses `_map_symbol_to_ensid()` which auto-detects whether `TargetGene` contains ENSIDs or gene symbols — if ENSIDs (>50% match), uses them directly; otherwise maps symbols → ENSID via expression CSV `Gene name` column. Enhancers are sorted by absolute distance to TSS (nearest first) and capped at 60 per gene. No minimum distance filter by default (all enhancers including ≤1kb are kept).
+- `abc/`: Streamlined ABC pipeline (candidates → neighborhoods → contact → predictions → encoder data). Entry point: `run_abc_pipeline()` in `__init__.py`. Supports cell-type presets (K562, GM12878, etc.) and `max_encoder_peaks` filtering. MACS2 settings match original Broad ABC pipeline (`-p 0.1`, `--nomodel`, `--shift -75`, `--extsize 150`). Presets use `XpressoGeneBounds.hg38.bed` (18,377 genes). `TargetGene` outputs ENSID with `TargetGeneSymbol` for gene symbols. Default `max_distance=1MB`.
 
 **`src/scripts/`** — Training utilities:
 - `utils.py`: Data processing and normalization
@@ -156,7 +166,11 @@ Raw Data (FASTA, BigWig signals, CSV expression, ABC links)
 
 ### Gene ID Matching
 
-ABC pipeline outputs use **gene symbols** (e.g., `BET1L`, `K562`) in `TargetGene`, while the expression CSV uses **ENSID** (e.g., `ENSG00000000003`). The pipeline maps symbols → ENSID via `_map_symbol_to_ensid()` using the `Gene name` column in the expression CSV, then merges on `ENSID`. Both `ENSID` and `Gene name` are kept in the enhancer-gene table through to HDF5.
+The new ABC pipeline outputs **ENSID** (e.g., `ENSG00000000003`) in `TargetGene` and gene symbols in `TargetGeneSymbol`. Legacy ABC outputs use gene symbols in `TargetGene`. The encoding pipeline (`_map_symbol_to_ensid()`) auto-detects the format: if `TargetGene` values match known ENSIDs, they are used directly; otherwise symbols are mapped via the expression CSV `Gene name` column. The merge with expression data always joins on `ENSID`.
+
+### Enhancer Slot Ordering
+
+Enhancers are sorted by **absolute distance** to TSS (nearest first) and capped at 60 per gene. Slot 0 is reserved for the self-promoter element (if `--include-self-promoter`), which is the gene's own promoter region (`isSelfPromoter=True`, typically `class=promoter`, distance 0–2kb). Remaining slots fill with the next closest enhancers. With `--rm_self_promoter` at training time, elements with `abs(distance) < 1kb` are skipped and remaining enhancers shift up.
 
 ### Data
 
