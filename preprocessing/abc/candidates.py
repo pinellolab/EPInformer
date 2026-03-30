@@ -239,11 +239,9 @@ def define_candidates(
         "--nomodel",
         "--shift", str(shift),
         "--extsize", str(extsize),
-        "-B", "--SPMR",
-        "--nolambda",
         "--keep-dup", "all",
         "--call-summits",
-        "-p", "0.01",
+        "-p", "0.1",
         "-n", "peaks",
         "--outdir", macs2_dir,
     ]

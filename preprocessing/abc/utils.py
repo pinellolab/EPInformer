@@ -427,6 +427,9 @@ def load_gene_bed(
     # Strand-aware TSS
     df["tss"] = np.where(df["strand"] == "+", df["start"], df["end"])
 
+    # Fill empty gene symbols with ENSID fallback
+    df["symbol"] = df["symbol"].replace("", np.nan).fillna(df["ENSID"])
+
     # Strip ENSID version suffix (e.g. ENSG00000177951.6 → ENSG00000177951)
     df["ENSID"] = df["ENSID"].astype(str).str.replace(r"\.\d+$", "", regex=True)
 

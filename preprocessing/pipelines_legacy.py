@@ -87,18 +87,34 @@ def _orf_density_alias(cage_xpresso_df: pd.DataFrame) -> pd.DataFrame:
 
 
 def _map_symbol_to_ensid(promoter_enhancer_df: pd.DataFrame, cage_xpresso_df: pd.DataFrame) -> pd.DataFrame:
-    """Map ABC TargetGene (gene symbol) → ENSID using expression CSV lookup.
+    """Map ABC TargetGene → ENSID using expression CSV lookup.
 
-    ABC output uses gene symbols (e.g. BET1L) while the expression CSV indexes
-    by ENSID (e.g. ENSG00000000003).  This creates a ``TargetGene_ENSID`` column
-    so the downstream merge can join on ENSID.
+    If TargetGene already contains ENSIDs (e.g. ENSG00000000003), use them
+    directly.  Otherwise map gene symbols (e.g. BET1L) via the expression CSV
+    ``Gene name`` column.  Creates a ``TargetGene_ENSID`` column for downstream
+    merge.
     """
-    symbol_to_ensid = cage_xpresso_df.set_index("Gene name")["ENSID"].to_dict()
-    promoter_enhancer_df["TargetGene_ENSID"] = promoter_enhancer_df["TargetGene"].map(symbol_to_ensid)
-    n_mapped = promoter_enhancer_df["TargetGene_ENSID"].notna().sum()
-    n_genes = promoter_enhancer_df.loc[promoter_enhancer_df["TargetGene_ENSID"].notna(), "TargetGene"].nunique()
-    n_total_genes = promoter_enhancer_df["TargetGene"].nunique()
-    print(f"Gene symbol → ENSID: {n_genes}/{n_total_genes} genes mapped ({n_mapped}/{len(promoter_enhancer_df)} rows)")
+    known_ensids = set(cage_xpresso_df["ENSID"].dropna().astype(str))
+    sample = promoter_enhancer_df["TargetGene"].dropna().head(100)
+    ensid_frac = sample.isin(known_ensids).mean()
+
+    if ensid_frac > 0.5:
+        # TargetGene already contains ENSIDs — use directly
+        promoter_enhancer_df["TargetGene_ENSID"] = promoter_enhancer_df["TargetGene"]
+        n_mapped = promoter_enhancer_df["TargetGene_ENSID"].isin(known_ensids).sum()
+        n_genes = promoter_enhancer_df.loc[
+            promoter_enhancer_df["TargetGene_ENSID"].isin(known_ensids), "TargetGene"
+        ].nunique()
+        n_total_genes = promoter_enhancer_df["TargetGene"].nunique()
+        print(f"TargetGene already ENSID: {n_genes}/{n_total_genes} genes matched ({n_mapped}/{len(promoter_enhancer_df)} rows)")
+    else:
+        # TargetGene contains gene symbols — map via expression CSV
+        symbol_to_ensid = cage_xpresso_df.set_index("Gene name")["ENSID"].to_dict()
+        promoter_enhancer_df["TargetGene_ENSID"] = promoter_enhancer_df["TargetGene"].map(symbol_to_ensid)
+        n_mapped = promoter_enhancer_df["TargetGene_ENSID"].notna().sum()
+        n_genes = promoter_enhancer_df.loc[promoter_enhancer_df["TargetGene_ENSID"].notna(), "TargetGene"].nunique()
+        n_total_genes = promoter_enhancer_df["TargetGene"].nunique()
+        print(f"Gene symbol → ENSID: {n_genes}/{n_total_genes} genes mapped ({n_mapped}/{len(promoter_enhancer_df)} rows)")
     return promoter_enhancer_df
 
 
@@ -937,7 +953,7 @@ def obtain_PE_withSignals(
 
     _fa = fasta_path or _DEFAULT_FASTA_PINELLO
     fasta_extractor = FastaStringExtractor(_fa)
-    _min_dist = max(min_distance, max_seq_len / 2)
+    _min_dist = min_distance
     gene_enhancer_expr_sub_df = gene_enhancer_expr_df[
         (gene_enhancer_expr_df["distance"] <= max_distance)
         & (gene_enhancer_expr_df["distance"] > _min_dist)
@@ -1068,7 +1084,7 @@ def obtain_PE_withSignals(
     for row_i, ensid in enumerate(tqdm.tqdm(ensid_list)):
         gene_df = gene_enhancer_expr_sub_df[
             gene_enhancer_expr_sub_df["ENSID"] == ensid
-        ].sort_values(by="distance_relative")
+        ].sort_values(by="distance_relative", key=lambda x: x.abs())
 
         row_0 = gene_df.iloc[0]
         gene_tss = row_0["TSS_y"]
@@ -1259,7 +1275,7 @@ def obtain_K562_PE_withSignals(
 
     _fa = fasta_path or _DEFAULT_FASTA_PINELLO
     fasta_extractor = FastaStringExtractor(_fa)
-    _min_dist = max(min_distance, max_seq_len / 2)  # never closer than half the window
+    _min_dist = min_distance
     gene_enhancer_expr_sub_df = gene_enhancer_expr_df[
         (gene_enhancer_expr_df["distance"] <= max_distance)
         & (gene_enhancer_expr_df["distance"] > _min_dist)
@@ -1422,7 +1438,7 @@ def obtain_K562_PE_withSignals(
     for row_i, ensid in enumerate(tqdm.tqdm(ensid_list)):
         gene_df = gene_enhancer_expr_sub_df[
             gene_enhancer_expr_sub_df["ENSID"] == ensid
-        ].sort_values(by="distance_relative")
+        ].sort_values(by="distance_relative", key=lambda x: x.abs())
 
         row_0 = gene_df.iloc[0]
         gene_tss = row_0["TSS_y"]

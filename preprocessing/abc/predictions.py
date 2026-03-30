@@ -207,7 +207,14 @@ def predict_abc(
 
     # Gene-side columns from the gene list (may have suffixes from the merge)
     # Map TargetGene info
-    pairs["TargetGene"] = pairs["symbol"]
+    # Resolve ENSID column (may be 'ENSID', 'Ensembl_ID', or with '_gene' suffix)
+    _ensid_col = None
+    for _c in ("ENSID", "Ensembl_ID", "ENSID_gene", "Ensembl_ID_gene"):
+        if _c in pairs.columns:
+            _ensid_col = _c
+            break
+    pairs["TargetGene"] = pairs[_ensid_col] if _ensid_col else pairs["symbol"]
+    pairs["TargetGeneSymbol"] = pairs["symbol"]
     pairs["TargetGeneTSS"] = pairs["tss"]
 
     # Expression
@@ -258,7 +265,7 @@ def predict_abc(
     output_columns = [
         "chr", "start", "end", "name", "class",
         "activity_base",
-        "TargetGene", "TargetGeneTSS", "TargetGeneExpression",
+        "TargetGene", "TargetGeneSymbol", "TargetGeneTSS", "TargetGeneExpression",
         "TargetGenePromoterActivityQuantile", "TargetGeneIsExpressed",
         "distance", "isSelfPromoter",
         "powerlaw_contact", "powerlaw_contact_reference",
