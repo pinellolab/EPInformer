@@ -6,7 +6,7 @@ reference:
   fasta: ./data/reference/hg38/hg38.fa
   gene_bed: ./data/reference/hg38/XpressoGeneBounds.hg38.bed
   chrom_sizes: ./data/reference/hg38/GRCh38_EBV.chrom.sizes.tsv
-  expression_csv: ./data/GM12878_K562_18377_gene_expr_fromXpresso_with_sequence_strand.csv
+  expression_csv: ./data/GM12878_K562_18377_gene_expr_fromXpresso.csv
   blacklist: null
 
 # ---- Element-gene link parameters (Stage 1: BAM -> predictions) ----
