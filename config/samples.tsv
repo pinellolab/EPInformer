@@ -1,3 +1,3 @@
 cell_type	accessibility_bam	assay	h3k27ac_bam	hic_file	expression_column	preset
 K562	./data/K562/DNase/ENCFF257HEE.bam	dnase	./data/K562/H3K27ac/ENCFF232RQF.bam	./data/K562/HiC/ENCFF621AIY.hic	Actual_K562	K562
-GM12878	./data/GM12878/DNase/sample.bam	dnase	./data/GM12878/H3K27ac/sample.bam		Actual_GM12878	GM12878
+GM12878	./data/GM12878/DNase/ENCFF729UYK.bam	dnase	./data/GM12878/H3K27ac/ENCFF269GKF.bam	./data/GM12878/HiC/ENCFF318GOM.hic	Actual_GM12878	GM12878

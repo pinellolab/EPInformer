@@ -16,6 +16,7 @@ GM12878_peak_5bins_around_summit_activity_sequence_new.csv
 
 # Pipeline outputs
 abc_output/
+batch_output/
 
 # Test outputs
 test/
