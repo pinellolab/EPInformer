@@ -98,6 +98,12 @@ def run_abc_pipeline(
     include_promoter_region: bool = False,
     dry_run: bool = False,
     n_threads: int = 1,
+    hic_gamma: float = 1.024238616787792,
+    hic_scale: float = 5.9594510043736655,
+    hic_gamma_reference: float = 0.87,
+    hic_pseudocount_distance: int = 5000,
+    scale_hic_using_powerlaw: bool = True,
+    tss_hic_contribution: float = 100.0,
 ) -> dict:
     """Run the full ABC pipeline.
 
@@ -202,6 +208,11 @@ def run_abc_pipeline(
         hic_file=hic_file, max_distance=max_distance, gamma=gamma,
         tss_slop=tss_slop, hic_resolution=hic_resolution,
         cell_type=cell_type, n_threads=n_threads,
+        hic_gamma=hic_gamma, hic_scale=hic_scale,
+        hic_gamma_reference=hic_gamma_reference,
+        hic_pseudocount_distance=hic_pseudocount_distance,
+        scale_hic_using_powerlaw=scale_hic_using_powerlaw,
+        tss_hic_contribution=tss_hic_contribution,
     )
     outputs["predictions"] = predictions_path
     logger.done()

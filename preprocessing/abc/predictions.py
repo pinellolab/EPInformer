@@ -15,7 +15,7 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 
-from .contact import load_hic, get_contacts_for_pairs
+from .contact import load_hic, get_contacts_for_pairs, qc_hic
 
 
 # ---------------------------------------------------------------------------
@@ -47,6 +47,12 @@ def predict_abc(
     hic_resolution: int = 5000,
     cell_type: str = "K562",
     n_threads: int = 1,
+    hic_gamma: float = 1.024238616787792,
+    hic_scale: float = 5.9594510043736655,
+    hic_gamma_reference: float = 0.87,
+    hic_pseudocount_distance: int = 5000,
+    scale_hic_using_powerlaw: bool = True,
+    tss_hic_contribution: float = 100.0,
 ) -> str:
     """Compute ABC scores for all gene-enhancer pairs (ABC Step 3).
 
@@ -72,6 +78,18 @@ def predict_abc(
         Hi-C bin resolution in bp (default 5000).
     cell_type : str
         Label for the CellType column in the output (default ``"K562"``).
+    hic_gamma : float
+        Fitted Hi-C power-law gamma (default from Broad ABC).
+    hic_scale : float
+        Fitted Hi-C power-law scale (default from Broad ABC).
+    hic_gamma_reference : float
+        Reference gamma for power-law scaling (default 0.87).
+    hic_pseudocount_distance : int
+        Distance at which pseudocount is evaluated (default 5000).
+    scale_hic_using_powerlaw : bool
+        Whether to scale Hi-C by reference/observed power-law ratio.
+    tss_hic_contribution : float
+        Diagonal correction factor (default 100).
 
     Returns
     -------
@@ -99,7 +117,11 @@ def predict_abc(
     hic_data = None
     if hic_file is not None:
         _log(f"Loading Hi-C data from {hic_file} ...")
-        hic_data = load_hic(hic_file, resolution=hic_resolution)
+        hic_data = load_hic(
+            hic_file,
+            resolution=hic_resolution,
+            tss_hic_contribution=tss_hic_contribution,
+        )
 
     # ------------------------------------------------------------------
     # 3. Build gene-enhancer pairs within max_distance of TSS
@@ -145,23 +167,53 @@ def predict_abc(
     _log(f"Generated {len(pairs)} pairs across {n_genes} genes")
 
     # ------------------------------------------------------------------
-    # 4. Compute contact scores
+    # 4. Mark isSelfPromoter (needed before Hi-C QC)
     # ------------------------------------------------------------------
-    # Prepare columns expected by get_contacts_for_pairs
+    element_half_width = ((pairs["end"] - pairs["start"]) / 2).values
+    pairs["isSelfPromoter"] = (
+        (pairs["distance"].values) < (tss_slop + element_half_width)
+    )
+
+    # ------------------------------------------------------------------
+    # 5. Map TargetGene (needed for Hi-C QC grouping)
+    # ------------------------------------------------------------------
+    _ensid_col = None
+    for _c in ("ENSID", "Ensembl_ID", "ENSID_gene", "Ensembl_ID_gene"):
+        if _c in pairs.columns:
+            _ensid_col = _c
+            break
+    pairs["TargetGene"] = pairs[_ensid_col] if _ensid_col else pairs["symbol"]
+    pairs["TargetGeneSymbol"] = pairs["symbol"]
+    pairs["TargetGeneTSS"] = pairs["tss"]
+
+    # ------------------------------------------------------------------
+    # 6. Compute contact scores (Broad ABC order)
+    # ------------------------------------------------------------------
     pairs["chrom"] = pairs["chr"]
 
     pairs = get_contacts_for_pairs(
-        pairs, hic_data=hic_data, gamma=gamma, resolution=hic_resolution
+        pairs,
+        hic_data=hic_data,
+        hic_gamma=hic_gamma,
+        hic_scale=hic_scale,
+        hic_gamma_reference=hic_gamma_reference,
+        hic_pseudocount_distance=hic_pseudocount_distance,
+        scale_hic_using_powerlaw=scale_hic_using_powerlaw,
+        resolution=hic_resolution,
     )
 
+    # Hi-C QC: replace genes with insufficient coverage
+    if hic_data is not None and "hic_contact" in pairs.columns:
+        pairs = qc_hic(pairs, hic_gamma, hic_scale, hic_resolution)
+
     # Determine which contact column to use for ABC scoring
-    if hic_data is not None and "hic_contact_pl_scaled" in pairs.columns:
-        pairs["contact"] = pairs["hic_contact_pl_scaled"]
+    if hic_data is not None and "hic_contact_pl_scaled_adj" in pairs.columns:
+        pairs["contact"] = pairs["hic_contact_pl_scaled_adj"]
     else:
         pairs["contact"] = pairs["powerlaw_contact"]
 
     # ------------------------------------------------------------------
-    # 5. Compute ABC scores (per-gene normalization)
+    # 7. Compute ABC scores (per-gene normalization)
     # ------------------------------------------------------------------
     _log("Computing ABC scores ...")
 
@@ -172,7 +224,6 @@ def predict_abc(
     pairs["powerlaw.Score.Numerator"] = pairs["activity_base"] * pairs["powerlaw_contact"]
 
     # Determine gene grouping key
-    # Use (symbol, tss) combination if symbol is available, otherwise tss alone
     if "symbol" in pairs.columns:
         gene_key = ["symbol", "tss"]
     else:
@@ -194,28 +245,8 @@ def predict_abc(
     )
 
     # ------------------------------------------------------------------
-    # 6. Mark isSelfPromoter
+    # 8. Format output columns
     # ------------------------------------------------------------------
-    element_half_width = ((pairs["end"] - pairs["start"]) / 2).values
-    pairs["isSelfPromoter"] = (
-        (pairs["distance"].values) < (tss_slop + element_half_width)
-    )
-
-    # ------------------------------------------------------------------
-    # 7. Format output columns
-    # ------------------------------------------------------------------
-
-    # Gene-side columns from the gene list (may have suffixes from the merge)
-    # Map TargetGene info
-    # Resolve ENSID column (may be 'ENSID', 'Ensembl_ID', or with '_gene' suffix)
-    _ensid_col = None
-    for _c in ("ENSID", "Ensembl_ID", "ENSID_gene", "Ensembl_ID_gene"):
-        if _c in pairs.columns:
-            _ensid_col = _c
-            break
-    pairs["TargetGene"] = pairs[_ensid_col] if _ensid_col else pairs["symbol"]
-    pairs["TargetGeneSymbol"] = pairs["symbol"]
-    pairs["TargetGeneTSS"] = pairs["tss"]
 
     # Expression
     expr_col = None
@@ -228,12 +259,10 @@ def predict_abc(
     else:
         pairs["TargetGeneExpression"] = np.nan
 
-    # TargetGeneIsExpressed
     pairs["TargetGeneIsExpressed"] = (
         pairs["TargetGeneExpression"].fillna(0) > 0.5
     )
 
-    # PromoterActivityQuantile
     paq_col = None
     for candidate in ("PromoterActivityQuantile", "PromoterActivityQuantile_gene"):
         if candidate in pairs.columns:
@@ -243,17 +272,18 @@ def predict_abc(
         pairs[paq_col] if paq_col is not None else np.nan
     )
 
-    # Fill in columns with reasonable defaults for those we don't fully compute
+    # Fill in columns with reasonable defaults
     if "hic_contact" not in pairs.columns:
         pairs["hic_contact"] = np.nan
     if "hic_contact_pl_scaled" not in pairs.columns:
         pairs["hic_contact_pl_scaled"] = np.nan
+    if "hic_contact_pl_scaled_adj" not in pairs.columns:
+        pairs["hic_contact_pl_scaled_adj"] = pairs["hic_contact_pl_scaled"]
+    if "powerlaw_contact_reference" not in pairs.columns:
+        pairs["powerlaw_contact_reference"] = pairs["powerlaw_contact"]
+    if "hic_pseudocount" not in pairs.columns:
+        pairs["hic_pseudocount"] = 0.0
 
-    pairs["powerlaw_contact_reference"] = pairs["powerlaw_contact"]
-    pairs["hic_pseudocount"] = 0.0
-    pairs["hic_contact_pl_scaled_adj"] = pairs["hic_contact_pl_scaled"]
-
-    # Ensure normalized columns exist
     if "normalized_h3K27ac" not in pairs.columns:
         pairs["normalized_h3K27ac"] = 0.0
     if "normalized_dhs" not in pairs.columns:
@@ -261,7 +291,6 @@ def predict_abc(
 
     pairs["CellType"] = cell_type
 
-    # Define final output column order
     output_columns = [
         "chr", "start", "end", "name", "class",
         "activity_base",
@@ -277,9 +306,7 @@ def predict_abc(
         "normalized_h3K27ac", "normalized_dhs",
     ]
 
-    # Only keep columns that exist (in case of unexpected missing columns)
     output_columns = [c for c in output_columns if c in pairs.columns]
-
     output_df = pairs[output_columns].copy()
 
     # ------------------------------------------------------------------
