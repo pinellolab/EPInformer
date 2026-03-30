@@ -3,6 +3,7 @@
 ## Files
 
 - **config.yaml** -- Main configuration (reference files, algorithm parameters, output settings)
+- **parity_k562_training.yaml** -- Optional preset: Xpresso `expression_csv` + `abc_params.include_self_promoter: true` for fairer comparison with [`train_EPInformer_abc.py`](../train_EPInformer_abc.py) defaults and [`run_k562_preprocessing.py`](../run_k562_preprocessing.py)-style self-promoter handling (see [docs/why_new_hdf5_underperforms.md](../docs/why_new_hdf5_underperforms.md))
 - **samples.tsv** -- Sample table with one row per cell type
 
 ## Sample Table Columns
@@ -28,6 +29,9 @@ Empty cells in optional columns are treated as unset (uses defaults).
 ```bash
 # Run full pipeline for all samples
 python run_pipeline.py --config config/config.yaml
+
+# Training-parity-oriented preset (Xpresso CSV + self-promoter in Stage 1)
+python run_pipeline.py --config config/parity_k562_training.yaml
 
 # Element-gene links only, single sample
 python run_pipeline.py --config config/config.yaml --stages links --samples K562

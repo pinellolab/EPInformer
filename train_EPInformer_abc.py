@@ -79,9 +79,21 @@ class promoter_enhancer_dataset(Dataset):
         self._promoter_seq = torch.from_numpy(self.data_h5['promoter_seq'][:]).share_memory_()
         self._gene_enh_idx = torch.from_numpy(self.data_h5['gene_enh_idx'][:].astype(np.int64)).share_memory_()
         self._enhancer_seq = torch.from_numpy(self.data_h5['enhancer_seq'][:]).share_memory_()
-        self._distance = torch.from_numpy(self.data_h5['distance'][:].astype(np.float64)).share_memory_()
-        self._activity = torch.from_numpy(self.data_h5['activity'][:].astype(np.float64)).share_memory_()
-        self._contact = torch.from_numpy(self.data_h5['contact'][:].astype(np.float64)).share_memory_()
+
+        def _nan_to_num_feat(name, arr):
+            a = np.asarray(arr, dtype=np.float64)
+            n_nan = int(np.isnan(a).sum())
+            if n_nan:
+                print(
+                    f"  Warning: {n_nan} NaN(s) in HDF5 '{name}' — replacing with 0.0 "
+                    "(common for missing Hi-C contact)."
+                )
+            a = np.nan_to_num(a, nan=0.0, posinf=0.0, neginf=0.0)
+            return torch.from_numpy(a).share_memory_()
+
+        self._distance = _nan_to_num_feat('distance', self.data_h5['distance'][:])
+        self._activity = _nan_to_num_feat('activity', self.data_h5['activity'][:])
+        self._contact = _nan_to_num_feat('contact', self.data_h5['contact'][:])
         self.data_h5.close()
         del self.data_h5
 

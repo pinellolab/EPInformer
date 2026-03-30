@@ -21,7 +21,7 @@ abc_params:
   max_encoder_peaks: 100000
   include_self_promoter: false
   include_promoter_region: false
-  n_threads: 4
+  n_threads: 12  # keep in sync with slurm/run_pipeline_cpu.slurm #SBATCH --cpus-per-task
 
 # ---- Encoding parameters (Stage 2: predictions -> HDF5) ----
 preprocessing_params:

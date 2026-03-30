@@ -1,4 +1,5 @@
 # EPInformer training / preprocessing (see CLAUDE.md)
+biopython
 pandas
 scipy
 scikit-learn
@@ -12,4 +13,7 @@ kipoiseq
 openpyxl
 tangermeme
 pyBigWig
+pysam
+pybedtools
+hic-straw
 pyyaml

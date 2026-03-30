@@ -1,0 +1,14 @@
+# Command-line tools for ABC / K562 preprocessing (checked by preprocessing/abc/utils.py).
+# They must be on PATH inside the same conda env you use for Python.
+#
+# bedtools and samtools (Bioconda):
+#   conda install -c bioconda -y bedtools samtools
+#
+# MACS2: prefer pip in this env so extensions link against your current Python/numpy/libm.
+# Bioconda MACS2 builds sometimes fail at import with:
+#   ImportError: ... ScoreTrack...so: undefined symbol: __log_finite
+# Fix:
+#   conda remove -y --force macs2   # only if conda installed macs2
+#   pip install macs2
+#
+# (Older one-liner was: conda install -c bioconda -y macs2 bedtools samtools)

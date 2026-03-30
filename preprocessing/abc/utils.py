@@ -95,8 +95,9 @@ class StepLogger:
 
 _INSTALL_HINTS = {
     "macs2": (
-        "Install via conda:  conda install -c bioconda macs2\n"
-        "  Or via pip:         pip install macs2"
+        "Install via pip (recommended):  pip install macs2\n"
+        "  Or conda:  conda install -c bioconda macs2\n"
+        "  If you see ImportError: undefined symbol __log_finite, use pip after conda remove --force macs2."
     ),
     "bedtools": (
         "Install via conda:  conda install -c bioconda bedtools\n"

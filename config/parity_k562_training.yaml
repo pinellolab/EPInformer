@@ -1,0 +1,43 @@
+# Parity-oriented preset when benchmarking against Xpresso-based training and
+# self-promoter-inclusive ABC (see docs/why_new_hdf5_underperforms.md).
+#
+# Usage (from repo root, after editing samples.tsv paths as needed):
+#   python run_pipeline.py --config config/parity_k562_training.yaml
+#
+# Diff vs config/config.yaml:
+#   - reference.expression_csv -> GM12878+K562 Xpresso CSV (matches train_EPInformer_abc.py default)
+#   - abc_params.include_self_promoter -> true (align Stage 1 with CLAUDE.md / run_k562 --include-self-promoter)
+
+samples_table: samples.tsv
+
+reference:
+  fasta: ./data/reference/hg38/hg38.fa
+  gene_bed: ./data/reference/hg38/CollapsedGeneBounds.hg38.bed
+  chrom_sizes: ./data/reference/hg38/GRCh38_EBV.chrom.sizes.tsv
+  expression_csv: ./data/GM12878_K562_18377_gene_expr_fromXpresso_with_sequence_strand.csv
+  blacklist: null
+
+abc_params:
+  n_top_peaks: 150000
+  peak_extend: 250
+  max_distance: 2500000
+  gamma: 0.87
+  tss_slop: 500
+  hic_resolution: 5000
+  neg_fraction: 0.05
+  max_encoder_peaks: 100000
+  include_self_promoter: true
+  include_promoter_region: false
+  n_threads: 12
+
+preprocessing_params:
+  min_distance: 0
+  max_distance: 100000
+  n_enhancer: 60
+  max_seq_len: 2000
+  include_self_promoter: true
+  tss_column: TSS_xpresso
+  no_bigwig: true
+
+output:
+  base_dir: ./batch_output
