@@ -3,9 +3,11 @@ Generate sequence encoder training data (Step 4).
 
 Produces 256bp sequences with activity labels for pre-training
 the ``enhancer_predictor_256bp`` model.  For each candidate peak,
-five bins of 256bp are extracted at offsets [-3, -2, -1, 0, +1]
-relative to the summit.  Optional negative samples are added from
-randomly chosen genomic positions far from any peak.
+five bins of 256bp are extracted at offsets [-2, -1, 0, 1, 2]
+relative to the summit.  Activity (DNase RPM, or √(H3K27ac·DNase) when
+both BAMs are provided) is computed **per 256bp bin**, not over the full
+MACS peak interval.  Optional negative samples are added from randomly
+chosen genomic positions far from any peak.
 """
 
 import os
@@ -54,6 +56,41 @@ def _load_chrom_sizes(path):
     """Return a dict mapping chromosome name → length from a TSV file."""
     df = pd.read_csv(path, sep="\t", header=None, names=["chrom", "size"])
     return dict(zip(df["chrom"], df["size"]))
+
+
+def _normalize_macs_peak_name(name):
+    """MACS2 ``callpeak -n peaks`` emits names like ``peaks_peak_123``; collapse to ``peaks_123``."""
+    s = str(name)
+    if s.startswith("peaks_peak_"):
+        return "peaks_" + s[len("peaks_peak_") :]
+    return s
+
+
+def _build_bin_intervals(df, chrom_sizes, id_col="peak_idx", summit_col="summit"):
+    """256bp windows matching ``_extract_chrom_sequences`` (one row per valid bin)."""
+    records = []
+    for _, row in df.iterrows():
+        chrom = row["chr"]
+        clen = chrom_sizes.get(chrom, 0)
+        summit = int(row[summit_col])
+        pid = int(row[id_col])
+        name = row["name"]
+        for offset in _OFFSETS:
+            center = summit + offset * _STRIDE
+            start = center - _HALF_BIN
+            end = center + _HALF_BIN
+            if start < 0 or end > clen:
+                continue
+            records.append({
+                id_col: pid,
+                "name": name,
+                "chr": chrom,
+                "summit": summit,
+                "offset": offset,
+                "start": int(start),
+                "end": int(end),
+            })
+    return pd.DataFrame(records)
 
 
 def _generate_negative_regions(
@@ -139,19 +176,29 @@ def _generate_negative_regions(
 # Public API
 # ---------------------------------------------------------------------------
 
-def _extract_chrom_sequences(fasta_path, chrom, chrom_rows, chrom_sizes, has_h3k27ac):
-    """Extract 5-bin sequences for all peaks on one chromosome (thread worker)."""
+def _extract_chrom_sequences(
+    fasta_path,
+    chrom,
+    chrom_rows,
+    chrom_sizes,
+    has_h3k27ac,
+    bin_lookup,
+    id_col,
+):
+    """Extract 5-bin sequences; RPM and Activity come from *bin_lookup* (per 256bp bin)."""
     fasta = pyfaidx.Fasta(fasta_path)
     rows = []
     for _, row in tqdm(chrom_rows.iterrows(), total=len(chrom_rows),
                        desc=f"  {chrom}", leave=False, ncols=80):
         summit = int(row["summit"])
         name = row["name"]
-        dhs_rpm = float(row.get("DHS.RPM", 0.0))
-        h3k27ac_rpm = float(row.get("H3K27ac.RPM", 0.0)) if has_h3k27ac else 0.0
-        activity = float(row.get("activity_base", dhs_rpm))
+        pid = int(row[id_col])
 
         for offset in _OFFSETS:
+            key = (pid, offset)
+            if key not in bin_lookup.index:
+                continue
+
             center = summit + offset * _STRIDE
             start = center - _HALF_BIN
             end = center + _HALF_BIN
@@ -159,6 +206,11 @@ def _extract_chrom_sequences(fasta_path, chrom, chrom_rows, chrom_sizes, has_h3k
             seq = _extract_sequence(fasta, chrom, start, end, chrom_sizes)
             if seq is None:
                 continue
+
+            stats = bin_lookup.loc[key]
+            dhs_rpm = float(stats["DHS.RPM"])
+            h3k27ac_rpm = float(stats["H3K27ac.RPM"]) if has_h3k27ac else 0.0
+            activity = float(stats["activity_base"])
 
             rows.append({
                 "Name": name,
@@ -193,8 +245,8 @@ def generate_encoder_data(
     """Generate 256bp sequences + activity labels for encoder pre-training.
 
     Reads the raw MACS2 narrowPeak file, selects the top *max_peaks* summits
-    by signalValue, counts BAM reads for activity labels, extracts 5 bins of
-    256bp around each summit, and adds negative samples.
+    by signalValue, counts BAM reads **in each 256bp bin** for activity labels,
+    extracts 5 bins around each summit, and adds negative samples.
 
     Parameters
     ----------
@@ -242,63 +294,72 @@ def generate_encoder_data(
     n_select = min(max_peaks, n_total)
     peaks = peaks.nlargest(n_select, "signalValue").reset_index(drop=True)
     peaks["summit"] = peaks["start"] + peaks["peak"]
+    peaks["name"] = peaks["name"].map(_normalize_macs_peak_name)
 
     logger.info(f"Selected top {n_select} summits by signalValue (from {n_total} total peaks)")
 
     # -----------------------------------------------------------------
-    # 2. Count BAM reads for activity labels
+    # 2. Count BAM reads per 256bp bin (matches sequence windows)
     # -----------------------------------------------------------------
     chrom_sizes = _load_chrom_sizes(chrom_sizes_path)
 
     from .utils import count_reads_in_regions
 
-    # Build regions for read counting (peak regions around summits)
     regions = peaks[["chr", "start", "end", "name", "summit"]].copy()
     n_pos = len(regions)
+    regions["peak_idx"] = np.arange(n_pos, dtype=np.int64)
+    merged = regions
 
-    # Generate negative regions
     n_neg = max(1, int(n_pos * neg_fraction))
     peak_bed = pybedtools.BedTool([
         (str(r["chr"]), int(r["start"]), int(r["end"]))
         for _, r in regions.iterrows()
     ]).sort()
     neg_df = _generate_negative_regions(peak_bed, chrom_sizes, n_neg, blacklist=blacklist)
+    neg_df["neg_idx"] = np.arange(len(neg_df), dtype=np.int64)
 
-    # Combine positive and negative for BAM counting
-    all_regions = pd.concat([regions, neg_df], ignore_index=True)
+    bin_pos = _build_bin_intervals(merged, chrom_sizes, id_col="peak_idx")
+    bin_neg = _build_bin_intervals(neg_df, chrom_sizes, id_col="neg_idx")
+    n_pos_bins = len(bin_pos)
+    bin_all = pd.concat([bin_pos, bin_neg], ignore_index=True)
 
-    # Count DNase/ATAC reads
-    logger.info("Counting accessibility reads for all regions ...")
-    all_regions = count_reads_in_regions(accessibility_bam, all_regions, n_threads=n_threads)
-    all_regions.rename(columns={
+    logger.info(f"Counting accessibility reads in {len(bin_all)} 256bp bins ...")
+    bin_all = count_reads_in_regions(accessibility_bam, bin_all, n_threads=n_threads)
+    bin_all.rename(columns={
         "readCount": "DHS.readCount", "RPM": "DHS.RPM", "RPKM": "DHS.RPKM",
     }, inplace=True)
 
-    # Count H3K27ac reads (if BAM provided)
     has_h3k27ac = h3k27ac_bam is not None
     if has_h3k27ac:
-        logger.info("Counting H3K27ac reads for all regions ...")
-        h3k_counts = count_reads_in_regions(h3k27ac_bam, all_regions, n_threads=n_threads)
-        all_regions["H3K27ac.RPM"] = h3k_counts["RPM"]
+        logger.info("Counting H3K27ac reads per 256bp bin ...")
+        h3k = count_reads_in_regions(h3k27ac_bam, bin_all[["chr", "start", "end"]], n_threads=n_threads)
+        bin_all["H3K27ac.RPM"] = h3k["RPM"]
+    else:
+        bin_all["H3K27ac.RPM"] = 0.0
 
-    # Compute activity_base
     if has_h3k27ac:
-        all_regions["activity_base"] = np.sqrt(
-            all_regions["H3K27ac.RPM"] * all_regions["DHS.RPM"]
+        bin_all["activity_base"] = np.sqrt(
+            bin_all["H3K27ac.RPM"] * bin_all["DHS.RPM"]
         )
     else:
-        all_regions["activity_base"] = all_regions["DHS.RPM"]
+        bin_all["activity_base"] = bin_all["DHS.RPM"]
 
-    # Split back
-    merged = all_regions.iloc[:n_pos].copy()
-    neg_df = all_regions.iloc[n_pos:].copy()
+    pos_bins_df = bin_all.iloc[:n_pos_bins].copy()
+    neg_bins_df = bin_all.iloc[n_pos_bins:].copy()
 
-    has_h3k27ac_col = "H3K27ac.RPM" in merged.columns and merged["H3K27ac.RPM"].sum() > 0
+    pos_lookup = pos_bins_df.set_index(["peak_idx", "offset"])[
+        ["DHS.RPM", "H3K27ac.RPM", "activity_base"]
+    ]
+    neg_lookup = neg_bins_df.set_index(["neg_idx", "offset"])[
+        ["DHS.RPM", "H3K27ac.RPM", "activity_base"]
+    ]
+
+    has_h3k27ac_col = has_h3k27ac and bin_all["H3K27ac.RPM"].sum() > 0
 
     logger.info(
-        f"Activity computed from BAMs — "
-        f"positive mean: {merged['activity_base'].mean():.4f}, "
-        f"negative mean: {neg_df['activity_base'].mean():.4f}"
+        f"Per-bin activity from BAMs — "
+        f"positive bins mean: {pos_bins_df['activity_base'].mean():.4f}, "
+        f"negative bins mean: {neg_bins_df['activity_base'].mean():.4f}"
     )
 
     # -----------------------------------------------------------------
@@ -309,12 +370,17 @@ def generate_encoder_data(
     if n_threads <= 1 or len(grouped) <= 1:
         rows = []
         for chrom, grp in tqdm(grouped.items(), desc="  Extracting sequences", leave=False, ncols=80):
-            rows.extend(_extract_chrom_sequences(fasta_path, chrom, grp, chrom_sizes, has_h3k27ac_col))
+            rows.extend(_extract_chrom_sequences(
+                fasta_path, chrom, grp, chrom_sizes, has_h3k27ac_col, pos_lookup, "peak_idx",
+            ))
     else:
         rows = []
         with ThreadPoolExecutor(max_workers=min(n_threads, len(grouped))) as pool:
             futures = {
-                chrom: pool.submit(_extract_chrom_sequences, fasta_path, chrom, grp, chrom_sizes, has_h3k27ac_col)
+                chrom: pool.submit(
+                    _extract_chrom_sequences,
+                    fasta_path, chrom, grp, chrom_sizes, has_h3k27ac_col, pos_lookup, "peak_idx",
+                )
                 for chrom, grp in grouped.items()
             }
             for chrom, future in tqdm(futures.items(), total=len(futures),
@@ -330,12 +396,17 @@ def generate_encoder_data(
     if n_threads <= 1 or len(neg_grouped) <= 1:
         neg_rows = []
         for chrom, grp in tqdm(neg_grouped.items(), desc="  Negative sequences", leave=False, ncols=80):
-            neg_rows.extend(_extract_chrom_sequences(fasta_path, chrom, grp, chrom_sizes, has_h3k27ac_col))
+            neg_rows.extend(_extract_chrom_sequences(
+                fasta_path, chrom, grp, chrom_sizes, has_h3k27ac_col, neg_lookup, "neg_idx",
+            ))
     else:
         neg_rows = []
         with ThreadPoolExecutor(max_workers=min(n_threads, len(neg_grouped))) as pool:
             futures = {
-                chrom: pool.submit(_extract_chrom_sequences, fasta_path, chrom, grp, chrom_sizes, has_h3k27ac_col)
+                chrom: pool.submit(
+                    _extract_chrom_sequences,
+                    fasta_path, chrom, grp, chrom_sizes, has_h3k27ac_col, neg_lookup, "neg_idx",
+                )
                 for chrom, grp in neg_grouped.items()
             }
             for chrom, future in tqdm(futures.items(), total=len(futures),
