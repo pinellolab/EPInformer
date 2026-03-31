@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>EPInformer batch CV — EPInformer-abc vs EPInformer-v2</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,600;0,9..40,700;1,9..40,400&family=Fraunces:opsz,wght@9..144,500;9..144,700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0e1114;
+      --panel: #161b22;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --accent: #58a6ff;
+      --accent2: #3fb950;
+      --border: #30363d;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "DM Sans", system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.55;
+      font-size: 15px;
+    }
+    .wrap { max-width: 920px; margin: 0 auto; padding: 2.5rem 1.25rem 4rem; }
+    h1 {
+      font-family: "Fraunces", Georgia, serif;
+      font-weight: 700;
+      font-size: 1.85rem;
+      letter-spacing: -0.02em;
+      margin: 0 0 0.35rem;
+      line-height: 1.2;
+    }
+    .sub {
+      color: var(--muted);
+      font-size: 0.95rem;
+      margin-bottom: 2rem;
+    }
+    h2 {
+      font-family: "Fraunces", Georgia, serif;
+      font-size: 1.15rem;
+      margin: 2rem 0 0.75rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+    h3 {
+      font-family: "Fraunces", Georgia, serif;
+      font-size: 1.05rem;
+      margin: 1.35rem 0 0.65rem;
+      font-weight: 600;
+      color: var(--accent);
+    }
+    p { margin: 0 0 1rem; color: #c9d1d9; }
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.25rem 1.35rem;
+      margin: 1rem 0;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.92rem;
+    }
+    th, td {
+      text-align: left;
+      padding: 0.55rem 0.65rem;
+      border-bottom: 1px solid var(--border);
+    }
+    th {
+      color: var(--muted);
+      font-weight: 600;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    tr:last-child td { border-bottom: none; }
+    .num { font-variant-numeric: tabular-nums; text-align: right; }
+    .tag {
+      display: inline-block;
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 0.15rem 0.45rem;
+      border-radius: 4px;
+      background: rgba(88, 166, 255, 0.12);
+      color: var(--accent);
+      margin-right: 0.35rem;
+    }
+    .tag.v2 { background: rgba(63, 185, 80, 0.12); color: var(--accent2); }
+    ul { margin: 0.5rem 0 1rem 1.25rem; color: #c9d1d9; }
+    li { margin: 0.35rem 0; }
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.84em;
+      background: rgba(0,0,0,0.35);
+      padding: 0.12rem 0.35rem;
+      border-radius: 4px;
+    }
+    .foot {
+      margin-top: 2.5rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border);
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>EPInformer-abc vs EPInformer-v2 (batch pipeline)</h1>
+    <p class="sub">12-fold cross-validation · test-set Pearson <em>r</em> · K562 &amp; GM12878 · metrics from <code>log_gpu/</code> (2026-03-30 / 2026-03-31)</p>
+
+    <div class="panel">
+      <p style="margin-bottom:0.75rem"><strong>Scope.</strong> This report summarizes held-out fold performance for gene expression prediction (RNA / Xpresso-matched expression columns) using factored HDF5 from the batch pipeline. Each row is one Slurm array task; Pearson <em>r</em> is the value printed at the end of each fold log (<code>Pearson R:</code>).</p>
+      <p style="margin:0"><strong>Enhancer feats.</strong> <code>n_enh_feats=3</code> uses three enhancer channels (typically distance, ABC activity, Hi-C contact). <code>n_enh_feats=2</code> uses two channels (distance + activity; Hi-C contact omitted). EPInformer-abc runs below use the default 3-feature encoder.</p>
+    </div>
+
+    <h2>Summary (mean ± SD)</h2>
+
+    <h3>K562</h3>
+    <div class="panel">
+      <table>
+        <thead>
+          <tr>
+            <th>Model</th>
+            <th class="num">Mean <em>r</em></th>
+            <th class="num">SD</th>
+            <th class="num">Min</th>
+            <th class="num">Max</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="tag">abc</span>EPInformer-abc</td>
+            <td class="num">0.844</td>
+            <td class="num">0.029</td>
+            <td class="num">0.775</td>
+            <td class="num">0.879</td>
+          </tr>
+          <tr>
+            <td><span class="tag v2">v2</span>EPInformer-v2 · 2 feats</td>
+            <td class="num">0.856</td>
+            <td class="num">0.026</td>
+            <td class="num">0.792</td>
+            <td class="num">0.892</td>
+          </tr>
+          <tr>
+            <td><span class="tag v2">v2</span>EPInformer-v2 · 3 feats</td>
+            <td class="num">0.855</td>
+            <td class="num">0.027</td>
+            <td class="num">0.788</td>
+            <td class="num">0.893</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>GM12878</h3>
+    <div class="panel">
+      <table>
+        <thead>
+          <tr>
+            <th>Model</th>
+            <th class="num">Mean <em>r</em></th>
+            <th class="num">SD</th>
+            <th class="num">Min</th>
+            <th class="num">Max</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="tag">abc</span>EPInformer-abc</td>
+            <td class="num">0.810</td>
+            <td class="num">0.024</td>
+            <td class="num">0.778</td>
+            <td class="num">0.845</td>
+          </tr>
+          <tr>
+            <td><span class="tag v2">v2</span>EPInformer-v2 · 2 feats</td>
+            <td class="num">0.823</td>
+            <td class="num">0.023</td>
+            <td class="num">0.783</td>
+            <td class="num">0.863</td>
+          </tr>
+          <tr>
+            <td><span class="tag v2">v2</span>EPInformer-v2 · 3 feats</td>
+            <td class="num">0.820</td>
+            <td class="num">0.022</td>
+            <td class="num">0.781</td>
+            <td class="num">0.853</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2>Interpretation (same data, same CV)</h2>
+    <ul>
+      <li><strong>EPInformer-v2 vs EPInformer-abc:</strong> On this batch setup, EPInformer-v2 reaches higher mean test Pearson <em>r</em> than EPInformer-abc for both cell lines (largest gap on GM12878).</li>
+      <li><strong>EPInformer-v2 · 2 vs 3 feats:</strong> Mean <em>r</em> is nearly identical for K562; for GM12878, 2 feats is slightly higher on average than 3 feats, with more fold-to-fold variability when adding Hi-C.</li>
+    </ul>
+
+    <h2>Log sources</h2>
+    <div class="panel">
+      <ul style="margin:0">
+        <li><strong>EPInformer-abc</strong> — <code>log_gpu/2026-03-30/</code>, array jobs <code>11492662</code> (K562) and <code>11492663</code> (GM12878), outputs under <code>EPInformer_models/batch_K562_cv12/</code> and <code>batch_GM12878_cv12/</code>. Model name in logs: <code>EPInformer-abc-v0.1…3feats…</code>.</li>
+        <li><strong>EPInformer-v2 · 3 feats</strong> — <code>log_gpu/2026-03-31/</code>, jobs <code>11492962</code> (K562) and <code>11492967</code> (GM12878), <code>…60enhs.3feats…</code>, dirs <code>batch_*_cv12_v2/</code>.</li>
+        <li><strong>EPInformer-v2 · 2 feats</strong> — <code>log_gpu/2026-03-31/</code>, jobs <code>11493079</code> (K562) and <code>11493084</code> (GM12878), header lines <code>N_ENH_FEATS=2</code>, dirs <code>batch_*_cv12_v2_2feats/</code>.</li>
+      </ul>
+    </div>
+
+    <h2>Architecture (short)</h2>
+    <div class="panel">
+      <p style="margin-top:0"><strong>EPInformer-abc</strong> — attention over promoter–enhancer sequence embeddings with ABC-driven weighting of enhancer features (distance / activity / contact) before expression readout.</p>
+      <p style="margin-bottom:0"><strong>EPInformer-v2</strong> — alternative fusion: per-channel feature MLPs and multiplicative gating with sequence embeddings, then transformer layers; training uses the same <code>--model_type EPInformer-v2</code> flag in <code>train_EPInformer_abc.py</code>.</p>
+    </div>
+
+    <p class="foot">Generated for the EPInformer repository. Numbers are rounded for display; raw values come from <code>Pearson R:</code> lines in the cited log files.</p>
+  </div>
+</body>
+</html>
