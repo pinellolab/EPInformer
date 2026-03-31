@@ -1,379 +1,516 @@
-import os
-import sys
-import argparse
-from datetime import datetime
-import os
-import scripts.utils_forTraining as utils
-import pandas as pd
-import numpy as np
+"""Pre-train the 256bp sequence encoder on peak activity prediction.
 
+Trains `enhancer_predictor_256bp` to predict log2(activity) from 256bp
+one-hot-encoded DNA sequences using 12-fold leave-chromosome-out CV.
+"""
+
+import os
+import random
+import argparse
+import warnings
+
+import numpy as np
+import pandas as pd
 from scipy import stats
-from sklearn.model_selection import train_test_split
 from tqdm import tqdm
 import torch
-import h5py
-from torch import Tensor
 import torch.nn as nn
-import math
-from sklearn.metrics import mean_squared_error
-import copy
-import numpy as np
-import warnings
-import torch.nn.functional as F
-
 import torch.utils.data as data_utils
-from torch.utils.data import Subset, Dataset, DataLoader
-warnings.filterwarnings('ignore')
-
-from dataclasses import dataclass
-from scipy.stats import pearsonr
-
+from torch.utils.data import Dataset, WeightedRandomSampler
 from Bio.Seq import Seq
-import glob
-import random
+
 from EPInformer.models import enhancer_predictor_256bp
 from preprocessing import one_hot_encode
 
-class dnase_dataset(Dataset):
-    def __init__(self, cell_name, chrom_list, strand = 'both'):
-        self.cell_name = cell_name 
+warnings.filterwarnings("ignore")
+
+# ---------------------------------------------------------------------------
+# Dataset
+# ---------------------------------------------------------------------------
+
+DEFAULT_CSV_PATTERN = (
+    "/home/bingxing2/gpuuser926/project/EPInformer/"
+    "data/enhancer_sequences/{}_peak_5bins_around_summit_activity_sequence.csv"
+)
+
+
+class PeakActivityDataset(Dataset):
+    """256bp peak-bin sequences with activity labels."""
+
+    def __init__(self, cell_name, chrom_list, strand="both",
+                 csv_path=None, dataframe=None, summit_only=False):
         self.strand = strand
-        dnase_df = pd.read_csv('/home/bingxing2/gpuuser926/project/EPInformer/data/enhancer_sequences/{}_peak_5bins_around_summit_activity_sequence.csv'.format(cell_name))
-        dnase_df = dnase_df.rename(columns={'Offset_to_summit': 'Pos'})
-        # dnase_df['Activity'] = np.sqrt(dnase_df['H3K27ac_1_RPM'] * dnase_df['DNase_RPM'])
-        self.dnase_df = dnase_df[dnase_df['Chromosome'].isin(chrom_list)].reset_index(drop=True)
+        if dataframe is not None:
+            dnase_df = dataframe.copy()
+        elif csv_path is not None:
+            dnase_df = pd.read_csv(csv_path)
+        else:
+            dnase_df = pd.read_csv(DEFAULT_CSV_PATTERN.format(cell_name))
+        dnase_df = dnase_df.rename(columns={"Offset_to_summit": "Pos"})
+        dnase_df = dnase_df[dnase_df["Chromosome"].isin(chrom_list)]
+        if summit_only:
+            dnase_df = dnase_df[dnase_df["Pos"] == 0]
+        self.dnase_df = dnase_df.reset_index(drop=True)
+
+    def sample_weights(self, temperature=1.0):
+        """Compute per-sample weights that upsample high-activity bins.
+
+        Weight = softmax(log2_activity / temperature), so higher activity
+        gets sampled more often.  temperature controls how aggressive the
+        upsampling is (lower = more aggressive, 1.0 = moderate).
+        """
+        log2_act = np.log2(0.1 + self.dnase_df["Activity"].values)
+        scaled = log2_act / temperature
+        # shift for numerical stability before exp
+        weights = np.exp(scaled - scaled.max())
+        weights /= weights.sum()
+        return torch.from_numpy(weights).double()
+
     def __len__(self):
         return len(self.dnase_df)
 
     def __getitem__(self, idx):
-        sample = self.dnase_df.iloc[idx]
-        activity = np.log2(0.1+sample['Activity'])
-        # activity = sample['Activity']
-        seq = sample['Sequence']
-        seq_name = sample['Name'] + '_' + str(sample['Pos'])
-        if self.strand == 'both':
+        row = self.dnase_df.iloc[idx]
+        activity = np.log2(0.1 + row["Activity"])
+        seq = row["Sequence"]
+        seq_name = f"{row['Name']}_{row['Pos']}"
+        if self.strand == "both":
             if random.random() > 0.5:
                 seq = str(Seq(seq).reverse_complement())
-        elif self.strand == 'reverse':
+        elif self.strand == "reverse":
             seq = str(Seq(seq).reverse_complement())
         ohe_seq = one_hot_encode(seq)[None, :, :]
         return ohe_seq, activity, seq_name
 
+
+# ---------------------------------------------------------------------------
+# Loss
+# ---------------------------------------------------------------------------
+
 class L1KLmixed(nn.Module):
-    def __init__(self, reduction='batchmean', alpha=1.0, beta=0.5):
+    """Weighted combination of L1 loss and KL divergence."""
+
+    def __init__(self, reduction="batchmean", alpha=1.0, beta=0.5):
         super().__init__()
-        
-        self.reduction = reduction
         self.alpha = alpha
-        self.beta  = beta
-        
-        self.MSE = nn.L1Loss(reduction=reduction.replace('batch',''))
-        self.KL  = nn.KLDivLoss(reduction=reduction, log_target=True)
-    
+        self.beta = beta
+        self.l1 = nn.L1Loss(reduction=reduction.replace("batch", ""))
+        self.kl = nn.KLDivLoss(reduction=reduction, log_target=True)
+
     def forward(self, preds, targets):
+        preds_log = preds - torch.logsumexp(preds, dim=-1, keepdim=True)
+        target_log = targets - torch.logsumexp(targets, dim=-1, keepdim=True)
+        l1_loss = self.l1(preds, targets)
+        kl_loss = self.kl(preds_log, target_log)
+        return (l1_loss * self.alpha + kl_loss * self.beta) / (self.alpha + self.beta)
 
-        preds_log_prob  = preds   - torch.logsumexp(preds, dim=-1, keepdim=True)
-        target_log_prob = targets - torch.logsumexp(targets, dim=-1, keepdim=True)
-        
-        MSE_loss = self.MSE(preds, targets)
-        KL_loss  = self.KL(preds_log_prob, target_log_prob)
-        
-        combined_loss = MSE_loss.mul(self.alpha) + \
-                        KL_loss.mul(self.beta)
-        
-        return combined_loss.div(self.alpha+self.beta)
-        
-def get_lr(optimizer):
-    for param_group in optimizer.param_groups:
-        return param_group['lr']
 
-class Logger():
-    """A logging class that can report or save metrics.
+# ---------------------------------------------------------------------------
+# Logger & EarlyStopping
+# ---------------------------------------------------------------------------
 
-    This class contains a simple utility for saving statistics as they are
-    generated, saving a report to a text file at the end, and optionally
-    print the report to screen one line at a time as it is being generated.
-    Must begin using the `start` method, which will reset the logger.
-
-    Parameters
-    ----------
-    names: list or tuple
-        An iterable containing the names of the columns to be logged.
-
-    verbose: bool, optional
-        Whether to print to screen during the logging.
-    """
+class Logger:
+    """Simple tabular metric logger."""
 
     def __init__(self, names, verbose=False):
         self.names = names
         self.verbose = verbose
 
     def start(self):
-        """Begin the recording process."""
-
         self.data = {name: [] for name in self.names}
-
         if self.verbose:
             print("\t".join(self.names))
 
     def add(self, row):
-        """Add a row to the log.
-
-        This method will add one row to the log and, if verbosity is set,
-        will print out the row to the log. The row must be the same length
-        as the names given at instantiation.
-
-        Parameters
-        ----------
-        args: tuple or list
-            An iterable containing the statistics to be saved.
-        """
-
         assert len(row) == len(self.names)
-
         for name, value in zip(self.names, row):
             self.data[name].append(value)
-
         if self.verbose:
-            print("\t".join(map(str, [round(x, 4) if isinstance(x, float) else x
-                for x in row])))
+            print("\t".join(
+                str(round(x, 4) if isinstance(x, float) else x) for x in row
+            ))
 
-    def save(self, name):
-        """Write a log to disk.
+    def save(self, path):
+        pd.DataFrame(self.data).to_csv(path, sep="\t", index=False)
 
-
-        Parameters
-        ----------
-        name: str
-            The filename to save the logs to.
-        """
-        pd.DataFrame(self.data).to_csv(name, sep='\t', index=False)
 
 class EarlyStopping:
-    """Early stops the training if validation loss doesn't improve after a given patience."""
-    def __init__(self, patience=3, verbose=False, delta=0, path='checkpoint.pt'):
-        """
-        Args:
-            patience (int): How long to wait after last time validation loss improved.
-                            Default: 6
-            verbose (bool): If True, prints a message for each validation loss improvement.
-                            Default: False
-            delta (float): Minimum change in the monitored quantity to qualify as an improvement.
-                            Default: 0
-            path (str): Path for the checkpoint to be saved to.
-                            Default: 'checkpoint.pt'
-        """
+    """Stop training when validation metric stops improving."""
+
+    def __init__(self, patience=3, verbose=False, delta=0, path="checkpoint.pt"):
         self.patience = patience
         self.verbose = verbose
+        self.delta = delta
+        self.path = path
         self.counter = 0
         self.best_score = None
         self.early_stop = False
         self.val_loss_min = np.inf
-        self.delta = delta
-        self.path = path
 
     def __call__(self, val_loss, model, epoch_i):
         score = -val_loss
         if self.best_score is None:
             self.best_score = score
-            self.save_checkpoint(val_loss, model, epoch_i)
+            self._save(val_loss, model, epoch_i)
         elif score < self.best_score + self.delta:
             self.counter += 1
-            print(f'EarlyStopping counter: {self.counter} out of {self.patience}', 'best_score', self.best_score)
+            print(f"EarlyStopping counter: {self.counter}/{self.patience} "
+                  f"(best={self.best_score:.4f})")
             if self.counter >= self.patience:
                 self.early_stop = True
         else:
             self.best_score = score
-            self.save_checkpoint(val_loss, model, epoch_i)
+            self._save(val_loss, model, epoch_i)
             self.counter = 0
 
-    def save_checkpoint(self, val_loss, model, epoch_i):
-        '''Saves model when validation loss decrease.'''
+    def _save(self, val_loss, model, epoch_i):
         if self.verbose:
-            print(f'Validation loss decreased ({self.val_loss_min:.6f} --> {val_loss:.6f}).  Saving model ...')
-
-        torch.save({
-                'epoch': epoch_i,
-                'model_state_dict': model.state_dict(),
-                'loss': val_loss,
-                },
-                self.path)
-        print('Saving ckpt at', self.path)
-        # torch.save(model.state_dict(), self.path)
+            print(f"Validation loss decreased ({self.val_loss_min:.6f} "
+                  f"--> {val_loss:.6f}).  Saving model ...")
+        torch.save({"epoch": epoch_i, "model_state_dict": model.state_dict(),
+                     "loss": val_loss}, self.path)
+        print(f"Saving ckpt at {self.path}")
         self.val_loss_min = val_loss
-        
-def train(net, training_dataset, fold_i, saved_model_path='./models/', learning_rate=1e-4, model_logger=None, valid_dataset = None, model_name = '', batch_size = 64, device = 'cuda', EPOCHS=100, valid_size=1000):
-    if not os.path.exists(saved_model_path):
-        os.mkdir(saved_model_path)
-    if valid_dataset is not None:
-        train_ds = training_dataset
-        valid_ds = valid_dataset
-    else:
-        train_idx, val_idx = train_test_split(list(range(len(training_dataset))), test_size=valid_size, shuffle=True, random_state=66, stratify=stratify)
-        train_ds = Subset(training_dataset, train_idx)
-        valid_ds = Subset(training_dataset, val_idx)
-    
-    print("fold", fold_i ,"training data:", len(train_ds), "validated data:", len(valid_ds), 'total data:', len(training_dataset))
-    trainloader = data_utils.DataLoader(train_ds, batch_size=batch_size, shuffle=True, num_workers=0, pin_memory=True)
-    early_stopping = EarlyStopping(patience=5,
-               verbose=True, path= saved_model_path + "/fold_" + str(fold_i) + "_best_"+model_name+"_checkpoint.pt")
 
-    L_expr = L1KLmixed() # nn.SmoothL1Loss()
-    optimizer = torch.optim.AdamW(net.parameters(), lr=learning_rate, weight_decay=1e-6)
-    # print('model_name:', net.model_name)
-    lrs = []
+
+# ---------------------------------------------------------------------------
+# Train / Validate / Test
+# ---------------------------------------------------------------------------
+
+def _make_loader(dataset, batch_size, shuffle=False, pin_memory=False, num_workers=0):
+    persistent = num_workers > 0
+    return data_utils.DataLoader(
+        dataset, batch_size=batch_size, shuffle=shuffle,
+        num_workers=num_workers, pin_memory=pin_memory,
+        persistent_workers=persistent,
+    )
+
+
+def train(net, train_ds, fold_i, saved_model_path="./models/",
+          learning_rate=1e-4, model_logger=None, valid_dataset=None,
+          model_name="", batch_size=64, device="cuda", EPOCHS=100,
+          num_workers=0, upsample=False, upsample_temp=1.0):
+    os.makedirs(saved_model_path, exist_ok=True)
+    pin = device == "cuda"
+
+    upsample_tag = ""
+    if upsample:
+        weights = train_ds.sample_weights(temperature=upsample_temp)
+        sampler = WeightedRandomSampler(weights, num_samples=len(train_ds),
+                                        replacement=True)
+        upsample_tag = f"  upsample=True (temp={upsample_temp})"
+    else:
+        sampler = None
+
+    print(f"fold {fold_i}  train: {len(train_ds)}  "
+          f"valid: {len(valid_dataset)}{upsample_tag}")
+
+    persistent = num_workers > 0
+    trainloader = data_utils.DataLoader(
+        train_ds, batch_size=batch_size,
+        shuffle=(sampler is None), sampler=sampler,
+        num_workers=num_workers, pin_memory=pin,
+        persistent_workers=persistent,
+    )
+    ckpt_path = f"{saved_model_path}/fold_{fold_i}_best_{model_name}_checkpoint.pt"
+    early_stopping = EarlyStopping(patience=5, verbose=True, path=ckpt_path)
+
+    criterion = L1KLmixed()
+    optimizer = torch.optim.AdamW(net.parameters(), lr=learning_rate,
+                                  weight_decay=1e-6)
+
     for epoch in range(EPOCHS):
         net.train()
-        print('learning rate:', get_lr(optimizer))
-        running_loss = 0
-        loss_e = 0
-        # print('model training mode is:', net.training)
-        for data in tqdm(trainloader):
-            # print(inputs.size())
-            optimizer.zero_grad()
-            ohe_seq, y_expr, seq_name = data
+        lr = optimizer.param_groups[0]["lr"]
+        print(f"learning rate: {lr}")
+        running_loss = 0.0
+
+        for ohe_seq, y_expr, _ in tqdm(trainloader):
+            optimizer.zero_grad(set_to_none=True)
             ohe_seq = ohe_seq.float().to(device)
             y_expr = y_expr.float().to(device)
-            pred_expr = net(ohe_seq)
-            loss_expr = L_expr(pred_expr, y_expr)
-            loss_e += loss_expr.item()
-            loss = loss_expr
-            # propagate the loss backward
+            loss = criterion(net(ohe_seq), y_expr)
             loss.backward()
-            # update the gradients
             optimizer.step()
             running_loss += loss.item()
 
-        print('[Epoch %d] loss: %.9f' %
-                      (epoch + 1, running_loss/len(trainloader)))
-        print('Training Loss: expression loss:', loss_e/len(trainloader))
-        
-        val_mse_all, val_r2_all, val_pr_all = validate(net, valid_ds, device=device)
-        val_r2 = val_r2_all
-        val_pr_wE, val_r2_wE = val_pr_all, val_r2_all
-        print('Valdaition R square all:', val_r2_all)
+        avg_loss = running_loss / len(trainloader)
+        print(f"[Epoch {epoch + 1}] loss: {avg_loss:.9f}")
+
+        val_mse, val_r2, val_pearson = validate(
+            net, valid_dataset, device=device, num_workers=num_workers)
+        print(f"Validation R²: {val_r2:.4f}")
         early_stopping(-val_r2, net, epoch)
+
         if model_logger is not None:
-            label_type = net.name.split('.')[-1]
-            model_logger.add([fold_i, epoch, running_loss/len(trainloader), val_mse_all, val_pr_all, val_r2_all, val_pr_wE, val_r2_wE, early_stopping.counter, label_type])
+            label_type = net.name.split(".")[-1]
+            model_logger.add([fold_i, epoch, avg_loss, val_mse,
+                              val_pearson, val_r2, val_pearson, val_r2,
+                              early_stopping.counter, label_type])
         if early_stopping.early_stop:
             print("Early stopping")
             break
-    return lrs
 
-def validate(net, valid_ds, batch_size=1024, device = 'cuda'):
-    validloader = data_utils.DataLoader(valid_ds, batch_size=batch_size, pin_memory=True, num_workers=0)
+
+def validate(net, valid_ds, batch_size=1024, device="cuda", num_workers=0):
+    pin = device == "cuda"
+    validloader = _make_loader(valid_ds, batch_size, pin_memory=pin,
+                               num_workers=num_workers)
     net.eval()
-    L_expr = L1KLmixed()
+    criterion = L1KLmixed()
+    all_preds, all_actual = [], []
+    total_loss = 0.0
+
     with torch.no_grad():
-        preds = []
-        actual = []
-        loss_e = 0
-        for data in tqdm(validloader):
-            ohe_seq, y_expr, seq_name = data
+        for ohe_seq, y_expr, _ in tqdm(validloader):
             ohe_seq = ohe_seq.float().to(device)
             y_expr = y_expr.float().to(device)
             pred_expr = net(ohe_seq)
-            loss_expr = L_expr(pred_expr, y_expr)
-            outputs = list(pred_expr.flatten().cpu().detach().numpy())
-            labels = list(y_expr.flatten().cpu().detach().numpy())
-            loss_expr = L_expr(pred_expr, y_expr)
-            loss_e += loss_expr.item()
-            preds += outputs
-            actual += labels
+            total_loss += criterion(pred_expr, y_expr).item()
+            all_preds.append(pred_expr.flatten().cpu())
+            all_actual.append(y_expr.flatten().cpu())
+
+    preds = torch.cat(all_preds).numpy()
+    actual = torch.cat(all_actual).numpy()
+
     try:
-        slope, intercept, r_value, p_value, std_err = stats.linregress(preds, actual)
-        peasonr, pvalue = stats.pearsonr(preds, actual)
-    except:
-        peasonr = 0
-        r_value = 0
-    mse = mean_squared_error(preds, actual)
-    print('Validation loss expression loss:', loss_e/len(validloader))
-    print("valid: mse", mse, "R_sqaure", r_value**2, 'peasonr', peasonr)
-    return mse, r_value**2, peasonr
+        _, _, r_value, _, _ = stats.linregress(preds, actual)
+        pearson_r, _ = stats.pearsonr(preds, actual)
+    except Exception:
+        pearson_r, r_value = 0.0, 0.0
 
-def test(net, test_ds, fold_i, model_name = None, saved_model_path=None, batch_size=64, device = 'cuda', model_type='best'):
-    testloader = data_utils.DataLoader(test_ds, batch_size=batch_size, pin_memory=True, num_workers=0)
+    mse = float(np.mean((preds - actual) ** 2))
+    print(f"Validation loss: {total_loss / len(validloader):.6f}")
+    print(f"valid: mse {mse:.4f}  R² {r_value**2:.4f}  Pearson r {pearson_r:.4f}")
+    return mse, r_value ** 2, pearson_r
+
+
+def _rc_ohe(ohe_seq):
+    """Reverse-complement one-hot tensor: flip sequence order and swap A↔T, C↔G.
+
+    Input shape: (B, 1, L, 4).  Channel order is [A, C, G, T].
+    RC = reverse along L and reverse channel order [T, G, C, A] → [A, C, G, T] swap.
+    """
+    return ohe_seq.flip(dims=[-2, -1])
+
+
+def test(net, test_ds, fold_i, model_name=None, saved_model_path=None,
+         batch_size=64, device="cuda", num_workers=0, rc_average=False):
+    pin = device == "cuda"
+    testloader = _make_loader(test_ds, batch_size, pin_memory=pin,
+                              num_workers=num_workers)
     if saved_model_path is not None:
-        checkpoint = torch.load(saved_model_path + "/fold_" + str(fold_i) + "_best_"+model_name+"_checkpoint.pt", weights_only=False)
-        net.load_state_dict(checkpoint['model_state_dict'])
-        print(model_name, fold_i, 'loaded!')
-    net.eval()
-    L_expr = L1KLmixed()
-    with torch.no_grad():
-        preds = []
-        actual = []
-        ensid_list = []
-        for data in tqdm(testloader):
-            ohe_seq, y_expr, seq_name = data
-            ohe_seq = ohe_seq.float().to(device)
-            y_expr = y_expr.float().to(device)
-            pred_expr = net(ohe_seq)
-            loss_expr = L_expr(pred_expr, y_expr)
-            outputs = list(pred_expr.flatten().cpu().detach().numpy())
-            labels = list(y_expr.flatten().cpu().detach().numpy())
-            preds += outputs
-            actual += labels
-            ensid_list += list(seq_name)
+        ckpt_path = f"{saved_model_path}/fold_{fold_i}_best_{model_name}_checkpoint.pt"
+        checkpoint = torch.load(ckpt_path, weights_only=False)
+        net.load_state_dict(checkpoint["model_state_dict"])
+        print(f"{model_name} fold {fold_i} loaded!")
 
-    slope, intercept, r_value, p_value, std_err = stats.linregress(preds, actual)
-    peasonr, pvalue = stats.pearsonr(preds, actual)
-    # mse = mean_squared_error(preds, actual)
-    # print(fold %s test sequence: %0.3f' % (fold_i, r_value**2))\
-    ensid_list = np.array(ensid_list).flatten()
-    preds_df = pd.DataFrame({'preds': preds, 'actual': actual, 'ensid': ensid_list})
-    preds_df['fold'] = fold_i
-    # preds_df.to_csv(saved_model_path + "/fold_" + str(fold_i) + "_"+ model_name + "_predictions.csv")
-    print('\nPearson R:', peasonr)
+    net.eval()
+    all_preds, all_actual, all_names = [], [], []
+
+    with torch.no_grad():
+        for ohe_seq, y_expr, seq_name in tqdm(testloader):
+            ohe_seq = ohe_seq.float().to(device)
+            pred_fwd = net(ohe_seq)
+            if rc_average:
+                pred_rc = net(_rc_ohe(ohe_seq))
+                pred_expr = (pred_fwd + pred_rc) / 2.0
+            else:
+                pred_expr = pred_fwd
+            all_preds.append(pred_expr.flatten().cpu())
+            all_actual.append(y_expr.flatten())
+            all_names.extend(seq_name)
+
+    preds = torch.cat(all_preds).numpy()
+    actual = torch.cat(all_actual).numpy()
+    pearson_r, _ = stats.pearsonr(preds, actual)
+
+    preds_df = pd.DataFrame({
+        "preds": preds, "actual": actual, "ensid": all_names
+    })
+    preds_df["fold"] = fold_i
+    print(f"\nPearson R: {pearson_r:.4f}" +
+          (" (RC-averaged)" if rc_average else ""))
     return preds_df
 
 
-split_df = pd.read_csv('./data/leave_chrom_out_crossvalidation_split_18377genes.csv', index_col=0)
-split_df['chrom'] = 'chr' + split_df['chrom']
+# ---------------------------------------------------------------------------
+# Main
+# ---------------------------------------------------------------------------
 
-import argparse
-parser = argparse.ArgumentParser()
-parser.add_argument('--cell', type=str, default='HepG2', help='cell type')
-cells = parser.parse_args().cell
-device = 'cuda'
-# os.environ["CUDA_VISIBLE_DEVICES"] = '0'
+def main():
+    parser = argparse.ArgumentParser(
+        description="Pre-train 256bp sequence encoder on peak activity")
+    parser.add_argument("--cell", type=str, default="HepG2", help="cell type")
+    parser.add_argument("--data-csv", type=str, default=None,
+                        help="Path to peak activity sequence CSV. "
+                             "Overrides --cell for data loading.")
+    parser.add_argument("--batch-size", type=int, default=256,
+                        help="training batch size")
+    parser.add_argument("--epochs", type=int, default=50,
+                        help="max training epochs")
+    parser.add_argument("--folds", type=int, nargs="+", default=None,
+                        help="fold numbers to run (e.g. --folds 1 2). "
+                             "Default: all 12 folds.")
+    parser.add_argument("--num-workers", type=int,
+                        default=min(4, os.cpu_count() or 1),
+                        help="DataLoader workers (default: min(4, cpu_count))")
+    parser.add_argument("--output-dir", type=str, default="./results/seqencoder",
+                        help="Root output directory for checkpoints, predictions, "
+                             "and summary (default: ./results/seqencoder)")
+    parser.add_argument("--test-summit-only", action="store_true",
+                        help="Additionally evaluate on summit-only (Pos==0) test set")
+    parser.add_argument("--rc-average", action="store_true",
+                        help="Average forward and reverse-complement predictions at test time")
+    parser.add_argument("--upsample", action="store_true",
+                        help="Upsample high-activity samples via weighted sampling")
+    parser.add_argument("--upsample-temp", type=float, default=1.0,
+                        help="Temperature for upsampling weights. "
+                             "Lower = more aggressive (default: 1.0)")
+    args = parser.parse_args()
 
-if cells == 'all':
-    cell_list = [ 'NHEK','HUVEC', 'HepG2', 'H1', 'GM12878', 'K562v2']
-else:
-    cell_list = [cells]
-os.makedirs('./pretrained_seqencoder_h3k27ac_predictions/', exist_ok=True)
-test_strand = 'reverse'
-for cell in cell_list:
-    cell_results = []
-    for fi in range(1, 13):
-        fold_i = 'fold_{}'.format(fi)
-        # Set up the dataset
-        train_chrom = list(split_df[split_df[fold_i] == 'train']['chrom'].unique())
-        valid_chrom = list(split_df[split_df[fold_i] == 'valid']['chrom'].unique())
-        test_chrom = list(split_df[split_df[fold_i] == 'test']['chrom'].unique())
-        train_ds = dnase_dataset(cell, train_chrom, strand='both')
-        valid_ds = dnase_dataset(cell, valid_chrom, strand='forward')
-        test_ds = dnase_dataset(cell, test_chrom, strand=test_strand)
-        model = enhancer_predictor_256bp().to(device)
-        model.name = 'enhancer_predictor_log2_H3K27ac_256bp_{}'.format(cell)
-        print('model name:', model.name)
-        saved_model_path = './pretrained_seqencoder_h3k27ac/'
-        os.makedirs(saved_model_path, exist_ok=True)
-        # train(model, train_ds, valid_dataset=valid_ds, learning_rate=0.0005, EPOCHS=50, model_name = model.name, fold_i=fi, batch_size=256, device=device, saved_model_path=saved_model_path)
-        # save model
-        torch.save({
-            'model_state_dict': model.state_dict(),
-            'model_name': model.name,
-            'fold_i': fi,
-            'cell': cell
-        }, saved_model_path + "/fold_" + str(fold_i) + "_last_"+ model.name+"_checkpoint.pt")
-        # print('Model saved at:', saved_model_path + '/fold_{}_best_enhancer
-        preds_df = test(model, test_ds, model_name = model.name, saved_model_path=saved_model_path, fold_i=fi, batch_size=128, device=device)
-        preds_df['cell'] = cell
-        cell_results.append(preds_df)
-    cell_results_df = pd.concat(cell_results, axis=0)
-    cell_results_df.to_csv('./pretrained_seqencoder_h3k27ac_predictions/enhancer_predictor_H3K27ac_256bp_{}_{}_predictions.csv'.format(cell, test_strand))
-    peasonr, pvalue = stats.pearsonr(cell_results_df['preds'], cell_results_df['actual'])
-    print(cell, len(cell_results_df), 'Pearson R:', peasonr)
-    print('Results saved at:', './pretrained_seqencoder_h3k27ac_predictions/enhancer_predictor_H3K27ac_256bp_{}_{}_predictions.csv'.format(cell, test_strand))
+    # --- Device ---
+    if torch.cuda.is_available():
+        device = "cuda"
+    elif hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
+        device = "mps"
+    else:
+        device = "cpu"
+    print(f"Using device: {device}")
+
+    # --- CV splits ---
+    split_df = pd.read_csv(
+        "./data/leave_chrom_out_crossvalidation_split_18377genes.csv", index_col=0)
+    split_df["chrom"] = "chr" + split_df["chrom"]
+
+    # --- Cell list ---
+    if args.cell == "all":
+        cell_list = ["NHEK", "HUVEC", "HepG2", "H1", "GM12878", "K562v2"]
+    else:
+        cell_list = [args.cell]
+
+    output_root = args.output_dir
+    model_dir = os.path.join(output_root, "checkpoints")
+    pred_dir = os.path.join(output_root, "predictions")
+    os.makedirs(model_dir, exist_ok=True)
+    os.makedirs(pred_dir, exist_ok=True)
+
+    test_strand = "forward" if args.rc_average else "reverse"
+    fold_range = args.folds or list(range(1, 13))
+    all_summary_rows = []
+
+    for cell in cell_list:
+        # Read CSV once, share across folds
+        if args.data_csv:
+            full_df = pd.read_csv(args.data_csv)
+        else:
+            full_df = pd.read_csv(DEFAULT_CSV_PATTERN.format(cell))
+
+        cell_results = []
+        for fi in fold_range:
+            fold_key = f"fold_{fi}"
+            train_chrom = list(split_df[split_df[fold_key] == "train"]["chrom"].unique())
+            valid_chrom = list(split_df[split_df[fold_key] == "valid"]["chrom"].unique())
+            test_chrom = list(split_df[split_df[fold_key] == "test"]["chrom"].unique())
+
+            train_ds = PeakActivityDataset(cell, train_chrom, strand="both",
+                                           dataframe=full_df)
+            valid_ds = PeakActivityDataset(cell, valid_chrom, strand="forward",
+                                           dataframe=full_df)
+            test_ds = PeakActivityDataset(cell, test_chrom, strand=test_strand,
+                                          dataframe=full_df)
+
+            model = enhancer_predictor_256bp().to(device)
+            model.name = f"enhancer_predictor_log2_H3K27ac_256bp_{cell}"
+            print(f"model name: {model.name}")
+
+            train(model, train_ds, valid_dataset=valid_ds,
+                  learning_rate=0.0005, EPOCHS=args.epochs,
+                  model_name=model.name, fold_i=fi,
+                  batch_size=args.batch_size, device=device,
+                  saved_model_path=model_dir,
+                  num_workers=args.num_workers,
+                  upsample=args.upsample,
+                  upsample_temp=args.upsample_temp)
+
+            # Save last checkpoint
+            torch.save({
+                "model_state_dict": model.state_dict(),
+                "model_name": model.name,
+                "fold_i": fi, "cell": cell,
+            }, f"{model_dir}/fold_{fi}_last_{model.name}_checkpoint.pt")
+
+            preds_df = test(model, test_ds, model_name=model.name,
+                            saved_model_path=model_dir, fold_i=fi,
+                            batch_size=128, device=device,
+                            num_workers=args.num_workers,
+                            rc_average=args.rc_average)
+            preds_df["cell"] = cell
+            cell_results.append(("all_bins", preds_df))
+
+            # Per-fold summary (all bins)
+            fold_r, _ = stats.pearsonr(preds_df["preds"], preds_df["actual"])
+            fold_mse = float(np.mean((preds_df["preds"] - preds_df["actual"]) ** 2))
+            all_summary_rows.append({
+                "cell": cell, "fold": fi, "test_set": "all_bins",
+                "n_samples": len(preds_df),
+                "pearson_r": fold_r, "mse": fold_mse,
+                "upsample": args.upsample,
+                "upsample_temp": args.upsample_temp if args.upsample else None,
+            })
+
+            # Summit-only test
+            if args.test_summit_only:
+                summit_ds = PeakActivityDataset(
+                    cell, test_chrom, strand=test_strand,
+                    dataframe=full_df, summit_only=True)
+                print(f"  Summit-only test set: {len(summit_ds)} samples")
+                summit_preds = test(model, summit_ds, model_name=model.name,
+                                    saved_model_path=model_dir, fold_i=fi,
+                                    batch_size=128, device=device,
+                                    num_workers=args.num_workers,
+                                    rc_average=args.rc_average)
+                summit_preds["cell"] = cell
+                cell_results.append(("summit_only", summit_preds))
+
+                s_r, _ = stats.pearsonr(summit_preds["preds"], summit_preds["actual"])
+                s_mse = float(np.mean((summit_preds["preds"] - summit_preds["actual"]) ** 2))
+                all_summary_rows.append({
+                    "cell": cell, "fold": fi, "test_set": "summit_only",
+                    "n_samples": len(summit_preds),
+                    "pearson_r": s_r, "mse": s_mse,
+                    "upsample": args.upsample,
+                    "upsample_temp": args.upsample_temp if args.upsample else None,
+                })
+
+        # Save predictions and compute overall metrics per test_set
+        for test_set_name in dict.fromkeys(tag for tag, _ in cell_results):
+            subset = pd.concat([df for tag, df in cell_results if tag == test_set_name])
+            suffix = f"_{test_set_name}" if test_set_name != "all_bins" else ""
+            out_path = os.path.join(
+                pred_dir, f"enhancer_predictor_H3K27ac_256bp_{cell}_{test_strand}{suffix}_predictions.csv")
+            subset.to_csv(out_path, index=False)
+
+            overall_r, _ = stats.pearsonr(subset["preds"], subset["actual"])
+            overall_mse = float(np.mean((subset["preds"] - subset["actual"]) ** 2))
+            all_summary_rows.append({
+                "cell": cell, "fold": "ALL", "test_set": test_set_name,
+                "n_samples": len(subset),
+                "pearson_r": overall_r, "mse": overall_mse,
+                "upsample": args.upsample,
+                "upsample_temp": args.upsample_temp if args.upsample else None,
+            })
+            print(f"{cell} [{test_set_name}]  n={len(subset)}  Pearson R: {overall_r:.4f}")
+            print(f"  Predictions saved at: {out_path}")
+
+    # --- Write aggregate summary ---
+    summary_df = pd.DataFrame(all_summary_rows)
+    summary_path = os.path.join(output_root, "summary.csv")
+    summary_df.to_csv(summary_path, index=False)
+    print(f"\n{'='*60}")
+    print(f"Aggregate summary saved at: {summary_path}")
+    print(summary_df.to_string(index=False))
+
+
+if __name__ == "__main__":
+    main()
