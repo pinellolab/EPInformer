@@ -24,6 +24,12 @@ test/
 # Local Slurm submit templates and cluster logs (not tracked)
 slurm/
 log_gpu/
+log_cpu/
+
+# Local scratch / machine-specific data (not tracked)
+data/GM12878/
+data/old_h5
+note.md
 
 # Python
 __pycache__/
