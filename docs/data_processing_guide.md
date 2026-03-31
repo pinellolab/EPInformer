@@ -133,6 +133,41 @@ For each cell type you want to process, you need:
 
 > **Note:** The pipeline automatically sorts and indexes BAM files if needed (via `samtools sort` and `samtools index`). You do not need to prepare them manually.
 
+### Automated download from ENCODE
+
+Use the download script to query the ENCODE REST API and download the best available files:
+
+```bash
+# Dry run — show what would be downloaded
+python scripts/download_encode_data.py --dry-run
+
+# Download for specific cell types
+python scripts/download_encode_data.py --cell-types HepG2,H1,NHEK,HUVEC
+
+# Download specific assays only
+python scripts/download_encode_data.py --cell-types HepG2 --assays DNase,H3K27ac
+```
+
+The script automatically:
+- Queries the ENCODE API for **unfiltered alignment** BAMs (GRCh38)
+- Falls back to the 4DN portal for Hi-C data when not available on ENCODE
+- Saves per-file metadata JSON alongside each download
+- Skips files that already exist (use `--force` to re-download)
+
+Files are saved to `data/{CellType}/{Assay}/{ACCESSION}.{ext}` with metadata at `data/{CellType}/{Assay}/{ACCESSION}_metadata.json`.
+
+### Choosing ENCODE BAM files (manual download)
+
+When downloading BAM files manually from the ENCODE portal, use **"unfiltered alignments"**, not "alignments". The ABC pipeline is designed to work with raw/unfiltered BAMs:
+
+- **MACS2 is called with `--keep-dup all`**, so it expects reads that have not been deduplicated. Using pre-deduplicated "alignments" BAMs would undercount reads and weaken activity scores.
+- **Read counting (`pysam.count()`) applies no MAPQ filter**, so upstream quality filtering is unnecessary.
+- **Quality control is handled downstream** by retaining only the top 150K peaks by read count, not by pre-filtering BAMs.
+
+For example, for K562 DNase-seq, use `ENCFF257HEE.bam` (output type: "unfiltered alignments"), not the filtered "alignments" version of the same experiment.
+
+> **Exception:** ATAC-seq inputs should be in deduplicated TagAlign format, as described in the original ABC pipeline documentation.
+
 ---
 
 ## Step 4: Configure the Pipeline

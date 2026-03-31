@@ -41,6 +41,18 @@ pip install pyranges pyfaidx kipoiseq openpyxl tangermeme h5py pyBigWig
 # Download training data from Zenodo
 sh ./download_data.sh
 
+# --- Download ENCODE BAM/HiC files ---
+# Dry run: show what would be downloaded for all 11 cell lines
+python scripts/download_encode_data.py --dry-run
+# Download specific cell types
+python scripts/download_encode_data.py --cell-types HepG2,H1,NHEK
+# All replicates (one BAM per bio rep, marks *best*)
+python scripts/download_encode_data.py --all-replicates --dry-run
+# Roadmap 57 epigenomes (report only)
+python scripts/download_encode_data.py \
+    --roadmap data/roadmap_expression/.cache/EG.name.txt \
+    --dry-run --report data/roadmap_encode_report.html
+
 # --- ABC Pipeline (from BAM/HiC → enhancer-gene predictions) ---
 # Run full ABC pipeline for a cell type (with Hi-C)
 python -c "
@@ -170,6 +182,8 @@ Raw Data (FASTA, BigWig signals, CSV expression, ABC links)
 - `--include-self-promoter` injects near-TSS self-promoter elements (from ABC `isSelfPromoter` flag) at slot 0 of each gene's enhancer list with real ABC features (activity, contact, DHS, distance). This is critical for matching legacy performance (~0.81 vs ~0.63 Pearson R without).
 
 **`scripts/rerun_encoder_step.py`** — Re-runs only Step 4 (encoder data generation) of the ABC pipeline for a given cell type, reading config/samples from the same YAML/TSV used by `run_pipeline.py`. Usage: `python scripts/rerun_encoder_step.py --cell K562`.
+
+**`scripts/download_encode_data.py`** — Queries ENCODE REST API to find and download unfiltered-alignment BAM files (DNase, H3K27ac, ATAC) and Hi-C `.hic` files. Reads cell types from `data/cell_line_list.txt` (11 cell lines) by default; `--roadmap` mode supports all 57 Roadmap epigenomes via `data/roadmap_expression/.cache/EG.name.txt`. Key features: biosample ontology name mapping (e.g., NHEK→`keratinocyte`, HUVEC→`endothelial cell of umbilical vein`), 4DN Hi-C fallback, `--all-replicates` mode (one BAM per bio rep with `*best*` marker), ENCODE phase detection (ENCODE2/3/4 via `award.rfa`), `--report` HTML generation, per-file metadata JSON. Uses `frame=embedded` ENCODE search to get award info in a single query. BAM files must be **unfiltered alignments** (not filtered "alignments") because the ABC pipeline uses `MACS2 --keep-dup all`.
 
 **`preprocessing/data_prep/build_gene_annotation.py`** — Builds hg38 gene annotation BED from Roadmap's Ensembl v65 gene_info by lifting over hg19 coordinates. Supports `--gene-set pc` (protein-coding, ~20K) or `--gene-set pc_linc` (+ lincRNA, ~25K). Requires `liftOver` binary on PATH.
 
