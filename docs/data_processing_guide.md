@@ -161,8 +161,8 @@ abc_params:
   gamma: 0.87
   tss_slop: 500
   hic_resolution: 5000
-  neg_fraction: 0.05
-  max_encoder_peaks: 100000
+  neg_fraction: 0.05           # fraction of negative samples for encoder pre-training
+  max_encoder_peaks: 100000   # top peaks (by signalValue) for encoder pre-training data
   include_self_promoter: false
   include_promoter_region: false
   n_threads: 4
@@ -285,10 +285,13 @@ After the pipeline completes, outputs are organized per cell type:
 batch_output/
   K562/
     links/                                          # Stage 1 outputs
+      macs2/
+        peaks_peaks.narrowPeak                      # MACS2 peak calls
       Neighborhoods/
         EnhancerList.txt                            # Candidate enhancer elements
       Predictions/
         EnhancerPredictionsAllPutative.txt          # All enhancer-gene predictions
+      K562_peak_5bins_around_summit_activity_sequence.csv  # Encoder pre-training data
     encoding/                                       # Stage 2 outputs
       K562_samples.h5                               # HDF5 training file
   GM12878/
@@ -302,7 +305,27 @@ The HDF5 file contains arrays for each gene: one-hot encoded sequences, activity
 
 ---
 
-## Step 8: Train the Model
+## Step 8: Encoder Pre-training Data
+
+Stage 1 also generates encoder pre-training data (Step 4 of the ABC pipeline). This produces 256bp sequences with per-bin activity labels for pre-training the `enhancer_predictor_256bp` sequence encoder.
+
+For each of the top peaks (controlled by `max_encoder_peaks`), 5 bins of 256bp are extracted at offsets [-2, -1, 0, 1, 2] relative to the peak summit (stride = 156bp). Activity is computed **per 256bp bin** by counting BAM reads in the same window used for sequence extraction (DNase RPM, or sqrt(H3K27ac * DNase) when both BAMs are provided). Optional negative samples from random genomic positions >= 1kb from any peak are included (controlled by `neg_fraction`).
+
+Output: `{output_dir}/{cell_type}/links/{cell_type}_peak_5bins_around_summit_activity_sequence.csv`
+
+### Re-running encoder data only
+
+To regenerate encoder pre-training data without re-running the full ABC pipeline, use the helper script:
+
+```bash
+python scripts/rerun_encoder_step.py --cell K562
+```
+
+This reads the same `config/config.yaml` and `config/samples.tsv` as `run_pipeline.py`, locates the existing narrowPeak file, and re-runs only the encoder data generation step.
+
+---
+
+## Step 9: Train the Model
 
 Point the training script at the HDF5 file:
 

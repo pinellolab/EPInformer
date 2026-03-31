@@ -64,6 +64,9 @@ python run_pipeline.py --config config/config.yaml --samples K562 --stages both
 # Dry run to validate config without running
 python run_pipeline.py --config config/config.yaml --dry-run
 
+# Re-run only the encoder data step (Step 4) for a cell type
+python scripts/rerun_encoder_step.py --cell K562
+
 # --- Build gene annotation BED from Roadmap Ensembl v65 (hg19 → hg38 liftover) ---
 python preprocessing/data_prep/build_gene_annotation.py \
     --gene-set pc --output-dir data/reference/hg38        # protein-coding (~20K)
@@ -152,6 +155,7 @@ Raw Data (FASTA, BigWig signals, CSV expression, ABC links)
 - `links.py`: Encodes enhancer-gene links with ABC scores
 - `pipelines_legacy.py`: Legacy cell-type-specific preprocessing pipelines. Gene matching uses `_map_symbol_to_ensid()` which auto-detects whether `TargetGene` contains ENSIDs or gene symbols — if ENSIDs (>50% match), uses them directly; otherwise maps symbols → ENSID via expression CSV `Gene name` column. Enhancers are sorted by absolute distance to TSS (nearest first) and capped at 60 per gene. No minimum distance filter by default (all enhancers including ≤1kb are kept).
 - `abc/`: Streamlined ABC pipeline (candidates → neighborhoods → contact → predictions → encoder data). Entry point: `run_abc_pipeline()` in `__init__.py`. Supports cell-type presets (K562, GM12878, etc.) and `max_encoder_peaks` filtering. MACS2 settings match original Broad ABC pipeline (`-p 0.1`, `--nomodel`, `--shift -75`, `--extsize 150`). Presets use `XpressoGeneBounds.hg38.bed` (18,377 genes). `TargetGene` outputs ENSID with `TargetGeneSymbol` for gene symbols. Default `max_distance=1MB`. Hi-C processing matches the original Broad ABC pipeline: SCALE normalization via `hicstraw.HiCFile`, doubly-stochastic correction, diagonal bin correction (`tss_hic_contribution=100`), power-law formula `exp(scale - gamma*log(dist+1))` with 5kb min clip, power-law scaling (`hic * reference/observed`), pseudocount (`min(powerlaw, powerlaw_at_5kb)`), and QC (replace genes with insufficient Hi-C coverage). Self-promoter ABC scores are NOT overridden to 1.0.
+- `abc/encoder_pretrain_data.py`: Generates 256bp sequences + activity labels for pre-training the `enhancer_predictor_256bp` encoder. Extracts 5 bins per summit at offsets [-2,-1,0,1,2] × 156bp stride. Activity is computed **per 256bp bin** from BAM read counts (DNase RPM, or √(H3K27ac·DNase) when both BAMs provided), not over the full MACS peak interval. Optional negative samples from random genomic positions ≥1kb from any peak.
 
 **`run_pipeline.py`** — Config-driven batch orchestrator. Reads a YAML config (`config/config.yaml`) and TSV sample table (`config/samples.tsv`), runs Stage 1 (ABC links via `run_abc_pipeline()`) and Stage 2 (HDF5 encoding via `obtain_PE_withSignals()`). Supports `--stages links|encoding|both`, `--samples` filter, `--dry-run`. Hi-C parameters (`hic_gamma`, `hic_scale`, etc.) are read from `abc_params` in the YAML config.
 
@@ -164,6 +168,8 @@ Raw Data (FASTA, BigWig signals, CSV expression, ABC links)
 **`run_k562_preprocessing.py`** — K562-specific CLI with subcommands: `with-signals`, `h3k27ac`, `pe`
 - Key flags: `--min-distance` (default 0), `--max-distance` (default 100000), `--n-enhancer` (default 60), `--include-self-promoter`, `--abc-all-putative`
 - `--include-self-promoter` injects near-TSS self-promoter elements (from ABC `isSelfPromoter` flag) at slot 0 of each gene's enhancer list with real ABC features (activity, contact, DHS, distance). This is critical for matching legacy performance (~0.81 vs ~0.63 Pearson R without).
+
+**`scripts/rerun_encoder_step.py`** — Re-runs only Step 4 (encoder data generation) of the ABC pipeline for a given cell type, reading config/samples from the same YAML/TSV used by `run_pipeline.py`. Usage: `python scripts/rerun_encoder_step.py --cell K562`.
 
 **`preprocessing/data_prep/build_gene_annotation.py`** — Builds hg38 gene annotation BED from Roadmap's Ensembl v65 gene_info by lifting over hg19 coordinates. Supports `--gene-set pc` (protein-coding, ~20K) or `--gene-set pc_linc` (+ lincRNA, ~25K). Requires `liftOver` binary on PATH.
 
