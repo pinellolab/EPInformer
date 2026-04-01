@@ -22,6 +22,10 @@ python scripts/download_encode_data.py --from-manifest data/encode_manifest.json
 
 # Generate aria2c input for fast multi-connection download
 python scripts/download_encode_data.py --from-manifest data/roadmap_download_manifest.json --aria2c
+
+# Same, but place files under data/roadmap_encode_downloads/... (rebase JSON paths)
+python scripts/download_encode_data.py --from-manifest data/roadmap_download_manifest.json \\
+    --manifest-root data/roadmap_encode_downloads --aria2c
 """
 
 from __future__ import annotations
@@ -563,6 +567,33 @@ def load_manifest(path: str) -> list[DownloadItem]:
     return items
 
 
+def rebase_manifest_dest_paths(
+    items: list[DownloadItem],
+    new_root: str,
+    strip_prefix: str = "data",
+) -> None:
+    """Rewrite dest_path to live under new_root, dropping strip_prefix from manifest paths."""
+    strip_prefix = strip_prefix.rstrip(os.sep) or strip_prefix
+    n = 0
+    for it in items:
+        if not it.dest_path:
+            continue
+        try:
+            rel = os.path.relpath(it.dest_path, strip_prefix)
+        except ValueError:
+            continue
+        if rel.startswith(".." + os.sep) or rel == "..":
+            print(
+                f"  [manifest-root] skip rebase (not under {strip_prefix}): {it.dest_path}",
+                file=sys.stderr,
+            )
+            continue
+        it.dest_path = os.path.normpath(os.path.join(new_root, rel))
+        it.exists = os.path.exists(it.dest_path)
+        n += 1
+    print(f"Rebased {n} dest_path values under {new_root!r} (prefix {strip_prefix!r})")
+
+
 # ---------------------------------------------------------------------------
 # Download
 # ---------------------------------------------------------------------------
@@ -779,14 +810,19 @@ def generate_aria2c_input(items: list[DownloadItem], output_path: str) -> str:
 
 
 def run_aria2c(
-    input_path: str, connections: int = 4, parallel: int = 3,
+    input_path: str,
+    connections: int = 4,
+    parallel: int = 3,
+    connect_timeout: int = 60,
+    stall_timeout: int = 600,
 ) -> None:
     """Run aria2c with the given input file."""
     aria2c = shutil.which("aria2c")
     if not aria2c:
         print("aria2c not found on PATH. Install it or use the input file manually:")
         print(f"  aria2c -i {input_path} -x {connections} -j {parallel} -c "
-              f"--auto-file-renaming=false")
+              f"--auto-file-renaming=false "
+              f"--connect-timeout={connect_timeout} --timeout={stall_timeout}")
         return
 
     cmd = [
@@ -794,6 +830,8 @@ def run_aria2c(
         f"-i{input_path}",
         f"-x{connections}",
         f"-j{parallel}",
+        f"--connect-timeout={connect_timeout}",
+        f"--timeout={stall_timeout}",
         "-c",  # resume
         "--auto-file-renaming=false",
         "--console-log-level=notice",
@@ -877,6 +915,23 @@ def parse_args() -> argparse.Namespace:
         help="Load manifest JSON instead of querying ENCODE API (e.g., --from-manifest data/encode_manifest.json)",
     )
     p.add_argument(
+        "--manifest-root",
+        default=None,
+        metavar="DIR",
+        help="With --from-manifest: place files under DIR by rebasing each dest_path: "
+             "strip --manifest-path-prefix from the JSON path, then join DIR. "
+             "Example: JSON data/E003_H1/DNase/x.bam with "
+             "--manifest-root data/roadmap_encode_downloads → "
+             "data/roadmap_encode_downloads/E003_H1/DNase/x.bam",
+    )
+    p.add_argument(
+        "--manifest-path-prefix",
+        default="data",
+        metavar="PREFIX",
+        help="Directory prefix stripped from manifest dest_path before joining --manifest-root "
+             "(default: %(default)s).",
+    )
+    p.add_argument(
         "--parallel",
         type=int,
         default=1,
@@ -905,6 +960,20 @@ def parse_args() -> argparse.Namespace:
         default=3,
         metavar="N",
         help="Parallel file downloads for aria2c -j (default: 3)",
+    )
+    p.add_argument(
+        "--aria2c-connect-timeout",
+        type=int,
+        default=60,
+        metavar="SEC",
+        help="aria2c --connect-timeout in seconds (default: %(default)s)",
+    )
+    p.add_argument(
+        "--aria2c-timeout",
+        type=int,
+        default=600,
+        metavar="SEC",
+        help="aria2c --timeout: no-data stall limit in seconds (default: %(default)s)",
     )
     return p.parse_args()
 
@@ -1229,9 +1298,19 @@ def _query_for_sample(
 def main() -> None:
     args = parse_args()
 
+    if args.manifest_root and not args.from_manifest:
+        print("Error: --manifest-root requires --from-manifest", file=sys.stderr)
+        sys.exit(1)
+
     if args.from_manifest:
         # Load from saved manifest — skip API queries
         items = load_manifest(args.from_manifest)
+        if args.manifest_root:
+            rebase_manifest_dest_paths(
+                items,
+                args.manifest_root,
+                args.manifest_path_prefix,
+            )
     else:
         # Query ENCODE API
         samples = _resolve_cell_types(args)
@@ -1275,9 +1354,20 @@ def main() -> None:
 
     # aria2c mode
     if args.aria2c is not None:
-        input_path = args.aria2c if args.aria2c != "auto" else "data/aria2c_download.txt"
+        if args.aria2c != "auto":
+            input_path = args.aria2c
+        elif args.manifest_root:
+            input_path = os.path.join(args.manifest_root, "aria2c_download.txt")
+        else:
+            input_path = "data/aria2c_download.txt"
         generate_aria2c_input(items, input_path)
-        run_aria2c(input_path, args.aria2c_connections, args.aria2c_parallel)
+        run_aria2c(
+            input_path,
+            args.aria2c_connections,
+            args.aria2c_parallel,
+            connect_timeout=args.aria2c_connect_timeout,
+            stall_timeout=args.aria2c_timeout,
+        )
         return
 
     # Create download log
