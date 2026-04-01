@@ -52,6 +52,14 @@ python scripts/download_encode_data.py --all-replicates --dry-run
 python scripts/download_encode_data.py \
     --roadmap data/roadmap_expression/.cache/EG.name.txt \
     --dry-run --report data/roadmap_encode_report.html
+# Save manifest (query API once, reuse later without API)
+python scripts/download_encode_data.py --dry-run --save-manifest data/encode_manifest
+# Download from saved manifest (no API queries)
+python scripts/download_encode_data.py --from-manifest data/encode_manifest.json
+# Build Roadmap per-replicate manifest (38 epigenomes × DNase/H3K27ac/HiC)
+python scripts/build_roadmap_manifest.py
+# Download from Roadmap manifest
+python scripts/download_encode_data.py --from-manifest data/roadmap_download_manifest.json
 
 # --- ABC Pipeline (from BAM/HiC → enhancer-gene predictions) ---
 # Run full ABC pipeline for a cell type (with Hi-C)
@@ -183,7 +191,9 @@ Raw Data (FASTA, BigWig signals, CSV expression, ABC links)
 
 **`scripts/rerun_encoder_step.py`** — Re-runs only Step 4 (encoder data generation) of the ABC pipeline for a given cell type, reading config/samples from the same YAML/TSV used by `run_pipeline.py`. Usage: `python scripts/rerun_encoder_step.py --cell K562`.
 
-**`scripts/download_encode_data.py`** — Queries ENCODE REST API to find and download unfiltered-alignment BAM files (DNase, H3K27ac, ATAC) and Hi-C `.hic` files. Reads cell types from `data/cell_line_list.txt` (11 cell lines) by default; `--roadmap` mode supports all 57 Roadmap epigenomes via `data/roadmap_expression/.cache/EG.name.txt`. Key features: biosample ontology name mapping (e.g., NHEK→`keratinocyte`, HUVEC→`endothelial cell of umbilical vein`), 4DN Hi-C fallback, `--all-replicates` mode (one BAM per bio rep with `*best*` marker), ENCODE phase detection (ENCODE2/3/4 via `award.rfa`), `--report` HTML generation, per-file metadata JSON. Uses `frame=embedded` ENCODE search to get award info in a single query. BAM files must be **unfiltered alignments** (not filtered "alignments") because the ABC pipeline uses `MACS2 --keep-dup all`.
+**`scripts/download_encode_data.py`** — Queries ENCODE REST API to find and download unfiltered-alignment BAM files (DNase, H3K27ac, ATAC) and Hi-C `.hic` files. Reads cell types from `data/cell_line_list.txt` (11 cell lines) by default; `--roadmap` mode supports all 57 Roadmap epigenomes via `data/roadmap_expression/.cache/EG.name.txt`. Key features: biosample ontology name mapping (e.g., NHEK→`keratinocyte`, HUVEC→`endothelial cell of umbilical vein`), 4DN Hi-C fallback, `--all-replicates` mode (one BAM per bio rep with `*best*` marker), ENCODE phase detection (ENCODE2/3/4 via `award.rfa`), `--report` HTML generation, per-file metadata JSON. Uses `frame=embedded` ENCODE search to get award info in a single query. BAM files must be **unfiltered alignments** (not filtered "alignments") because the ABC pipeline uses `MACS2 --keep-dup all`. Supports `--save-manifest PATH` to export TSV+JSON manifests and `--from-manifest PATH.json` to download from a saved manifest without re-querying the API. Pre-built manifests: `data/encode_manifest.{tsv,json}` (11 cell lines), `data/roadmap_encode_manifest.{tsv,json}` (57 epigenomes).
+
+**`scripts/build_roadmap_manifest.py`** — Builds a per-replicate download manifest for 38 verified Roadmap epigenomes (exact/close ENCODE matches) across DNase, H3K27ac, and Hi-C. Selects the best experiment per assay (newest pipeline, most replicates), includes all biological replicates, marks the best (largest file). Outputs `data/roadmap_download_manifest.{tsv,json,html}`. The mapping was verified against Roadmap metadata (`Roadmap.metadata.qc.jul2013.xlsx`) — E024 was corrected (was wrongly mapped to CD4+ Treg instead of ESC), E016/HUES64 confirmed no DNase. See `docs/encode_data_guide.md` for the full search→match→review→download pipeline.
 
 **`preprocessing/data_prep/build_gene_annotation.py`** — Builds hg38 gene annotation BED from Roadmap's Ensembl v65 gene_info by lifting over hg19 coordinates. Supports `--gene-set pc` (protein-coding, ~20K) or `--gene-set pc_linc` (+ lincRNA, ~25K). Requires `liftOver` binary on PATH.
 

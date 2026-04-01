@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Roadmap to ENCODE Mapping — Verified</title>
+<title>Roadmap Epigenomes — ENCODE Data Availability</title>
 <style>
   body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
          margin: 2em; background: #fafafa; color: #333; }
@@ -10,70 +10,60 @@
   h2 { color: #555; font-size: 1em; font-weight: 400; margin-top: 0; }
   .summary { background: #fff; border: 1px solid #ddd; border-radius: 8px;
               padding: 1em 1.5em; margin-bottom: 1.5em; }
-  .stat { display: inline-block; margin-right: 1.5em; text-align: center; }
-  .stat b { display: block; font-size: 1.6em; color: #1a1a2e; }
+  .stat { display: inline-block; margin-right: 2em; text-align: center; }
+  .stat b { display: block; font-size: 1.8em; color: #1a1a2e; }
   table { border-collapse: collapse; width: 100%; background: #fff;
            box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-radius: 8px;
-           overflow: hidden; font-size: 0.83em; }
+           overflow: hidden; font-size: 0.84em; }
   th { background: #1a1a2e; color: #fff; padding: 8px 10px; text-align: left;
        font-size: 0.78em; text-transform: uppercase; letter-spacing: 0.5px;
        position: sticky; top: 0; z-index: 10; }
   td { padding: 6px 10px; border-bottom: 1px solid #eee; vertical-align: top; }
   tr:hover { background: #f5f5ff; }
-  .eid { font-weight: 700; font-family: monospace; }
+  .eid { font-weight: 700; font-family: monospace; white-space: nowrap; }
+  .std-name { max-width: 250px; }
   .group { color: #666; font-size: 0.85em; }
   .anatomy { color: #888; font-size: 0.85em; }
   a { color: #2563eb; text-decoration: none; }
   a:hover { text-decoration: underline; }
-  .na { color: #bbb; font-style: italic; }
+  .na { color: #bbb; font-style: italic; font-size: 0.85em; }
   .no { color: #ddd; }
   .yes { background: #22c55e; color: #fff; font-size: 0.72em; padding: 2px 6px;
           border-radius: 4px; font-weight: 700; }
-  .conf { font-size: 0.72em; padding: 2px 8px; border-radius: 4px; font-weight: 700; }
-  .conf-exact { background: #22c55e; color: #fff; }
-  .conf-close { background: #3b82f6; color: #fff; }
-  .conf-broad { background: #f59e0b; color: #fff; }
-  .conf-wrong { background: #ef4444; color: #fff; }
-  .conf-none { background: #6b7280; color: #fff; }
-  .issue { background: #fef3c7; color: #92400e; font-size: 0.7em; padding: 1px 5px;
-            border-radius: 3px; margin-left: 4px; }
-  .issue-critical { background: #fee2e2; color: #991b1b; font-size: 0.7em; padding: 1px 5px;
-                     border-radius: 3px; margin-left: 4px; font-weight: 700; }
   .complete { background: #22c55e; color: #fff; font-size: 0.72em; padding: 2px 8px;
                border-radius: 4px; font-weight: 700; }
   .partial { background: #f59e0b; color: #fff; font-size: 0.72em; padding: 2px 8px;
               border-radius: 4px; font-weight: 700; }
   .dnase-only { background: #3b82f6; color: #fff; font-size: 0.72em; padding: 2px 8px;
                  border-radius: 4px; font-weight: 700; }
-  .unmapped { background: #6b7280; color: #fff; font-size: 0.72em; padding: 2px 8px;
+  .unmapped { background: #ef4444; color: #fff; font-size: 0.72em; padding: 2px 8px;
                border-radius: 4px; font-weight: 700; }
-  .wrong-status { background: #ef4444; color: #fff; font-size: 0.72em; padding: 2px 8px;
-                   border-radius: 4px; font-weight: 700; }
-  .note { color: #888; font-size: 0.8em; font-style: italic; max-width: 320px; }
+  .phase { font-size: 0.7em; padding: 2px 6px; border-radius: 4px; font-weight: 700; }
+  .phase-4 { background: #2563eb; color: #fff; }
+  .phase-3 { background: #f59e0b; color: #fff; }
+  .phase-2 { background: #9ca3af; color: #fff; }
   input[type=text] { padding: 6px 12px; border: 1px solid #ddd; border-radius: 6px;
                       width: 300px; margin-bottom: 1em; font-size: 0.9em; }
   footer { margin-top: 2em; color: #999; font-size: 0.8em; }
 </style>
 </head>
 <body>
-<h1>Roadmap to ENCODE Mapping — Verified</h1>
-<h2>Manual review of biosample name mapping + ENCODE data availability (DNase, H3K27ac, RNA-seq)</h2>
+<h1>Roadmap Epigenomes — ENCODE Data Availability</h1>
+<h2>Cross-reference of 57 Roadmap epigenomes with ENCODE unfiltered DNase BAMs, H3K27ac, and RNA-seq (GRCh38)</h2>
 
 <div class="summary">
-  <div class="stat"><b>28</b><span class="conf conf-exact">Exact</span></div>
-  <div class="stat"><b>10</b><span class="conf conf-close">Close</span></div>
-  <div class="stat"><b>10</b><span class="conf conf-broad">Broad</span></div>
-  <div class="stat"><b>1</b><span class="conf conf-wrong">Wrong</span></div>
-  <div class="stat"><b>8</b><span class="conf conf-none">None</span></div>
+  <div class="stat"><b>57</b>Roadmap<br>epigenomes</div>
+  <div class="stat"><b>50</b>DNase on<br>ENCODE</div>
+  <div class="stat"><b>37</b>+ H3K27ac</div>
+  <div class="stat"><b>50</b>+ RNA-seq</div>
+  <div class="stat"><b>37</b><span class="complete">Complete</span><br>(all three)</div>
+  <div class="stat"><b>6</b><span class="unmapped">Unmapped</span></div>
   <br><br>
-  <b>Exact</b> = same cell type/tissue. 
-  <b>Close</b> = similar but not identical (e.g., different ESC line, or HMEC vs mammary epithelial).
-  <b>Broad</b> = specific term has no DNase data; using broader category (e.g., hippocampus -> brain).
-  <b>Wrong</b> = previously incorrect mapping (now fixed).
-  <b>None</b> = no usable ENCODE data.
-  <br>
-  <span class="issue">issue tags</span> flag specific concerns. <span class="issue-critical">was wrong</span> = mapping error caught during review.
-  <br>Generated: 2026-04-01 10:28
+  <span class="complete">Complete</span> = DNase + H3K27ac + RNA-seq &nbsp;
+  <span class="partial">Partial</span> = DNase + one of H3K27ac/RNA-seq &nbsp;
+  <span class="dnase-only">DNase only</span> &nbsp;
+  <span class="unmapped">Unmapped</span> = no ENCODE biosample match
+  <br>Generated: 2026-04-01 10:15
 </div>
 
 <input type="text" id="filter" placeholder="Filter..." oninput="filterTable()">
@@ -82,759 +72,817 @@
 <thead>
 <tr>
   <th>EID</th>
+  <th>Short Name</th>
+  <th>Roadmap Standardized Name</th>
   <th>Group</th>
-  <th>Roadmap Name</th>
   <th>Anatomy</th>
   <th>ENCODE Biosample</th>
-  <th>Match Quality</th>
   <th>DNase</th>
   <th>H3K27ac</th>
   <th>RNA-seq</th>
   <th>Status</th>
-  <th>Notes</th>
+  <th>Best Accession</th>
+  <th>Phase</th>
 </tr>
 </thead>
 <tbody>
 <tr>
   <td class="eid">E000</td>
+  <td>Universal Human Reference</td>
+  <td class="std-name"></td>
   <td class="group"></td>
-  <td></td>
   <td class="anatomy"></td>
   <td><span class="na">-</span></td>
-  <td><span class="conf conf-none">None</span> </td>
-  <td><span class="no">-</span></td>
+  <td><span class="na">no mapping</span></td>
   <td><span class="no">-</span></td>
   <td><span class="no">-</span></td>
   <td><span class="unmapped">Unmapped</span></td>
-  <td class="note">Reference RNA, no ENCODE equivalent</td>
+  <td>-</td>
+  <td>-</td>
 </tr>
 <tr>
   <td class="eid">E003</td>
+  <td>H1</td>
+  <td class="std-name">H1 Cells</td>
   <td class="group">ESC</td>
-  <td>H1 Cells</td>
   <td class="anatomy">ESC</td>
   <td><a href="https://www.encodeproject.org/search/?type=File&status=released&assembly=GRCh38&biosample_ontology.term_name=H1&assay_title=DNase-seq&file_format=bam&output_type=unfiltered+alignments" target="_blank">H1</a></td>
-  <td><span class="conf conf-exact">Exact</span> </td>
-  <td><span class="yes">7</span></td>
+  <td><span class="yes">7 files</span></td>
   <td><span class="yes">Yes</span></td>
   <td><span class="yes">Yes</span></td>
   <td><span class="complete">Complete</span></td>
-  <td class="note"></td>
+  <td><a href="https://www.encodeproject.org/files/ENCFF966UXQ/" target="_blank">ENCFF966UXQ</a></td>
+  <td><span class="phase phase-4">ENCODE4</span></td>
 </tr>
 <tr>
   <td class="eid">E004</td>
+  <td>H1 BMP4 Mesendoderm</td>
+  <td class="std-name">H1 BMP4 Derived Mesendoderm Cultured Cells</td>
   <td class="group">ES-deriv</td>
-  <td>H1 BMP4 Derived Mesendoderm Cultured Cells</td>
   <td class="anatomy">ESC_DERIVED</td>
   <td><a href="https://www.encodeproject.org/search/?type=File&status=released&assembly=GRCh38&biosample_ontology.term_name=mesendoderm&assay_title=DNase-seq&file_format=bam&output_type=unfiltered+alignments" target="_blank">mesendoderm</a></td>
-  <td><span class="conf conf-exact">Exact</span> </td>
-  <td><span class="yes">3</span></td>
+  <td><span class="yes">3 files</span></td>
   <td><span class="yes">Yes</span></td>
   <td><span class="yes">Yes</span></td>
   <td><span class="complete">Complete</span></td>
-  <td class="note">ENCODE has H1-derived mesendoderm (ENCSR714DIF)</td>
+  <td><a href="https://www.encodeproject.org/files/ENCFF585KAH/" target="_blank">ENCFF585KAH</a></td>
+  <td><span class="phase phase-4">ENCODE4</span></td>
 </tr>
 <tr>
   <td class="eid">E005</td>
+  <td>H1 BMP4 Trophoblast</td>
+  <td class="std-name">H1 BMP4 Derived Trophoblast Cultured Cells</td>
   <td class="group">ES-deriv</td>
-  <td>H1 BMP4 Derived Trophoblast Cultured Cells</td>
   <td class="anatomy">ESC_DERIVED</td>
   <td><a href="https://www.encodeproject.org/search/?type=File&status=released&assembly=GRCh38&biosample_ontology.term_name=trophoblast%20cell&assay_title=DNase-seq&file_format=bam&output_type=unfiltered+alignments" target="_blank">trophoblast cell</a></td>
-  <td><span class="conf conf-wrong">Wrong</span> <span class="issue">source mismatch</span></td>
-  <td><span class="yes">17</span></td>
+  <td><span class="yes">17 files</span></td>
   <td><span class="yes">Yes</span></td>
   <td><span class="yes">Yes</span></td>
   <td><span class="complete">Complete</span></td>
-  <td class="note">Roadmap = H1-BMP4 derived; ENCODE trophoblasts are fetal (not H1-derived)</td>
+  <td><a href="https://www.encodeproject.org/files/ENCFF235GOT/" target="_blank">ENCFF235GOT</a></td>
+  <td><span class="phase phase-4">ENCODE4</span></td>
 </tr>
 <tr>
   <td class="eid">E006</td>
+  <td>H1 Mesenchymal SC</td>
+  <td class="std-name">H1 Derived Mesenchymal Stem Cells</td>
   <td class="group">ES-deriv</td>
-  <td>H1 Derived Mesenchymal Stem Cells</td>
   <td class="anatomy">ESC_DERIVED</td>
   <td><a href="https://www.encodeproject.org/search/?type=File&status=released&assembly=GRCh38&biosample_ontology.term_name=mesenchymal%20stem%20cell&assay_title=DNase-seq&file_format=bam&output_type=unfiltered+alignments" target="_blank">mesenchymal stem cell</a></td>
-  <td><span class="conf conf-exact">Exact</span> </td>
-  <td><span class="yes">4</span></td>
+  <td><span class="yes">4 files</span></td>
   <td><span class="yes">Yes</span></td>
   <td><span class="yes">Yes</span></td>
   <td><span class="complete">Complete</span></td>
-  <td class="note">ENCODE has H1-derived MSC (ENCSR731QLJ)</td>
+  <td><a href="https://www.encodeproject.org/files/ENCFF701GQV/" target="_blank">ENCFF701GQV</a></td>
+  <td><span class="phase phase-4">ENCODE4</span></td>
 </tr>
 <tr>
   <td class="eid">E007</td>
+  <td>H1 Neuronal Prog</td>
+  <td class="std-name">H1 Derived Neuronal Progenitor Cultured Cells</td>
   <td class="group">ES-deriv</td>
-  <td>H1 Derived Neuronal Progenitor Cultured Cells</td>
   <td class="anatomy">ESC_DERIVED</td>
   <td><a href="https://www.encodeproject.org/search/?type=File&status=released&assembly=GRCh38&biosample_ontology.term_name=neural%20progenitor%20cell&assay_title=DNase-seq&file_format=bam&output_type=unfiltered+alignments" target="_blank">neural progenitor cell</a></td>
-  <td><span class="conf conf-close">Close</span> <span class="issue">ESC line differs</span></td>
-  <td><span class="yes">4</span></td>
+  <td><span class="yes">4 files</span></td>
   <td><span class="yes">Yes</span></td>
   <td><span class="yes">Yes</span></td>
   <td><span class="complete">Complete</span></td>
-  <td class="note">Roadmap = H1-derived; ENCODE has H9-derived neural progenitors</td>
+  <td><a href="https://www.encodeproject.org/files/ENCFF281RRN/" target="_blank">ENCFF281RRN</a></td>
+  <td><span class="phase phase-4">ENCODE4</span></td>
 </tr>
 <tr>
   <td class="eid">E011</td>
+  <td>hESC CD184 Endoderm</td>
+  <td class="std-name">hESC Derived CD184+ Endoderm Cultured Cells</td>
   <td class="group">ES-deriv</td>
-  <td>hESC Derived CD184+ Endoderm Cultured Cells</td>
   <td class="anatomy">ESC_DERIVED</td>
   <td><a href="https://www.encodeproject.org/search/?type=File&status=released&assembly=GRCh38&biosample_ontology.term_name=endodermal%20cell&assay_title=DNase-seq&file_format=bam&output_type=unfiltered+alignments" target="_blank">endodermal cell</a></td>
-  <td><span class="conf conf-exact">Exact</span> </td>
-  <td><span class="yes">5</span></td>
+  <td><span class="yes">5 files</span></td>
   <td><span class="yes">Yes</span></td>
   <td><span class="yes">Yes</span></td>
   <td><span class="complete">Complete</span></td>
-  <td class="note">ENCODE has H1-derived endoderm (ENCSR940CXU)</td>
+  <td><a href="https://www.encodeproject.org/files/ENCFF800HSD/" target="_blank">ENCFF800HSD</a></td>
+  <td><span class="phase phase-4">ENCODE4</span></td>
 </tr>
 <tr>
   <td class="eid">E012</td>
+  <td>hESC CD56 Ectoderm</td>
+  <td class="std-name">hESC Derived CD56+ Ectoderm Cultured Cells</td>
   <td class="group">ES-deriv</td>
-  <td>hESC Derived CD56+ Ectoderm Cultured Cells</td>
   <td class="anatomy">ESC_DERIVED</td>
   <td><span class="na">-</span></td>
-  <td><span class="conf conf-none">None</span> </td>
-  <td><span class="no">-</span></td>
+  <td><span class="na">no mapping</span></td>
   <td><span class="no">-</span></td>
   <td><span class="no">-</span></td>
   <td><span class="unmapped">Unmapped</span></td>
-  <td class="note">hESC-derived CD56+ ectoderm — no ENCODE match</td>
+  <td>-</td>
+  <td>-</td>
 </tr>
 <tr>
   <td class="eid">E013</td>
+  <td>hESC CD56 Mesoderm</td>
+  <td class="std-name">hESC Derived CD56+ Mesoderm Cultured Cells</td>
   <td class="group">ES-deriv</td>
-  <td>hESC Derived CD56+ Mesoderm Cultured Cells</td>
   <td class="anatomy">ESC_DERIVED</td>
   <td><a href="https://www.encodeproject.org/search/?type=File&status=released&assembly=GRCh38&biosample_ontology.term_name=mesodermal%20cell&assay_title=DNase-seq&file_format=bam&output_type=unfiltered+alignments" target="_blank">mesodermal cell</a></td>
-  <td><span class="conf conf-close">Close</span> <span class="issue">ESC line differs</span></td>
-  <td><span class="yes">2</span></td>
+  <td><span class="yes">2 files</span></td>
   <td><span class="no">-</span></td>
   <td><span class="yes">Yes</span></td>
   <td><span class="partial">Partial</span></td>
-  <td class="note">Roadmap = hESC CD56+ mesoderm; ENCODE has H7-derived mesoderm</td>
+  <td><a href="https://www.encodeproject.org/files/ENCFF604YMS/" target="_blank">ENCFF604YMS</a></td>
+  <td><span class="phase phase-4">ENCODE4</span></td>
 </tr>
 <tr>
   <td class="eid">E016</td>
+  <td>HUES64</td>
+  <td class="std-name">HUES64 Cells</td>
   <td class="group">ESC</td>
-  <td>HUES64 Cells</td>
   <td class="anatomy">ESC</td>
   <td><span class="na">-</span></td>
-  <td><span class="conf conf-none">None</span> <span class="issue">no DNase</span></td>
   <td><span class="no">-</span></td>
   <td><span class="no">-</span></td>
   <td><span class="no">-</span></td>
-  <td><span class="unmapped">Unmapped</span></td>
-  <td class="note">HUES64 on ENCODE but has 0 DNase BAMs (has Hi-C, WGBS, RNA-seq)</td>
+  <td><span class="no">None</span></td>
+  <td>-</td>
+  <td>-</td>
 </tr>
 <tr>
   <td class="eid">E024</td>
+  <td>CD4 CD25 Treg</td>
+  <td class="std-name">ES-UCSF4  Cells</td>
   <td class="group">ESC</td>
-  <td>ES-UCSF4  Cells</td>
   <td class="anatomy">ESC</td>
-  <td><span class="na">-</span></td>
-  <td><span class="conf conf-none">None</span> <span class="issue-critical">was wrong</span></td>
+  <td><a href="https://www.encodeproject.org/search/?type=File&status=released&assembly=GRCh38&biosample_ontology.term_name=CD4-positive%2C%20CD25-positive%2C%20alpha-beta%20regulatory%20T%20cell&assay_title=DNase-seq&file_format=bam&output_type=unfiltered+alignments" target="_blank">CD4-positive, CD25-positive, alpha-beta regulatory T cell</a></td>
+  <td><span class="yes">9 files</span></td>
   <td><span class="no">-</span></td>
-  <td><span class="no">-</span></td>
-  <td><span class="no">-</span></td>
-  <td><span class="unmapped">Unmapped</span></td>
-  <td class="note">ES-UCSF4 (ESC line) — was WRONGLY mapped to CD4+ Treg. No ENCODE match.</td>
+  <td><span class="yes">Yes</span></td>
+  <td><span class="partial">Partial</span></td>
+  <td><a href="https://www.encodeproject.org/files/ENCFF212NUC/" target="_blank">ENCFF212NUC</a></td>
+  <td><span class="phase phase-4">ENCODE4</span></td>
 </tr>
 <tr>
   <td class="eid">E027</td>
+  <td>Breast Myoepithelial</td>
+  <td class="std-name">Breast Myoepithelial Primary Cells</td>
   <td class="group">Epithelial</td>
-  <td>Breast Myoepithelial Primary Cells</td>
   <td class="anatomy">BREAST</td>
   <td><span class="na">-</span></td>
-  <td><span class="conf conf-none">None</span> </td>
-  <td><span class="no">-</span></td>
+  <td><span class="na">no mapping</span></td>
   <td><span class="no">-</span></td>
   <td><span class="no">-</span></td>
   <td><span class="unmapped">Unmapped</span></td>
-  <td class="note">Breast myoepithelial — ENCODE term exists but 0 DNase BAMs</td>
+  <td>-</td>
+  <td>-</td>
 </tr>
 <tr>
   <td class="eid">E028</td>
+  <td>Breast vHMEC</td>
+  <td class="std-name">Breast variant Human Mammary Epithelial Cells (vHMEC)</td>
   <td class="group">Epithelial</td>
-  <td>Breast variant Human Mammary Epithelial Cells (vHMEC)</td>
   <td class="anatomy">BREAST</td>
   <td><a href="https://www.encodeproject.org/search/?type=File&status=released&assembly=GRCh38&biosample_ontology.term_name=mammary%20epithelial%20cell&assay_title=DNase-seq&file_format=bam&output_type=unfiltered+alignments" target="_blank">mammary epithelial cell</a></td>
-  <td><span class="conf conf-close">Close</span> </td>
-  <td><span class="yes">9</span></td>
+  <td><span class="yes">9 files</span></td>
   <td><span class="yes">Yes</span></td>
   <td><span class="yes">Yes</span></td>
   <td><span class="complete">Complete</span></td>
-  <td class="note">vHMEC mapped to general mammary epithelial cell</td>
+  <td><a href="https://www.encodeproject.org/files/ENCFF037PGN/" target="_blank">ENCFF037PGN</a></td>
+  <td><span class="phase phase-4">ENCODE4</span></td>
 </tr>
 <tr>
   <td class="eid">E037</td>
+  <td>CD4 Memory</td>
+  <td class="std-name">Primary T helper memory cells from peripheral blood 2</td>
   <td class="group">Blood & T-cell</td>
-  <td>Primary T helper memory cells from peripheral blood 2</td>
   <td class="anatomy">BLOOD</td>
   <td><a href="https://www.encodeproject.org/search/?type=File&status=released&assembly=GRCh38&biosample_ontology.term_name=CD4-positive%2C%20alpha-beta%20memory%20T%20cell&assay_title=DNase-seq&file_format=bam&output_type=unfiltered+alignments" target="_blank">CD4-positive, alpha-beta memory T cell</a></td>
-  <td><span class="conf conf-exact">Exact</span> </td>
-  <td><span class="yes">5</span></td>
+  <td><span class="yes">5 files</span></td>
   <td><span class="no">-</span></td>
   <td><span class="yes">Yes</span></td>
   <td><span class="partial">Partial</span></td>
-  <td class="note"></td>
+  <td><a href="https://www.encodeproject.org/files/ENCFF105DXR/" target="_blank">ENCFF105DXR</a></td>
+  <td><span class="phase phase-4">ENCODE4</span></td>
 </tr>
 <tr>
   <td class="eid">E038</td>
+  <td>CD4 Naive</td>
+  <td class="std-name">Primary T helper naive cells from peripheral blood</td>
   <td class="group">Blood & T-cell</td>
-  <td>Primary T helper naive cells from peripheral blood</td>
   <td class="anatomy">BLOOD</td>
   <td><a href="https://www.encodeproject.org/search/?type=File&status=released&assembly=GRCh38&biosample_ontology.term_name=naive%20thymus-derived%20CD4-positive%2C%20alpha-beta%20T%20cell&assay_title=DNase-seq&file_format=bam&output_type=unfiltered+alignments" target="_blank">naive thymus-derived CD4-positive, alpha-beta T cell</a></td>
-  <td><span class="conf conf-exact">Exact</span> </td>
-  <td><span class="yes">19</span></td>
+  <td><span class="yes">19 files</span></td>
   <td><span class="no">-</span></td>
   <td><span class="yes">Yes</span></td>
   <td><span class="partial">Partial</span></td>
-  <td class="note"></td>
+  <td><a href="https://www.encodeproject.org/files/ENCFF441QOR/" target="_blank">ENCFF441QOR</a></td>
+  <td><span class="phase phase-4">ENCODE4</span></td>
 </tr>
 <tr>
   <td class="eid">E047</td>
+  <td>CD8 Naive</td>
+  <td class="std-name">Primary T CD8+ naive cells from peripheral blood</td>
   <td class="group">Blood & T-cell</td>
-  <td>Primary T CD8+ naive cells from peripheral blood</td>
   <td class="anatomy">BLOOD</td>
   <td><a href="https://www.encodeproject.org/search/?type=File&status=released&assembly=GRCh38&biosample_ontology.term_name=naive%20thymus-derived%20CD8-positive%2C%20alpha-beta%20T%20cell&assay_title=DNase-seq&file_format=bam&output_type=unfiltered+alignments" target="_blank">naive thymus-derived CD8-positive, alpha-beta T cell</a></td>
-  <td><span class="conf conf-exact">Exact</span> </td>
-  <td><span class="yes">12</span></td>
+  <td><span class="yes">12 files</span></td>
   <td><span class="no">-</span></td>
   <td><span class="yes">Yes</span></td>
   <td><span class="partial">Partial</span></td>
-  <td class="note"></td>
+  <td><a href="https://www.encodeproject.org/files/ENCFF141NLE/" target="_blank">ENCFF141NLE</a></td>
+  <td><span class="phase phase-4">ENCODE4</span></td>
 </tr>
 <tr>
   <td class="eid">E050</td>
+  <td>CD34 Mobilized</td>
+  <td class="std-name">Primary hematopoietic stem cells G-CSF-mobilized Female</td>
   <td class="group">HSC & B-cell</td>
-  <td>Primary hematopoietic stem cells G-CSF-mobilized Female</td>
   <td class="anatomy">BLOOD</td>
   <td><span class="na">-</span></td>
-  <td><span class="conf conf-none">None</span> </td>
-  <td><span class="no">-</span></td>
+  <td><span class="na">no mapping</span></td>
   <td><span class="no">-</span></td>
   <td><span class="no">-</span></td>
   <td><span class="unmapped">Unmapped</span></td>
-  <td class="note">G-CSF mobilized CD34+ stem cells — no ENCODE match</td>
+  <td>-</td>
+  <td>-</td>
 </tr>
 <tr>
   <td class="eid">E053</td>
+  <td>Neurosphere Cortex</td>
+  <td class="std-name">Cortex derived primary cultured neurospheres</td>
   <td class="group">Neurosph</td>
-  <td>Cortex derived primary cultured neurospheres</td>
   <td class="anatomy">BRAIN</td>
   <td><span class="na">-</span></td>
-  <td><span class="conf conf-none">None</span> </td>
-  <td><span class="no">-</span></td>
+  <td><span class="na">no mapping</span></td>
   <td><span class="no">-</span></td>
   <td><span class="no">-</span></td>
   <td><span class="unmapped">Unmapped</span></td>
-  <td class="note">Cortex-derived neurospheres — ENCODE term exists but 0 DNase BAMs</td>
+  <td>-</td>
+  <td>-</td>
 </tr>
 <tr>
   <td class="eid">E054</td>
+  <td>Neurosphere GE</td>
+  <td class="std-name">Ganglion Eminence derived primary cultured neurospheres</td>
   <td class="group">Neurosph</td>
-  <td>Ganglion Eminence derived primary cultured neurospheres</td>
   <td class="anatomy">BRAIN</td>
   <td><a href="https://www.encodeproject.org/search/?type=File&status=released&assembly=GRCh38&biosample_ontology.term_name=neural%20crest%20cell&assay_title=DNase-seq&file_format=bam&output_type=unfiltered+alignments" target="_blank">neural crest cell</a></td>
-  <td><span class="conf conf-broad">Broad</span> <span class="issue">imprecise</span></td>
-  <td><span class="yes">2</span></td>
+  <td><span class="yes">2 files</span></td>
   <td><span class="no">-</span></td>
   <td><span class="yes">Yes</span></td>
   <td><span class="partial">Partial</span></td>
-  <td class="note">GE-derived neurospheres; neurosphere has 0 DNase BAMs; neural crest is approximate</td>
+  <td><a href="https://www.encodeproject.org/files/ENCFF470PUW/" target="_blank">ENCFF470PUW</a></td>
+  <td><span class="phase phase-4">ENCODE4</span></td>
 </tr>
 <tr>
   <td class="eid">E055</td>
+  <td>Foreskin Fibro 1</td>
+  <td class="std-name">Foreskin Fibroblast Primary Cells skin01</td>
   <td class="group">Epithelial</td>
-  <td>Foreskin Fibroblast Primary Cells skin01</td>
   <td class="anatomy">SKIN</td>
   <td><a href="https://www.encodeproject.org/search/?type=File&status=released&assembly=GRCh38&biosample_ontology.term_name=foreskin%20fibroblast&assay_title=DNase-seq&file_format=bam&output_type=unfiltered+alignments" target="_blank">foreskin fibroblast</a></td>
-  <td><span class="conf conf-exact">Exact</span> </td>
-  <td><span class="yes">14</span></td>
+  <td><span class="yes">14 files</span></td>
   <td><span class="no">-</span></td>
   <td><span class="yes">Yes</span></td>
   <td><span class="partial">Partial</span></td>
-  <td class="note"></td>
+  <td><a href="https://www.encodeproject.org/files/ENCFF443DQB/" target="_blank">ENCFF443DQB</a></td>
+  <td><span class="phase phase-4">ENCODE4</span></td>
 </tr>
 <tr>
   <td class="eid">E056</td>
+  <td>Foreskin Fibro 2</td>
+  <td class="std-name">Foreskin Fibroblast Primary Cells skin02</td>
   <td class="group">Epithelial</td>
-  <td>Foreskin Fibroblast Primary Cells skin02</td>
   <td class="anatomy">SKIN</td>
   <td><a href="https://www.encodeproject.org/search/?type=File&status=released&assembly=GRCh38&biosample_ontology.term_name=foreskin%20fibroblast&assay_title=DNase-seq&file_format=bam&output_type=unfiltered+alignments" target="_blank">foreskin fibroblast</a></td>
-  <td><span class="conf conf-exact">Exact</span> </td>
-  <td><span class="yes">14</span></td>
+  <td><span class="yes">14 files</span></td>
   <td><span class="no">-</span></td>
   <td><span class="yes">Yes</span></td>
   <td><span class="partial">Partial</span></td>
-  <td class="note">Same ENCODE biosample as E055 (different donor)</td>
+  <td><a href="https://www.encodeproject.org/files/ENCFF443DQB/" target="_blank">ENCFF443DQB</a></td>
+  <td><span class="phase phase-4">ENCODE4</span></td>
 </tr>
 <tr>
   <td class="eid">E057</td>
+  <td>Foreskin Kerat 2</td>
+  <td class="std-name">Foreskin Keratinocyte Primary Cells skin02</td>
   <td class="group">Epithelial</td>
-  <td>Foreskin Keratinocyte Primary Cells skin02</td>
   <td class="anatomy">SKIN</td>
   <td><a href="https://www.encodeproject.org/search/?type=File&status=released&assembly=GRCh38&biosample_ontology.term_name=foreskin%20keratinocyte&assay_title=DNase-seq&file_format=bam&output_type=unfiltered+alignments" target="_blank">foreskin keratinocyte</a></td>
-  <td><span class="conf conf-exact">Exact</span> </td>
-  <td><span class="yes">7</span></td>
+  <td><span class="yes">7 files</span></td>
   <td><span class="yes">Yes</span></td>
   <td><span class="yes">Yes</span></td>
   <td><span class="complete">Complete</span></td>
-  <td class="note"></td>
+  <td><a href="https://www.encodeproject.org/files/ENCFF218LFH/" target="_blank">ENCFF218LFH</a></td>
+  <td><span class="phase phase-4">ENCODE4</span></td>
 </tr>
 <tr>
   <td class="eid">E058</td>
+  <td>Foreskin Kerat 3</td>
+  <td class="std-name">Foreskin Keratinocyte Primary Cells skin03</td>
   <td class="group">Epithelial</td>
-  <td>Foreskin Keratinocyte Primary Cells skin03</td>
   <td class="anatomy">SKIN</td>
   <td><a href="https://www.encodeproject.org/search/?type=File&status=released&assembly=GRCh38&biosample_ontology.term_name=foreskin%20keratinocyte&assay_title=DNase-seq&file_format=bam&output_type=unfiltered+alignments" target="_blank">foreskin keratinocyte</a></td>
-  <td><span class="conf conf-exact">Exact</span> </td>
-  <td><span class="yes">7</span></td>
+  <td><span class="yes">7 files</span></td>
   <td><span class="yes">Yes</span></td>
   <td><span class="yes">Yes</span></td>
   <td><span class="complete">Complete</span></td>
-  <td class="note">Same ENCODE biosample as E057 (different donor)</td>
+  <td><a href="https://www.encodeproject.org/files/ENCFF218LFH/" target="_blank">ENCFF218LFH</a></td>
+  <td><span class="phase phase-4">ENCODE4</span></td>
 </tr>
 <tr>
   <td class="eid">E059</td>
+  <td>Foreskin Melano 1</td>
+  <td class="std-name">Foreskin Melanocyte Primary Cells skin01</td>
   <td class="group">Epithelial</td>
-  <td>Foreskin Melanocyte Primary Cells skin01</td>
   <td class="anatomy">SKIN</td>
   <td><a href="https://www.encodeproject.org/search/?type=File&status=released&assembly=GRCh38&biosample_ontology.term_name=foreskin%20melanocyte&assay_title=DNase-seq&file_format=bam&output_type=unfiltered+alignments" target="_blank">foreskin melanocyte</a></td>
-  <td><span class="conf conf-exact">Exact</span> </td>
-  <td><span class="yes">7</span></td>
+  <td><span class="yes">7 files</span></td>
   <td><span class="no">-</span></td>
   <td><span class="yes">Yes</span></td>
   <td><span class="partial">Partial</span></td>
-  <td class="note"></td>
+  <td><a href="https://www.encodeproject.org/files/ENCFF768NBD/" target="_blank">ENCFF768NBD</a></td>
+  <td><span class="phase phase-4">ENCODE4</span></td>
 </tr>
 <tr>
   <td class="eid">E061</td>
+  <td>Foreskin Melano 3</td>
+  <td class="std-name">Foreskin Melanocyte Primary Cells skin03</td>
   <td class="group">Epithelial</td>
-  <td>Foreskin Melanocyte Primary Cells skin03</td>
   <td class="anatomy">SKIN</td>
   <td><a href="https://www.encodeproject.org/search/?type=File&status=released&assembly=GRCh38&biosample_ontology.term_name=foreskin%20melanocyte&assay_title=DNase-seq&file_format=bam&output_type=unfiltered+alignments" target="_blank">foreskin melanocyte</a></td>
-  <td><span class="conf conf-exact">Exact</span> </td>
-  <td><span class="yes">7</span></td>
+  <td><span class="yes">7 files</span></td>
   <td><span class="no">-</span></td>
   <td><span class="yes">Yes</span></td>
   <td><span class="partial">Partial</span></td>
-  <td class="note">Same ENCODE biosample as E059 (different donor)</td>
+  <td><a href="https://www.encodeproject.org/files/ENCFF768NBD/" target="_blank">ENCFF768NBD</a></td>
+  <td><span class="phase phase-4">ENCODE4</span></td>
 </tr>
 <tr>
   <td class="eid">E062</td>
+  <td>PBMC</td>
+  <td class="std-name">Primary mononuclear cells from peripheral blood</td>
   <td class="group">Blood & T-cell</td>
-  <td>Primary mononuclear cells from peripheral blood</td>
   <td class="anatomy">BLOOD</td>
   <td><span class="na">-</span></td>
-  <td><span class="conf conf-none">None</span> <span class="issue">no DNase</span></td>
-  <td><span class="no">-</span></td>
+  <td><span class="na">no mapping</span></td>
   <td><span class="no">-</span></td>
   <td><span class="no">-</span></td>
   <td><span class="unmapped">Unmapped</span></td>
-  <td class="note">PBMC — ENCODE term exists but 0 DNase BAMs on GRCh38</td>
+  <td>-</td>
+  <td>-</td>
 </tr>
 <tr>
   <td class="eid">E065</td>
-  <td class="group">Heart</td>
   <td>Aorta</td>
+  <td class="std-name">Aorta</td>
+  <td class="group">Heart</td>
   <td class="anatomy">VASCULAR</td>
   <td><a href="https://www.encodeproject.org/search/?type=File&status=released&assembly=GRCh38&biosample_ontology.term_name=aorta&assay_title=DNase-seq&file_format=bam&output_type=unfiltered+alignments" target="_blank">aorta</a></td>
-  <td><span class="conf conf-exact">Exact</span> </td>
-  <td><span class="yes">2</span></td>
+  <td><span class="yes">2 files</span></td>
   <td><span class="yes">Yes</span></td>
   <td><span class="yes">Yes</span></td>
   <td><span class="complete">Complete</span></td>
-  <td class="note"></td>
+  <td><a href="https://www.encodeproject.org/files/ENCFF397WGK/" target="_blank">ENCFF397WGK</a></td>
+  <td><span class="phase phase-4">ENCODE4</span></td>
 </tr>
 <tr>
   <td class="eid">E066</td>
+  <td>Adult Liver</td>
+  <td class="std-name">Liver</td>
   <td class="group">Other</td>
-  <td>Liver</td>
   <td class="anatomy">LIVER</td>
   <td><a href="https://www.encodeproject.org/search/?type=File&status=released&assembly=GRCh38&biosample_ontology.term_name=liver&assay_title=DNase-seq&file_format=bam&output_type=unfiltered+alignments" target="_blank">liver</a></td>
-  <td><span class="conf conf-broad">Broad</span> </td>
-  <td><span class="yes">6</span></td>
+  <td><span class="yes">6 files</span></td>
   <td><span class="yes">Yes</span></td>
   <td><span class="yes">Yes</span></td>
   <td><span class="complete">Complete</span></td>
-  <td class="note">Adult liver mapped to general liver (includes fetal)</td>
+  <td><a href="https://www.encodeproject.org/files/ENCFF623XDR/" target="_blank">ENCFF623XDR</a></td>
+  <td><span class="phase phase-4">ENCODE4</span></td>
 </tr>
 <tr>
   <td class="eid">E070</td>
-  <td class="group">Brain</td>
   <td>Brain Germinal Matrix</td>
+  <td class="std-name">Brain Germinal Matrix</td>
+  <td class="group">Brain</td>
   <td class="anatomy">BRAIN</td>
   <td><a href="https://www.encodeproject.org/search/?type=File&status=released&assembly=GRCh38&biosample_ontology.term_name=brain&assay_title=DNase-seq&file_format=bam&output_type=unfiltered+alignments" target="_blank">brain</a></td>
-  <td><span class="conf conf-broad">Broad</span> <span class="issue">broad fallback</span></td>
-  <td><span class="yes">39</span></td>
+  <td><span class="yes">39 files</span></td>
   <td><span class="no">-</span></td>
   <td><span class="yes">Yes</span></td>
   <td><span class="partial">Partial</span></td>
-  <td class="note">Germinal matrix has 0 DNase BAMs; using general brain (39 files, mixed regions)</td>
+  <td><a href="https://www.encodeproject.org/files/ENCFF594ZYT/" target="_blank">ENCFF594ZYT</a></td>
+  <td><span class="phase phase-4">ENCODE4</span></td>
 </tr>
 <tr>
   <td class="eid">E071</td>
+  <td>Brain Hippocampus</td>
+  <td class="std-name">Brain Hippocampus Middle</td>
   <td class="group">Brain</td>
-  <td>Brain Hippocampus Middle</td>
   <td class="anatomy">BRAIN</td>
   <td><a href="https://www.encodeproject.org/search/?type=File&status=released&assembly=GRCh38&biosample_ontology.term_name=brain&assay_title=DNase-seq&file_format=bam&output_type=unfiltered+alignments" target="_blank">brain</a></td>
-  <td><span class="conf conf-broad">Broad</span> <span class="issue">broad fallback</span></td>
-  <td><span class="yes">39</span></td>
+  <td><span class="yes">39 files</span></td>
   <td><span class="no">-</span></td>
   <td><span class="yes">Yes</span></td>
   <td><span class="partial">Partial</span></td>
-  <td class="note">Hippocampus has 0 DNase BAMs; using general brain. Ammon's horn has some data.</td>
+  <td><a href="https://www.encodeproject.org/files/ENCFF594ZYT/" target="_blank">ENCFF594ZYT</a></td>
+  <td><span class="phase phase-4">ENCODE4</span></td>
 </tr>
 <tr>
   <td class="eid">E079</td>
-  <td class="group">Digestive</td>
   <td>Esophagus</td>
+  <td class="std-name">Esophagus</td>
+  <td class="group">Digestive</td>
   <td class="anatomy">GI_ESOPHAGUS</td>
   <td><a href="https://www.encodeproject.org/search/?type=File&status=released&assembly=GRCh38&biosample_ontology.term_name=esophagus%20squamous%20epithelium&assay_title=DNase-seq&file_format=bam&output_type=unfiltered+alignments" target="_blank">esophagus squamous epithelium</a></td>
-  <td><span class="conf conf-close">Close</span> </td>
-  <td><span class="yes">2</span></td>
+  <td><span class="yes">2 files</span></td>
   <td><span class="yes">Yes</span></td>
   <td><span class="yes">Yes</span></td>
   <td><span class="complete">Complete</span></td>
-  <td class="note"></td>
+  <td><a href="https://www.encodeproject.org/files/ENCFF699UQU/" target="_blank">ENCFF699UQU</a></td>
+  <td><span class="phase phase-4">ENCODE4</span></td>
 </tr>
 <tr>
   <td class="eid">E082</td>
+  <td>Fetal Brain</td>
+  <td class="std-name">Fetal Brain Female</td>
   <td class="group">Brain</td>
-  <td>Fetal Brain Female</td>
   <td class="anatomy">BRAIN</td>
   <td><a href="https://www.encodeproject.org/search/?type=File&status=released&assembly=GRCh38&biosample_ontology.term_name=brain&assay_title=DNase-seq&file_format=bam&output_type=unfiltered+alignments" target="_blank">brain</a></td>
-  <td><span class="conf conf-broad">Broad</span> <span class="issue">broad fallback</span></td>
-  <td><span class="yes">39</span></td>
+  <td><span class="yes">39 files</span></td>
   <td><span class="no">-</span></td>
   <td><span class="yes">Yes</span></td>
   <td><span class="partial">Partial</span></td>
-  <td class="note">Fetal brain has 0 DNase BAMs; using general brain</td>
+  <td><a href="https://www.encodeproject.org/files/ENCFF594ZYT/" target="_blank">ENCFF594ZYT</a></td>
+  <td><span class="phase phase-4">ENCODE4</span></td>
 </tr>
 <tr>
   <td class="eid">E084</td>
+  <td>Fetal Intestine Lg</td>
+  <td class="std-name">Fetal Intestine Large</td>
   <td class="group">Digestive</td>
-  <td>Fetal Intestine Large</td>
   <td class="anatomy">GI_INTESTINE</td>
   <td><a href="https://www.encodeproject.org/search/?type=File&status=released&assembly=GRCh38&biosample_ontology.term_name=large%20intestine&assay_title=DNase-seq&file_format=bam&output_type=unfiltered+alignments" target="_blank">large intestine</a></td>
-  <td><span class="conf conf-broad">Broad</span> </td>
-  <td><span class="yes">28</span></td>
+  <td><span class="yes">28 files</span></td>
   <td><span class="yes">Yes</span></td>
   <td><span class="yes">Yes</span></td>
   <td><span class="complete">Complete</span></td>
-  <td class="note">Fetal large intestine mapped to general large intestine</td>
+  <td><a href="https://www.encodeproject.org/files/ENCFF091HXM/" target="_blank">ENCFF091HXM</a></td>
+  <td><span class="phase phase-4">ENCODE4</span></td>
 </tr>
 <tr>
   <td class="eid">E085</td>
+  <td>Fetal Intestine Sm</td>
+  <td class="std-name">Fetal Intestine Small</td>
   <td class="group">Digestive</td>
-  <td>Fetal Intestine Small</td>
   <td class="anatomy">GI_INTESTINE</td>
   <td><a href="https://www.encodeproject.org/search/?type=File&status=released&assembly=GRCh38&biosample_ontology.term_name=small%20intestine&assay_title=DNase-seq&file_format=bam&output_type=unfiltered+alignments" target="_blank">small intestine</a></td>
-  <td><span class="conf conf-broad">Broad</span> </td>
-  <td><span class="yes">27</span></td>
+  <td><span class="yes">27 files</span></td>
   <td><span class="yes">Yes</span></td>
   <td><span class="yes">Yes</span></td>
   <td><span class="complete">Complete</span></td>
-  <td class="note">Fetal small intestine mapped to general small intestine</td>
+  <td><a href="https://www.encodeproject.org/files/ENCFF931AYT/" target="_blank">ENCFF931AYT</a></td>
+  <td><span class="phase phase-4">ENCODE4</span></td>
 </tr>
 <tr>
   <td class="eid">E087</td>
-  <td class="group">Other</td>
   <td>Pancreatic Islets</td>
+  <td class="std-name">Pancreatic Islets</td>
+  <td class="group">Other</td>
   <td class="anatomy">PANCREAS</td>
   <td><a href="https://www.encodeproject.org/search/?type=File&status=released&assembly=GRCh38&biosample_ontology.term_name=pancreas&assay_title=DNase-seq&file_format=bam&output_type=unfiltered+alignments" target="_blank">pancreas</a></td>
-  <td><span class="conf conf-broad">Broad</span> <span class="issue">broad fallback</span></td>
-  <td><span class="yes">10</span></td>
+  <td><span class="yes">10 files</span></td>
   <td><span class="yes">Yes</span></td>
   <td><span class="yes">Yes</span></td>
   <td><span class="complete">Complete</span></td>
-  <td class="note">Islet of Langerhans has 0 DNase BAMs; using general pancreas</td>
+  <td><a href="https://www.encodeproject.org/files/ENCFF027VJJ/" target="_blank">ENCFF027VJJ</a></td>
+  <td><span class="phase phase-4">ENCODE4</span></td>
 </tr>
 <tr>
   <td class="eid">E094</td>
-  <td class="group">Digestive</td>
   <td>Gastric</td>
+  <td class="std-name">Gastric</td>
+  <td class="group">Digestive</td>
   <td class="anatomy">GI_STOMACH</td>
   <td><a href="https://www.encodeproject.org/search/?type=File&status=released&assembly=GRCh38&biosample_ontology.term_name=stomach&assay_title=DNase-seq&file_format=bam&output_type=unfiltered+alignments" target="_blank">stomach</a></td>
-  <td><span class="conf conf-close">Close</span> <span class="issue">broad fallback</span></td>
-  <td><span class="yes">43</span></td>
+  <td><span class="yes">43 files</span></td>
   <td><span class="yes">Yes</span></td>
   <td><span class="yes">Yes</span></td>
   <td><span class="complete">Complete</span></td>
-  <td class="note">Mucosa of stomach has 0 DNase BAMs; using stomach</td>
+  <td><a href="https://www.encodeproject.org/files/ENCFF815LKJ/" target="_blank">ENCFF815LKJ</a></td>
+  <td><span class="phase phase-4">ENCODE4</span></td>
 </tr>
 <tr>
   <td class="eid">E095</td>
-  <td class="group">Heart</td>
   <td>Left Ventricle</td>
+  <td class="std-name">Left Ventricle</td>
+  <td class="group">Heart</td>
   <td class="anatomy">HEART</td>
   <td><a href="https://www.encodeproject.org/search/?type=File&status=released&assembly=GRCh38&biosample_ontology.term_name=heart%20left%20ventricle&assay_title=DNase-seq&file_format=bam&output_type=unfiltered+alignments" target="_blank">heart left ventricle</a></td>
-  <td><span class="conf conf-exact">Exact</span> </td>
-  <td><span class="yes">15</span></td>
+  <td><span class="yes">15 files</span></td>
   <td><span class="yes">Yes</span></td>
   <td><span class="yes">Yes</span></td>
   <td><span class="complete">Complete</span></td>
-  <td class="note"></td>
+  <td><a href="https://www.encodeproject.org/files/ENCFF776NLW/" target="_blank">ENCFF776NLW</a></td>
+  <td><span class="phase phase-4">ENCODE4</span></td>
 </tr>
 <tr>
   <td class="eid">E096</td>
-  <td class="group">Other</td>
   <td>Lung</td>
+  <td class="std-name">Lung</td>
+  <td class="group">Other</td>
   <td class="anatomy">LUNG</td>
   <td><a href="https://www.encodeproject.org/search/?type=File&status=released&assembly=GRCh38&biosample_ontology.term_name=lung&assay_title=DNase-seq&file_format=bam&output_type=unfiltered+alignments" target="_blank">lung</a></td>
-  <td><span class="conf conf-broad">Broad</span> </td>
-  <td><span class="yes">35</span></td>
+  <td><span class="yes">35 files</span></td>
   <td><span class="yes">Yes</span></td>
   <td><span class="yes">Yes</span></td>
   <td><span class="complete">Complete</span></td>
-  <td class="note">General lung (may include fetal)</td>
+  <td><a href="https://www.encodeproject.org/files/ENCFF416BED/" target="_blank">ENCFF416BED</a></td>
+  <td><span class="phase phase-4">ENCODE4</span></td>
 </tr>
 <tr>
   <td class="eid">E097</td>
-  <td class="group">Other</td>
   <td>Ovary</td>
+  <td class="std-name">Ovary</td>
+  <td class="group">Other</td>
   <td class="anatomy">OVARY</td>
   <td><a href="https://www.encodeproject.org/search/?type=File&status=released&assembly=GRCh38&biosample_ontology.term_name=ovary&assay_title=DNase-seq&file_format=bam&output_type=unfiltered+alignments" target="_blank">ovary</a></td>
-  <td><span class="conf conf-exact">Exact</span> </td>
-  <td><span class="yes">13</span></td>
+  <td><span class="yes">13 files</span></td>
   <td><span class="yes">Yes</span></td>
   <td><span class="yes">Yes</span></td>
   <td><span class="complete">Complete</span></td>
-  <td class="note"></td>
+  <td><a href="https://www.encodeproject.org/files/ENCFF593QEZ/" target="_blank">ENCFF593QEZ</a></td>
+  <td><span class="phase phase-4">ENCODE4</span></td>
 </tr>
 <tr>
   <td class="eid">E098</td>
-  <td class="group">Other</td>
   <td>Pancreas</td>
+  <td class="std-name">Pancreas</td>
+  <td class="group">Other</td>
   <td class="anatomy">PANCREAS</td>
   <td><a href="https://www.encodeproject.org/search/?type=File&status=released&assembly=GRCh38&biosample_ontology.term_name=pancreas&assay_title=DNase-seq&file_format=bam&output_type=unfiltered+alignments" target="_blank">pancreas</a></td>
-  <td><span class="conf conf-exact">Exact</span> </td>
-  <td><span class="yes">10</span></td>
+  <td><span class="yes">10 files</span></td>
   <td><span class="yes">Yes</span></td>
   <td><span class="yes">Yes</span></td>
   <td><span class="complete">Complete</span></td>
-  <td class="note"></td>
+  <td><a href="https://www.encodeproject.org/files/ENCFF027VJJ/" target="_blank">ENCFF027VJJ</a></td>
+  <td><span class="phase phase-4">ENCODE4</span></td>
 </tr>
 <tr>
   <td class="eid">E100</td>
-  <td class="group">Muscle</td>
   <td>Psoas Muscle</td>
+  <td class="std-name">Psoas Muscle</td>
+  <td class="group">Muscle</td>
   <td class="anatomy">MUSCLE</td>
   <td><a href="https://www.encodeproject.org/search/?type=File&status=released&assembly=GRCh38&biosample_ontology.term_name=psoas%20muscle&assay_title=DNase-seq&file_format=bam&output_type=unfiltered+alignments" target="_blank">psoas muscle</a></td>
-  <td><span class="conf conf-exact">Exact</span> </td>
-  <td><span class="yes">10</span></td>
+  <td><span class="yes">10 files</span></td>
   <td><span class="yes">Yes</span></td>
   <td><span class="yes">Yes</span></td>
   <td><span class="complete">Complete</span></td>
-  <td class="note"></td>
+  <td><a href="https://www.encodeproject.org/files/ENCFF901DPU/" target="_blank">ENCFF901DPU</a></td>
+  <td><span class="phase phase-4">ENCODE4</span></td>
 </tr>
 <tr>
   <td class="eid">E104</td>
-  <td class="group">Heart</td>
   <td>Right Atrium</td>
+  <td class="std-name">Right Atrium</td>
+  <td class="group">Heart</td>
   <td class="anatomy">HEART</td>
   <td><a href="https://www.encodeproject.org/search/?type=File&status=released&assembly=GRCh38&biosample_ontology.term_name=right%20cardiac%20atrium&assay_title=DNase-seq&file_format=bam&output_type=unfiltered+alignments" target="_blank">right cardiac atrium</a></td>
-  <td><span class="conf conf-exact">Exact</span> </td>
-  <td><span class="yes">3</span></td>
+  <td><span class="yes">3 files</span></td>
   <td><span class="yes">Yes</span></td>
   <td><span class="yes">Yes</span></td>
   <td><span class="complete">Complete</span></td>
-  <td class="note"></td>
+  <td><a href="https://www.encodeproject.org/files/ENCFF629PRO/" target="_blank">ENCFF629PRO</a></td>
+  <td><span class="phase phase-4">ENCODE4</span></td>
 </tr>
 <tr>
   <td class="eid">E105</td>
-  <td class="group">Heart</td>
   <td>Right Ventricle</td>
+  <td class="std-name">Right Ventricle</td>
+  <td class="group">Heart</td>
   <td class="anatomy">HEART</td>
   <td><a href="https://www.encodeproject.org/search/?type=File&status=released&assembly=GRCh38&biosample_ontology.term_name=heart%20right%20ventricle&assay_title=DNase-seq&file_format=bam&output_type=unfiltered+alignments" target="_blank">heart right ventricle</a></td>
-  <td><span class="conf conf-exact">Exact</span> </td>
-  <td><span class="yes">13</span></td>
+  <td><span class="yes">13 files</span></td>
   <td><span class="yes">Yes</span></td>
   <td><span class="yes">Yes</span></td>
   <td><span class="complete">Complete</span></td>
-  <td class="note"></td>
+  <td><a href="https://www.encodeproject.org/files/ENCFF788XKC/" target="_blank">ENCFF788XKC</a></td>
+  <td><span class="phase phase-4">ENCODE4</span></td>
 </tr>
 <tr>
   <td class="eid">E106</td>
-  <td class="group">Digestive</td>
   <td>Sigmoid Colon</td>
+  <td class="std-name">Sigmoid Colon</td>
+  <td class="group">Digestive</td>
   <td class="anatomy">GI_COLON</td>
   <td><a href="https://www.encodeproject.org/search/?type=File&status=released&assembly=GRCh38&biosample_ontology.term_name=sigmoid%20colon&assay_title=DNase-seq&file_format=bam&output_type=unfiltered+alignments" target="_blank">sigmoid colon</a></td>
-  <td><span class="conf conf-exact">Exact</span> </td>
-  <td><span class="yes">5</span></td>
+  <td><span class="yes">5 files</span></td>
   <td><span class="yes">Yes</span></td>
   <td><span class="yes">Yes</span></td>
   <td><span class="complete">Complete</span></td>
-  <td class="note"></td>
+  <td><a href="https://www.encodeproject.org/files/ENCFF092HJS/" target="_blank">ENCFF092HJS</a></td>
+  <td><span class="phase phase-4">ENCODE4</span></td>
 </tr>
 <tr>
   <td class="eid">E109</td>
-  <td class="group">Digestive</td>
   <td>Small Intestine</td>
+  <td class="std-name">Small Intestine</td>
+  <td class="group">Digestive</td>
   <td class="anatomy">GI_INTESTINE</td>
   <td><a href="https://www.encodeproject.org/search/?type=File&status=released&assembly=GRCh38&biosample_ontology.term_name=small%20intestine&assay_title=DNase-seq&file_format=bam&output_type=unfiltered+alignments" target="_blank">small intestine</a></td>
-  <td><span class="conf conf-broad">Broad</span> </td>
-  <td><span class="yes">27</span></td>
+  <td><span class="yes">27 files</span></td>
   <td><span class="yes">Yes</span></td>
   <td><span class="yes">Yes</span></td>
   <td><span class="complete">Complete</span></td>
-  <td class="note">Same ENCODE biosample as E085</td>
+  <td><a href="https://www.encodeproject.org/files/ENCFF931AYT/" target="_blank">ENCFF931AYT</a></td>
+  <td><span class="phase phase-4">ENCODE4</span></td>
 </tr>
 <tr>
   <td class="eid">E112</td>
-  <td class="group">Thymus</td>
   <td>Thymus</td>
+  <td class="std-name">Thymus</td>
+  <td class="group">Thymus</td>
   <td class="anatomy">THYMUS</td>
   <td><a href="https://www.encodeproject.org/search/?type=File&status=released&assembly=GRCh38&biosample_ontology.term_name=thymus&assay_title=DNase-seq&file_format=bam&output_type=unfiltered+alignments" target="_blank">thymus</a></td>
-  <td><span class="conf conf-exact">Exact</span> </td>
-  <td><span class="yes">19</span></td>
+  <td><span class="yes">19 files</span></td>
   <td><span class="yes">Yes</span></td>
   <td><span class="yes">Yes</span></td>
   <td><span class="complete">Complete</span></td>
-  <td class="note"></td>
+  <td><a href="https://www.encodeproject.org/files/ENCFF706IXZ/" target="_blank">ENCFF706IXZ</a></td>
+  <td><span class="phase phase-4">ENCODE4</span></td>
 </tr>
 <tr>
   <td class="eid">E113</td>
-  <td class="group">Other</td>
   <td>Spleen</td>
+  <td class="std-name">Spleen</td>
+  <td class="group">Other</td>
   <td class="anatomy">SPLEEN</td>
   <td><a href="https://www.encodeproject.org/search/?type=File&status=released&assembly=GRCh38&biosample_ontology.term_name=spleen&assay_title=DNase-seq&file_format=bam&output_type=unfiltered+alignments" target="_blank">spleen</a></td>
-  <td><span class="conf conf-exact">Exact</span> </td>
-  <td><span class="yes">7</span></td>
+  <td><span class="yes">7 files</span></td>
   <td><span class="yes">Yes</span></td>
   <td><span class="yes">Yes</span></td>
   <td><span class="complete">Complete</span></td>
-  <td class="note"></td>
+  <td><a href="https://www.encodeproject.org/files/ENCFF627PAP/" target="_blank">ENCFF627PAP</a></td>
+  <td><span class="phase phase-4">ENCODE4</span></td>
 </tr>
 <tr>
   <td class="eid">E114</td>
+  <td>A549</td>
+  <td class="std-name">A549 EtOH 0.02pct Lung Carcinoma Cell Line</td>
   <td class="group">ENCODE2012</td>
-  <td>A549 EtOH 0.02pct Lung Carcinoma Cell Line</td>
   <td class="anatomy">LUNG</td>
   <td><a href="https://www.encodeproject.org/search/?type=File&status=released&assembly=GRCh38&biosample_ontology.term_name=A549&assay_title=DNase-seq&file_format=bam&output_type=unfiltered+alignments" target="_blank">A549</a></td>
-  <td><span class="conf conf-exact">Exact</span> </td>
-  <td><span class="yes">58</span></td>
+  <td><span class="yes">58 files</span></td>
   <td><span class="yes">Yes</span></td>
   <td><span class="yes">Yes</span></td>
   <td><span class="complete">Complete</span></td>
-  <td class="note"></td>
+  <td><a href="https://www.encodeproject.org/files/ENCFF995HBI/" target="_blank">ENCFF995HBI</a></td>
+  <td><span class="phase phase-4">ENCODE4</span></td>
 </tr>
 <tr>
   <td class="eid">E116</td>
+  <td>GM12878</td>
+  <td class="std-name">GM12878 Lymphoblastoid Cells</td>
   <td class="group">ENCODE2012</td>
-  <td>GM12878 Lymphoblastoid Cells</td>
   <td class="anatomy">BLOOD</td>
   <td><a href="https://www.encodeproject.org/search/?type=File&status=released&assembly=GRCh38&biosample_ontology.term_name=GM12878&assay_title=DNase-seq&file_format=bam&output_type=unfiltered+alignments" target="_blank">GM12878</a></td>
-  <td><span class="conf conf-exact">Exact</span> </td>
-  <td><span class="yes">4</span></td>
+  <td><span class="yes">4 files</span></td>
   <td><span class="yes">Yes</span></td>
   <td><span class="yes">Yes</span></td>
   <td><span class="complete">Complete</span></td>
-  <td class="note"></td>
+  <td><a href="https://www.encodeproject.org/files/ENCFF940NSD/" target="_blank">ENCFF940NSD</a></td>
+  <td><span class="phase phase-4">ENCODE4</span></td>
 </tr>
 <tr>
   <td class="eid">E117</td>
+  <td>HeLa</td>
+  <td class="std-name">HeLa-S3 Cervical Carcinoma Cell Line</td>
   <td class="group">ENCODE2012</td>
-  <td>HeLa-S3 Cervical Carcinoma Cell Line</td>
   <td class="anatomy">CERVIX</td>
   <td><a href="https://www.encodeproject.org/search/?type=File&status=released&assembly=GRCh38&biosample_ontology.term_name=HeLa-S3&assay_title=DNase-seq&file_format=bam&output_type=unfiltered+alignments" target="_blank">HeLa-S3</a></td>
-  <td><span class="conf conf-exact">Exact</span> </td>
-  <td><span class="yes">15</span></td>
+  <td><span class="yes">15 files</span></td>
   <td><span class="yes">Yes</span></td>
   <td><span class="yes">Yes</span></td>
   <td><span class="complete">Complete</span></td>
-  <td class="note"></td>
+  <td><a href="https://www.encodeproject.org/files/ENCFF187PXI/" target="_blank">ENCFF187PXI</a></td>
+  <td><span class="phase phase-4">ENCODE4</span></td>
 </tr>
 <tr>
   <td class="eid">E118</td>
+  <td>HepG2</td>
+  <td class="std-name">HepG2 Hepatocellular Carcinoma Cell Line</td>
   <td class="group">ENCODE2012</td>
-  <td>HepG2 Hepatocellular Carcinoma Cell Line</td>
   <td class="anatomy">LIVER</td>
   <td><a href="https://www.encodeproject.org/search/?type=File&status=released&assembly=GRCh38&biosample_ontology.term_name=HepG2&assay_title=DNase-seq&file_format=bam&output_type=unfiltered+alignments" target="_blank">HepG2</a></td>
-  <td><span class="conf conf-exact">Exact</span> </td>
-  <td><span class="yes">8</span></td>
+  <td><span class="yes">8 files</span></td>
   <td><span class="yes">Yes</span></td>
   <td><span class="yes">Yes</span></td>
   <td><span class="complete">Complete</span></td>
-  <td class="note"></td>
+  <td><a href="https://www.encodeproject.org/files/ENCFF878RGP/" target="_blank">ENCFF878RGP</a></td>
+  <td><span class="phase phase-4">ENCODE4</span></td>
 </tr>
 <tr>
   <td class="eid">E119</td>
+  <td>HMEC</td>
+  <td class="std-name">HMEC Mammary Epithelial Primary Cells</td>
   <td class="group">ENCODE2012</td>
-  <td>HMEC Mammary Epithelial Primary Cells</td>
   <td class="anatomy">BREAST</td>
   <td><a href="https://www.encodeproject.org/search/?type=File&status=released&assembly=GRCh38&biosample_ontology.term_name=mammary%20epithelial%20cell&assay_title=DNase-seq&file_format=bam&output_type=unfiltered+alignments" target="_blank">mammary epithelial cell</a></td>
-  <td><span class="conf conf-close">Close</span> </td>
-  <td><span class="yes">9</span></td>
+  <td><span class="yes">9 files</span></td>
   <td><span class="yes">Yes</span></td>
   <td><span class="yes">Yes</span></td>
   <td><span class="complete">Complete</span></td>
-  <td class="note">HMEC mapped to general mammary epithelial</td>
+  <td><a href="https://www.encodeproject.org/files/ENCFF037PGN/" target="_blank">ENCFF037PGN</a></td>
+  <td><span class="phase phase-4">ENCODE4</span></td>
 </tr>
 <tr>
   <td class="eid">E120</td>
+  <td>HSMM</td>
+  <td class="std-name">HSMM Skeletal Muscle Myoblasts Cells</td>
   <td class="group">ENCODE2012</td>
-  <td>HSMM Skeletal Muscle Myoblasts Cells</td>
   <td class="anatomy">MUSCLE</td>
   <td><a href="https://www.encodeproject.org/search/?type=File&status=released&assembly=GRCh38&biosample_ontology.term_name=skeletal%20muscle%20myoblast&assay_title=DNase-seq&file_format=bam&output_type=unfiltered+alignments" target="_blank">skeletal muscle myoblast</a></td>
-  <td><span class="conf conf-close">Close</span> </td>
-  <td><span class="yes">5</span></td>
+  <td><span class="yes">5 files</span></td>
   <td><span class="yes">Yes</span></td>
   <td><span class="yes">Yes</span></td>
   <td><span class="complete">Complete</span></td>
-  <td class="note">HSMM mapped to skeletal muscle myoblast</td>
+  <td><a href="https://www.encodeproject.org/files/ENCFF372SZT/" target="_blank">ENCFF372SZT</a></td>
+  <td><span class="phase phase-4">ENCODE4</span></td>
 </tr>
 <tr>
   <td class="eid">E122</td>
+  <td>HUVEC</td>
+  <td class="std-name">HUVEC Umbilical Vein Endothelial Primary Cells</td>
   <td class="group">ENCODE2012</td>
-  <td>HUVEC Umbilical Vein Endothelial Primary Cells</td>
   <td class="anatomy">VASCULAR</td>
   <td><a href="https://www.encodeproject.org/search/?type=File&status=released&assembly=GRCh38&biosample_ontology.term_name=endothelial%20cell%20of%20umbilical%20vein&assay_title=DNase-seq&file_format=bam&output_type=unfiltered+alignments" target="_blank">endothelial cell of umbilical vein</a></td>
-  <td><span class="conf conf-close">Close</span> </td>
-  <td><span class="yes">7</span></td>
+  <td><span class="yes">7 files</span></td>
   <td><span class="yes">Yes</span></td>
   <td><span class="yes">Yes</span></td>
   <td><span class="complete">Complete</span></td>
-  <td class="note">HUVEC</td>
+  <td><a href="https://www.encodeproject.org/files/ENCFF309JXB/" target="_blank">ENCFF309JXB</a></td>
+  <td><span class="phase phase-4">ENCODE4</span></td>
 </tr>
 <tr>
   <td class="eid">E123</td>
+  <td>K562</td>
+  <td class="std-name">K562 Leukemia Cells</td>
   <td class="group">ENCODE2012</td>
-  <td>K562 Leukemia Cells</td>
   <td class="anatomy">BLOOD</td>
   <td><a href="https://www.encodeproject.org/search/?type=File&status=released&assembly=GRCh38&biosample_ontology.term_name=K562&assay_title=DNase-seq&file_format=bam&output_type=unfiltered+alignments" target="_blank">K562</a></td>
-  <td><span class="conf conf-exact">Exact</span> </td>
-  <td><span class="yes">27</span></td>
+  <td><span class="yes">27 files</span></td>
   <td><span class="yes">Yes</span></td>
   <td><span class="yes">Yes</span></td>
   <td><span class="complete">Complete</span></td>
-  <td class="note"></td>
+  <td><a href="https://www.encodeproject.org/files/ENCFF987IUK/" target="_blank">ENCFF987IUK</a></td>
+  <td><span class="phase phase-4">ENCODE4</span></td>
 </tr>
 <tr>
   <td class="eid">E127</td>
+  <td>NHEK</td>
+  <td class="std-name">NHEK-Epidermal Keratinocyte Primary Cells</td>
   <td class="group">ENCODE2012</td>
-  <td>NHEK-Epidermal Keratinocyte Primary Cells</td>
   <td class="anatomy">SKIN</td>
   <td><a href="https://www.encodeproject.org/search/?type=File&status=released&assembly=GRCh38&biosample_ontology.term_name=keratinocyte&assay_title=DNase-seq&file_format=bam&output_type=unfiltered+alignments" target="_blank">keratinocyte</a></td>
-  <td><span class="conf conf-close">Close</span> </td>
-  <td><span class="yes">7</span></td>
+  <td><span class="yes">7 files</span></td>
   <td><span class="yes">Yes</span></td>
   <td><span class="yes">Yes</span></td>
   <td><span class="complete">Complete</span></td>
-  <td class="note">NHEK mapped to keratinocyte</td>
+  <td><a href="https://www.encodeproject.org/files/ENCFF478FRB/" target="_blank">ENCFF478FRB</a></td>
+  <td><span class="phase phase-4">ENCODE4</span></td>
 </tr>
 <tr>
   <td class="eid">E128</td>
+  <td>NHLF</td>
+  <td class="std-name">NHLF Lung Fibroblast Primary Cells</td>
   <td class="group">ENCODE2012</td>
-  <td>NHLF Lung Fibroblast Primary Cells</td>
   <td class="anatomy">LUNG</td>
   <td><a href="https://www.encodeproject.org/search/?type=File&status=released&assembly=GRCh38&biosample_ontology.term_name=fibroblast%20of%20lung&assay_title=DNase-seq&file_format=bam&output_type=unfiltered+alignments" target="_blank">fibroblast of lung</a></td>
-  <td><span class="conf conf-close">Close</span> </td>
-  <td><span class="yes">8</span></td>
+  <td><span class="yes">8 files</span></td>
   <td><span class="yes">Yes</span></td>
   <td><span class="yes">Yes</span></td>
   <td><span class="complete">Complete</span></td>
-  <td class="note">NHLF</td>
+  <td><a href="https://www.encodeproject.org/files/ENCFF807OQU/" target="_blank">ENCFF807OQU</a></td>
+  <td><span class="phase phase-4">ENCODE4</span></td>
 </tr>
 </tbody>
 </table>
@@ -849,10 +897,9 @@ function filterTable() {
 </script>
 
 <footer>
-  Verified by checking ENCODE experiment biosample_summary for H1-derived samples, 
-  confirming tissue-specific terms have 0 DNase BAMs (justifying broad fallbacks),
-  and correcting E024 (was wrongly mapped to CD4+ Treg instead of ESC).<br>
-  Source: Roadmap metadata + ENCODE REST API + <code>data/encode_all_dnase_samples.json</code>.
+  Source: Roadmap metadata (<code>Roadmap.metadata.qc.jul2013.xlsx</code>) cross-referenced with ENCODE REST API.<br>
+  DNase = unfiltered alignment BAMs on GRCh38. H3K27ac = Histone ChIP-seq with H3K27ac target. RNA-seq = total or polyA plus RNA-seq.<br>
+  ENCODE biosample names may be broader than the Roadmap sample (see <a href="roadmap_encode_mapping.html">mapping report</a>).
 </footer>
 </body>
 </html>

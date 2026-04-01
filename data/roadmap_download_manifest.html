@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Roadmap ENCODE Download Manifest</title>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+         margin: 2em; background: #fafafa; color: #333; }
+  h1 { color: #1a1a2e; margin-bottom: 0.3em; }
+  h2 { color: #555; font-size: 1em; font-weight: 400; margin-top: 0; }
+
+  .cards { display: flex; gap: 1em; flex-wrap: wrap; margin-bottom: 1.5em; }
+  .card { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 1em 1.5em;
+           min-width: 150px; text-align: center; }
+  .card b { display: block; font-size: 2em; color: #1a1a2e; }
+  .card small { color: #888; }
+  .card-assay { border-left: 4px solid; }
+  .card-dnase { border-color: #3b82f6; }
+  .card-h3k { border-color: #22c55e; }
+  .card-hic { border-color: #a855f7; }
+
+  table { border-collapse: collapse; width: 100%; background: #fff;
+           box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-radius: 8px;
+           overflow: hidden; font-size: 0.83em; }
+  th { background: #1a1a2e; color: #fff; padding: 8px 10px; text-align: left;
+       font-size: 0.78em; text-transform: uppercase; letter-spacing: 0.5px;
+       position: sticky; top: 0; z-index: 10; }
+  th.assay-dnase { background: #1e40af; }
+  th.assay-h3k { background: #166534; }
+  th.assay-hic { background: #6b21a8; }
+  td { padding: 6px 10px; border-bottom: 1px solid #eee; vertical-align: top; }
+  tr:hover { background: #f5f5ff; }
+
+  .eid { font-weight: 700; font-family: monospace; white-space: nowrap; }
+  .enc-bio { color: #666; font-size: 0.88em; max-width: 200px; }
+  a { color: #2563eb; text-decoration: none; font-weight: 600; font-size: 0.92em; }
+  a:hover { text-decoration: underline; }
+
+  .file-row { margin-bottom: 3px; line-height: 1.5; }
+  .detail { color: #888; font-size: 0.82em; }
+  .exp { color: #aaa; font-size: 0.78em; }
+  .missing { color: #ddd; text-align: center; }
+  .found { min-width: 200px; }
+
+  .mq { font-size: 0.72em; padding: 2px 8px; border-radius: 4px; font-weight: 700; }
+  .mq-exact { background: #22c55e; color: #fff; }
+  .mq-close { background: #3b82f6; color: #fff; }
+  .best { background: #22c55e; color: #fff; font-size: 0.68em; padding: 1px 5px;
+           border-radius: 3px; font-weight: 700; vertical-align: middle; }
+  .phase { font-size: 0.68em; padding: 1px 5px; border-radius: 3px; font-weight: 700; margin-left: 2px; }
+  .phase-4 { background: #2563eb; color: #fff; }
+  .phase-3 { background: #f59e0b; color: #fff; }
+  .phase-2 { background: #9ca3af; color: #fff; }
+  .phase-4dn { background: #a855f7; color: #fff; }
+
+  .complete { background: #22c55e; color: #fff; font-size: 0.72em; padding: 2px 8px;
+               border-radius: 4px; font-weight: 700; }
+  .partial { background: #f59e0b; color: #fff; font-size: 0.72em; padding: 2px 8px;
+              border-radius: 4px; font-weight: 700; }
+  .dnase-only { background: #3b82f6; color: #fff; font-size: 0.72em; padding: 2px 8px;
+                 border-radius: 4px; font-weight: 700; }
+  .unmapped { background: #6b7280; color: #fff; font-size: 0.72em; padding: 2px 8px;
+               border-radius: 4px; font-weight: 700; }
+
+  input[type=text] { padding: 6px 12px; border: 1px solid #ddd; border-radius: 6px;
+                      width: 300px; margin-bottom: 1em; font-size: 0.9em; }
+  footer { margin-top: 2em; color: #999; font-size: 0.8em; }
+</style>
+</head>
+<body>
+<h1>Roadmap ENCODE Download Manifest</h1>
+<h2>38 verified epigenomes x 3 assays — all biological replicates, best marked</h2>
+
+<div class="cards">
+  <div class="card"><b>38</b>Epigenomes<br><small>exact + close match</small></div>
+  <div class="card"><b>121</b>Files<br><small>26 not found</small></div>
+  <div class="card"><b>1077.5 GB</b>Total size<br><small>88 recommended</small></div>
+  <div class="card card-assay card-dnase">
+    <b>38</b>DNase<br>
+    <small>48 files | 574.2 GB</small>
+  </div>
+  <div class="card card-assay card-h3k">
+    <b>30</b>H3K27ac<br>
+    <small>53 files | 92.7 GB</small>
+  </div>
+  <div class="card card-assay card-hic">
+    <b>20</b>Hi-C<br>
+    <small>20 files | 410.5 GB</small>
+  </div>
+</div>
+
+<input type="text" id="filter" placeholder="Filter by EID, name, biosample..." oninput="filterTable()">
+
+<table id="tbl">
+<thead>
+<tr>
+  <th>EID</th>
+  <th>Roadmap Name</th>
+  <th>ENCODE Biosample</th>
+  <th>Match</th>
+  <th class="assay-dnase">DNase (unfiltered BAM)</th>
+  <th class="assay-h3k">H3K27ac (unfiltered BAM)</th>
+  <th class="assay-hic">Hi-C (.hic)</th>
+  <th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td class="eid">E003</td>
+  <td>H1</td>
+  <td class="enc-bio">H1</td>
+  <td><span class="mq mq-exact">exact</span></td>
+  <td class="found"><div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF031VZX/" target="_blank">ENCFF031VZX</a> <span class="best">best</span> <span class="detail">rep 1 | 17.5 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR951BNY</span></div>
+<div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF966UXQ/" target="_blank">ENCFF966UXQ</a> <span class="detail">rep 2 | 16.1 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR951BNY</span></div></td>
+  <td class="found"><div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF104RJG/" target="_blank">ENCFF104RJG</a> <span class="best">best</span> <span class="detail">rep 1 | 1020 MB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR000ANP</span></div>
+<div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF120QMN/" target="_blank">ENCFF120QMN</a> <span class="detail">rep 2 | 848 MB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR000ANP</span></div></td>
+  <td class="missing">-</td>
+  <td><span class="partial">DNase+H3K</span></td>
+</tr>
+<tr>
+  <td class="eid">E004</td>
+  <td>H1 BMP4 Mesendoderm</td>
+  <td class="enc-bio">mesendoderm</td>
+  <td><span class="mq mq-exact">exact</span></td>
+  <td class="found"><div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF585KAH/" target="_blank">ENCFF585KAH</a> <span class="best">best</span> <span class="detail">rep 1 | 20.5 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR714DIF</span></div></td>
+  <td class="found"><div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF513CDW/" target="_blank">ENCFF513CDW</a> <span class="detail">rep 1 | 912 MB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR473PNT</span></div>
+<div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF613EMM/" target="_blank">ENCFF613EMM</a> <span class="best">best</span> <span class="detail">rep 2 | 1.6 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR473PNT</span></div></td>
+  <td class="missing">-</td>
+  <td><span class="partial">DNase+H3K</span></td>
+</tr>
+<tr>
+  <td class="eid">E005</td>
+  <td>H1 BMP4 Trophoblast</td>
+  <td class="enc-bio">trophoblast cell</td>
+  <td><span class="mq mq-close">close</span></td>
+  <td class="found"><div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF235GOT/" target="_blank">ENCFF235GOT</a> <span class="best">best</span> <span class="detail">rep 1 | 15.8 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR179CDH</span></div></td>
+  <td class="found"><div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF524GXY/" target="_blank">ENCFF524GXY</a> <span class="detail">rep 1 | 1.1 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR425PQI</span></div>
+<div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF102QDE/" target="_blank">ENCFF102QDE</a> <span class="best">best</span> <span class="detail">rep 2 | 1.4 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR425PQI</span></div></td>
+  <td class="missing">-</td>
+  <td><span class="partial">DNase+H3K</span></td>
+</tr>
+<tr>
+  <td class="eid">E006</td>
+  <td>H1 Mesenchymal SC</td>
+  <td class="enc-bio">mesenchymal stem cell</td>
+  <td><span class="mq mq-exact">exact</span></td>
+  <td class="found"><div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF701GQV/" target="_blank">ENCFF701GQV</a> <span class="best">best</span> <span class="detail">rep 1 | 27.1 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR731QLJ</span></div></td>
+  <td class="found"><div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF221VBG/" target="_blank">ENCFF221VBG</a> <span class="detail">rep 1 | 5.1 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR013KEC</span></div>
+<div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF214ROW/" target="_blank">ENCFF214ROW</a> <span class="best">best</span> <span class="detail">rep 2 | 5.1 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR013KEC</span></div></td>
+  <td class="missing">-</td>
+  <td><span class="partial">DNase+H3K</span></td>
+</tr>
+<tr>
+  <td class="eid">E007</td>
+  <td>H1 Neuronal Prog</td>
+  <td class="enc-bio">neural progenitor cell</td>
+  <td><span class="mq mq-close">close</span></td>
+  <td class="found"><div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF712WSI/" target="_blank">ENCFF712WSI</a> <span class="detail">rep 1 | 16.5 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR963ALV</span></div>
+<div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF281RRN/" target="_blank">ENCFF281RRN</a> <span class="best">best</span> <span class="detail">rep 2 | 18.5 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR963ALV</span></div></td>
+  <td class="found"><div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF540SHX/" target="_blank">ENCFF540SHX</a> <span class="detail">rep 1 | 2.0 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR449AXO</span></div>
+<div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF549PQA/" target="_blank">ENCFF549PQA</a> <span class="best">best</span> <span class="detail">rep 2 | 2.1 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR449AXO</span></div></td>
+  <td class="missing">-</td>
+  <td><span class="partial">DNase+H3K</span></td>
+</tr>
+<tr>
+  <td class="eid">E011</td>
+  <td>hESC CD184 Endoderm</td>
+  <td class="enc-bio">endodermal cell</td>
+  <td><span class="mq mq-exact">exact</span></td>
+  <td class="found"><div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF800HSD/" target="_blank">ENCFF800HSD</a> <span class="best">best</span> <span class="detail">rep 1 | 20.1 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR940CXU</span></div></td>
+  <td class="found"><div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF952DCG/" target="_blank">ENCFF952DCG</a> <span class="detail">rep 1 | 1.4 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR200ETW</span></div>
+<div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF029GGZ/" target="_blank">ENCFF029GGZ</a> <span class="best">best</span> <span class="detail">rep 2 | 1.6 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR200ETW</span></div></td>
+  <td class="missing">-</td>
+  <td><span class="partial">DNase+H3K</span></td>
+</tr>
+<tr>
+  <td class="eid">E013</td>
+  <td>hESC CD56 Mesoderm</td>
+  <td class="enc-bio">mesodermal cell</td>
+  <td><span class="mq mq-close">close</span></td>
+  <td class="found"><div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF604YMS/" target="_blank">ENCFF604YMS</a> <span class="best">best</span> <span class="detail">rep 1 | 1.4 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR000EMX</span></div></td>
+  <td class="missing">-</td>
+  <td class="missing">-</td>
+  <td><span class="dnase-only">DNase only</span></td>
+</tr>
+<tr>
+  <td class="eid">E028</td>
+  <td>Breast vHMEC</td>
+  <td class="enc-bio">mammary epithelial cell</td>
+  <td><span class="mq mq-close">close</span></td>
+  <td class="found"><div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF037PGN/" target="_blank">ENCFF037PGN</a> <span class="best">best</span> <span class="detail">rep 1 | 6.9 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR817ALC</span></div></td>
+  <td class="found"><div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF112MQP/" target="_blank">ENCFF112MQP</a> <span class="best">best</span> <span class="detail">rep 1 | 775 MB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR000ALW</span></div>
+<div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF041ROD/" target="_blank">ENCFF041ROD</a> <span class="detail">rep 2 | 561 MB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR000ALW</span></div></td>
+  <td class="found"><div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF039SIJ/" target="_blank">ENCFF039SIJ</a> <span class="best">best</span> <span class="detail">rep 1 | 5.4 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR707XVJ</span></div></td>
+  <td><span class="complete">Complete</span></td>
+</tr>
+<tr>
+  <td class="eid">E037</td>
+  <td>CD4 Memory</td>
+  <td class="enc-bio">CD4-positive, alpha-beta memory T cell</td>
+  <td><span class="mq mq-exact">exact</span></td>
+  <td class="found"><div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF105DXR/" target="_blank">ENCFF105DXR</a> <span class="best">best</span> <span class="detail">rep 1 | 8.5 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR526TFD</span></div></td>
+  <td class="missing">-</td>
+  <td class="found"><div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF543ROK/" target="_blank">ENCFF543ROK</a> <span class="best">best</span> <span class="detail">rep 1 | 6.3 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR379TIE</span></div></td>
+  <td><span class="dnase-only">DNase only</span></td>
+</tr>
+<tr>
+  <td class="eid">E038</td>
+  <td>CD4 Naive</td>
+  <td class="enc-bio">naive thymus-derived CD4-positive, alpha-beta T cell</td>
+  <td><span class="mq mq-exact">exact</span></td>
+  <td class="found"><div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF441QOR/" target="_blank">ENCFF441QOR</a> <span class="best">best</span> <span class="detail">rep 1 | 13.4 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR181OGW</span></div></td>
+  <td class="missing">-</td>
+  <td class="found"><div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF074JNR/" target="_blank">ENCFF074JNR</a> <span class="best">best</span> <span class="detail">rep 1 | 6.4 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR458VJJ</span></div></td>
+  <td><span class="dnase-only">DNase only</span></td>
+</tr>
+<tr>
+  <td class="eid">E047</td>
+  <td>CD8 Naive</td>
+  <td class="enc-bio">naive thymus-derived CD8-positive, alpha-beta T cell</td>
+  <td><span class="mq mq-exact">exact</span></td>
+  <td class="found"><div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF141NLE/" target="_blank">ENCFF141NLE</a> <span class="best">best</span> <span class="detail">rep 1 | 10.4 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR291HMM</span></div></td>
+  <td class="missing">-</td>
+  <td class="missing">-</td>
+  <td><span class="dnase-only">DNase only</span></td>
+</tr>
+<tr>
+  <td class="eid">E055</td>
+  <td>Foreskin Fibro 1</td>
+  <td class="enc-bio">foreskin fibroblast</td>
+  <td><span class="mq mq-exact">exact</span></td>
+  <td class="found"><div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF913AWU/" target="_blank">ENCFF913AWU</a> <span class="best">best</span> <span class="detail">rep 1 | 23.3 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR000EPP</span></div>
+<div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF443DQB/" target="_blank">ENCFF443DQB</a> <span class="detail">rep 2 | 2.7 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR000EPP</span></div></td>
+  <td class="missing">-</td>
+  <td class="missing">-</td>
+  <td><span class="dnase-only">DNase only</span></td>
+</tr>
+<tr>
+  <td class="eid">E056</td>
+  <td>Foreskin Fibro 2</td>
+  <td class="enc-bio">foreskin fibroblast</td>
+  <td><span class="mq mq-exact">exact</span></td>
+  <td class="found"><div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF913AWU/" target="_blank">ENCFF913AWU</a> <span class="best">best</span> <span class="detail">rep 1 | 23.3 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR000EPP</span></div>
+<div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF443DQB/" target="_blank">ENCFF443DQB</a> <span class="detail">rep 2 | 2.7 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR000EPP</span></div></td>
+  <td class="missing">-</td>
+  <td class="missing">-</td>
+  <td><span class="dnase-only">DNase only</span></td>
+</tr>
+<tr>
+  <td class="eid">E057</td>
+  <td>Foreskin Kerat 2</td>
+  <td class="enc-bio">foreskin keratinocyte</td>
+  <td><span class="mq mq-exact">exact</span></td>
+  <td class="found"><div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF218LFH/" target="_blank">ENCFF218LFH</a> <span class="best">best</span> <span class="detail">rep 1 | 4.3 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR724CND</span></div></td>
+  <td class="found"><div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF573WQR/" target="_blank">ENCFF573WQR</a> <span class="best">best</span> <span class="detail">rep 1 | 3.6 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR637ISS</span></div>
+<div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF661IMO/" target="_blank">ENCFF661IMO</a> <span class="detail">rep 2 | 3.4 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR637ISS</span></div></td>
+  <td class="missing">-</td>
+  <td><span class="partial">DNase+H3K</span></td>
+</tr>
+<tr>
+  <td class="eid">E058</td>
+  <td>Foreskin Kerat 3</td>
+  <td class="enc-bio">foreskin keratinocyte</td>
+  <td><span class="mq mq-exact">exact</span></td>
+  <td class="found"><div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF218LFH/" target="_blank">ENCFF218LFH</a> <span class="best">best</span> <span class="detail">rep 1 | 4.3 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR724CND</span></div></td>
+  <td class="found"><div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF573WQR/" target="_blank">ENCFF573WQR</a> <span class="best">best</span> <span class="detail">rep 1 | 3.6 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR637ISS</span></div>
+<div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF661IMO/" target="_blank">ENCFF661IMO</a> <span class="detail">rep 2 | 3.4 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR637ISS</span></div></td>
+  <td class="missing">-</td>
+  <td><span class="partial">DNase+H3K</span></td>
+</tr>
+<tr>
+  <td class="eid">E059</td>
+  <td>Foreskin Melano 1</td>
+  <td class="enc-bio">foreskin melanocyte</td>
+  <td><span class="mq mq-exact">exact</span></td>
+  <td class="found"><div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF768NBD/" target="_blank">ENCFF768NBD</a> <span class="best">best</span> <span class="detail">rep 1 | 21.5 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR434OBM</span></div></td>
+  <td class="missing">-</td>
+  <td class="missing">-</td>
+  <td><span class="dnase-only">DNase only</span></td>
+</tr>
+<tr>
+  <td class="eid">E061</td>
+  <td>Foreskin Melano 3</td>
+  <td class="enc-bio">foreskin melanocyte</td>
+  <td><span class="mq mq-exact">exact</span></td>
+  <td class="found"><div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF768NBD/" target="_blank">ENCFF768NBD</a> <span class="best">best</span> <span class="detail">rep 1 | 21.5 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR434OBM</span></div></td>
+  <td class="missing">-</td>
+  <td class="missing">-</td>
+  <td><span class="dnase-only">DNase only</span></td>
+</tr>
+<tr>
+  <td class="eid">E065</td>
+  <td>Aorta</td>
+  <td class="enc-bio">aorta</td>
+  <td><span class="mq mq-exact">exact</span></td>
+  <td class="found"><div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF397WGK/" target="_blank">ENCFF397WGK</a> <span class="best">best</span> <span class="detail">rep 1 | 17.0 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR595DQM</span></div></td>
+  <td class="found"><div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF233YWT/" target="_blank">ENCFF233YWT</a> <span class="best">best</span> <span class="detail">rep 1 | 1.2 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR322TJD</span></div></td>
+  <td class="found"><div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF592DEU/" target="_blank">ENCFF592DEU</a> <span class="best">best</span> <span class="detail">rep 1 | 6.1 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR797MWY</span></div></td>
+  <td><span class="complete">Complete</span></td>
+</tr>
+<tr>
+  <td class="eid">E079</td>
+  <td>Esophagus</td>
+  <td class="enc-bio">esophagus squamous epithelium</td>
+  <td><span class="mq mq-close">close</span></td>
+  <td class="found"><div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF699UQU/" target="_blank">ENCFF699UQU</a> <span class="best">best</span> <span class="detail">rep 1 | 14.4 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR783OCW</span></div></td>
+  <td class="found"><div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF794FXP/" target="_blank">ENCFF794FXP</a> <span class="best">best</span> <span class="detail">rep 1 | 3.5 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR204TAU</span></div></td>
+  <td class="found"><div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF224HKR/" target="_blank">ENCFF224HKR</a> <span class="best">best</span> <span class="detail">rep 1 | 44.2 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR015CVF</span></div></td>
+  <td><span class="complete">Complete</span></td>
+</tr>
+<tr>
+  <td class="eid">E095</td>
+  <td>Left Ventricle</td>
+  <td class="enc-bio">heart left ventricle</td>
+  <td><span class="mq mq-exact">exact</span></td>
+  <td class="found"><div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF846KVX/" target="_blank">ENCFF846KVX</a> <span class="detail">rep 1 | 9.3 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR946DXB</span></div>
+<div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF776NLW/" target="_blank">ENCFF776NLW</a> <span class="best">best</span> <span class="detail">rep 2 | 12.9 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR946DXB</span></div></td>
+  <td class="found"><div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF480VMO/" target="_blank">ENCFF480VMO</a> <span class="best">best</span> <span class="detail">rep 1 | 2.1 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR748OJA</span></div></td>
+  <td class="found"><div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF524BGW/" target="_blank">ENCFF524BGW</a> <span class="best">best</span> <span class="detail">rep 1 | 5.8 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR498AFT</span></div></td>
+  <td><span class="complete">Complete</span></td>
+</tr>
+<tr>
+  <td class="eid">E097</td>
+  <td>Ovary</td>
+  <td class="enc-bio">ovary</td>
+  <td><span class="mq mq-exact">exact</span></td>
+  <td class="found"><div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF593QEZ/" target="_blank">ENCFF593QEZ</a> <span class="best">best</span> <span class="detail">rep 1 | 3.3 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR712PYJ</span></div></td>
+  <td class="found"><div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF287FAW/" target="_blank">ENCFF287FAW</a> <span class="best">best</span> <span class="detail">rep 1 | 1.5 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR268JQE</span></div></td>
+  <td class="found"><div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF365EBD/" target="_blank">ENCFF365EBD</a> <span class="best">best</span> <span class="detail">rep 1 | 6.7 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR782YIX</span></div></td>
+  <td><span class="complete">Complete</span></td>
+</tr>
+<tr>
+  <td class="eid">E098</td>
+  <td>Pancreas</td>
+  <td class="enc-bio">pancreas</td>
+  <td><span class="mq mq-exact">exact</span></td>
+  <td class="found"><div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF027VJJ/" target="_blank">ENCFF027VJJ</a> <span class="best">best</span> <span class="detail">rep 1 | 2.8 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR178JBL</span></div></td>
+  <td class="found"><div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF086DYL/" target="_blank">ENCFF086DYL</a> <span class="detail">rep 1 | 2.3 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR029SIG</span></div>
+<div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF181NJO/" target="_blank">ENCFF181NJO</a> <span class="best">best</span> <span class="detail">rep 2 | 2.7 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR029SIG</span></div></td>
+  <td class="found"><div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF171GTA/" target="_blank">ENCFF171GTA</a> <span class="best">best</span> <span class="detail">rep 1 | 5.7 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR387RQD</span></div></td>
+  <td><span class="complete">Complete</span></td>
+</tr>
+<tr>
+  <td class="eid">E100</td>
+  <td>Psoas Muscle</td>
+  <td class="enc-bio">psoas muscle</td>
+  <td><span class="mq mq-exact">exact</span></td>
+  <td class="found"><div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF215SXQ/" target="_blank">ENCFF215SXQ</a> <span class="best">best</span> <span class="detail">rep 1 | 9.5 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR000ELO</span></div>
+<div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF901DPU/" target="_blank">ENCFF901DPU</a> <span class="detail">rep 2 | 7.8 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR000ELO</span></div></td>
+  <td class="found"><div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF843JON/" target="_blank">ENCFF843JON</a> <span class="best">best</span> <span class="detail">rep 1 | 1.7 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR403PZH</span></div></td>
+  <td class="found"><div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF651ZUG/" target="_blank">ENCFF651ZUG</a> <span class="best">best</span> <span class="detail">rep 1 | 6.7 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR538PNC</span></div></td>
+  <td><span class="complete">Complete</span></td>
+</tr>
+<tr>
+  <td class="eid">E104</td>
+  <td>Right Atrium</td>
+  <td class="enc-bio">right cardiac atrium</td>
+  <td><span class="mq mq-exact">exact</span></td>
+  <td class="found"><div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF629PRO/" target="_blank">ENCFF629PRO</a> <span class="best">best</span> <span class="detail">rep 1 | 10.5 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR622HTS</span></div></td>
+  <td class="found"><div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF780PGC/" target="_blank">ENCFF780PGC</a> <span class="best">best</span> <span class="detail">rep 1 | 2.6 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR074ECR</span></div></td>
+  <td class="found"><div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF585UWG/" target="_blank">ENCFF585UWG</a> <span class="best">best</span> <span class="detail">rep 1 | 5.7 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR173VDQ</span></div></td>
+  <td><span class="complete">Complete</span></td>
+</tr>
+<tr>
+  <td class="eid">E105</td>
+  <td>Right Ventricle</td>
+  <td class="enc-bio">heart right ventricle</td>
+  <td><span class="mq mq-exact">exact</span></td>
+  <td class="found"><div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF557XPK/" target="_blank">ENCFF557XPK</a> <span class="detail">rep 1 | 12.4 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR746RDJ</span></div>
+<div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF788XKC/" target="_blank">ENCFF788XKC</a> <span class="best">best</span> <span class="detail">rep 2 | 16.8 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR746RDJ</span></div></td>
+  <td class="found"><div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF041QXK/" target="_blank">ENCFF041QXK</a> <span class="best">best</span> <span class="detail">rep 1 | 2.5 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR842TXG</span></div></td>
+  <td class="found"><div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF608CWF/" target="_blank">ENCFF608CWF</a> <span class="best">best</span> <span class="detail">rep 1 | 6.0 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR462CIE</span></div></td>
+  <td><span class="complete">Complete</span></td>
+</tr>
+<tr>
+  <td class="eid">E106</td>
+  <td>Sigmoid Colon</td>
+  <td class="enc-bio">sigmoid colon</td>
+  <td><span class="mq mq-exact">exact</span></td>
+  <td class="found"><div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF092HJS/" target="_blank">ENCFF092HJS</a> <span class="best">best</span> <span class="detail">rep 1 | 12.3 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR462XTM</span></div></td>
+  <td class="found"><div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF773HIA/" target="_blank">ENCFF773HIA</a> <span class="best">best</span> <span class="detail">rep 1 | 1.8 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR213SMK</span></div></td>
+  <td class="found"><div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF747EFS/" target="_blank">ENCFF747EFS</a> <span class="best">best</span> <span class="detail">rep 1 | 6.6 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR123ZFD</span></div></td>
+  <td><span class="complete">Complete</span></td>
+</tr>
+<tr>
+  <td class="eid">E112</td>
+  <td>Thymus</td>
+  <td class="enc-bio">thymus</td>
+  <td><span class="mq mq-exact">exact</span></td>
+  <td class="found"><div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF706IXZ/" target="_blank">ENCFF706IXZ</a> <span class="best">best</span> <span class="detail">rep 1 | 2.3 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR544KDB</span></div></td>
+  <td class="found"><div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF270ODA/" target="_blank">ENCFF270ODA</a> <span class="best">best</span> <span class="detail">rep 1 | 1.3 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR303IKJ</span></div></td>
+  <td class="missing">-</td>
+  <td><span class="partial">DNase+H3K</span></td>
+</tr>
+<tr>
+  <td class="eid">E113</td>
+  <td>Spleen</td>
+  <td class="enc-bio">spleen</td>
+  <td><span class="mq mq-exact">exact</span></td>
+  <td class="found"><div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF627PAP/" target="_blank">ENCFF627PAP</a> <span class="best">best</span> <span class="detail">rep 1 | 18.9 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR128GBN</span></div></td>
+  <td class="found"><div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF975CQD/" target="_blank">ENCFF975CQD</a> <span class="best">best</span> <span class="detail">rep 1 | 2.3 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR436JNB</span></div></td>
+  <td class="found"><div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF280EYD/" target="_blank">ENCFF280EYD</a> <span class="best">best</span> <span class="detail">rep 1 | 32.5 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR692QWS</span></div></td>
+  <td><span class="complete">Complete</span></td>
+</tr>
+<tr>
+  <td class="eid">E114</td>
+  <td>A549</td>
+  <td class="enc-bio">A549</td>
+  <td><span class="mq mq-exact">exact</span></td>
+  <td class="found"><div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF995HBI/" target="_blank">ENCFF995HBI</a> <span class="best">best</span> <span class="detail">rep 1 | 7.7 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR000EIE</span></div></td>
+  <td class="found"><div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF171ZHS/" target="_blank">ENCFF171ZHS</a> <span class="best">best</span> <span class="detail">rep 1 | 4.7 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR027BPE</span></div>
+<div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF202HUD/" target="_blank">ENCFF202HUD</a> <span class="detail">rep 2 | 2.7 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR027BPE</span></div>
+<div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF670MAA/" target="_blank">ENCFF670MAA</a> <span class="detail">rep 3 | 1.3 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR027BPE</span></div></td>
+  <td class="found"><div class="file-row"><a href="https://data.4dnucleome.org/files-processed/4DNFID68JQY9/" target="_blank">4DNFID68JQY9</a> <span class="best">best</span> <span class="detail">rep 0 | -</span> <span class="phase phase-4dn">4DN</span></div></td>
+  <td><span class="complete">Complete</span></td>
+</tr>
+<tr>
+  <td class="eid">E116</td>
+  <td>GM12878</td>
+  <td class="enc-bio">GM12878</td>
+  <td><span class="mq mq-exact">exact</span></td>
+  <td class="found"><div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF467CXY/" target="_blank">ENCFF467CXY</a> <span class="detail">rep 1 | 1.9 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR000EMT</span></div>
+<div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF940NSD/" target="_blank">ENCFF940NSD</a> <span class="best">best</span> <span class="detail">rep 2 | 6.9 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR000EMT</span></div></td>
+  <td class="found"><div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF645BAL/" target="_blank">ENCFF645BAL</a> <span class="best">best</span> <span class="detail">rep 1 | 1.5 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR000AKC</span></div>
+<div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF865OOP/" target="_blank">ENCFF865OOP</a> <span class="detail">rep 2 | 530 MB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR000AKC</span></div></td>
+  <td class="found"><div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF421PYE/" target="_blank">ENCFF421PYE</a> <span class="best">best</span> <span class="detail">rep 0 | 205.9 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR946AKI</span></div></td>
+  <td><span class="complete">Complete</span></td>
+</tr>
+<tr>
+  <td class="eid">E117</td>
+  <td>HeLa</td>
+  <td class="enc-bio">HeLa-S3</td>
+  <td><span class="mq mq-exact">exact</span></td>
+  <td class="found"><div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF187PXI/" target="_blank">ENCFF187PXI</a> <span class="best">best</span> <span class="detail">rep 1 | 2.8 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR000EJT</span></div></td>
+  <td class="found"><div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF948IRM/" target="_blank">ENCFF948IRM</a> <span class="detail">rep 1 | 1.1 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR000AOC</span></div>
+<div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF712QHJ/" target="_blank">ENCFF712QHJ</a> <span class="best">best</span> <span class="detail">rep 2 | 1.1 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR000AOC</span></div></td>
+  <td class="missing">-</td>
+  <td><span class="partial">DNase+H3K</span></td>
+</tr>
+<tr>
+  <td class="eid">E118</td>
+  <td>HepG2</td>
+  <td class="enc-bio">HepG2</td>
+  <td><span class="mq mq-exact">exact</span></td>
+  <td class="found"><div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF878RGP/" target="_blank">ENCFF878RGP</a> <span class="best">best</span> <span class="detail">rep 1 | 2.6 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR000EJV</span></div></td>
+  <td class="found"><div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF383AXK/" target="_blank">ENCFF383AXK</a> <span class="detail">rep 1 | 261 MB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR000AMO</span></div>
+<div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF179RTG/" target="_blank">ENCFF179RTG</a> <span class="detail">rep 2 | 401 MB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR000AMO</span></div>
+<div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF490KFG/" target="_blank">ENCFF490KFG</a> <span class="best">best</span> <span class="detail">rep 3 | 2.8 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR000AMO</span></div></td>
+  <td class="found"><div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF805ALH/" target="_blank">ENCFF805ALH</a> <span class="best">best</span> <span class="detail">rep 3 | 19.0 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR675PUL</span></div></td>
+  <td><span class="complete">Complete</span></td>
+</tr>
+<tr>
+  <td class="eid">E119</td>
+  <td>HMEC</td>
+  <td class="enc-bio">mammary epithelial cell</td>
+  <td><span class="mq mq-close">close</span></td>
+  <td class="found"><div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF037PGN/" target="_blank">ENCFF037PGN</a> <span class="best">best</span> <span class="detail">rep 1 | 6.9 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR817ALC</span></div></td>
+  <td class="found"><div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF112MQP/" target="_blank">ENCFF112MQP</a> <span class="best">best</span> <span class="detail">rep 1 | 775 MB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR000ALW</span></div>
+<div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF041ROD/" target="_blank">ENCFF041ROD</a> <span class="detail">rep 2 | 561 MB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR000ALW</span></div></td>
+  <td class="found"><div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF039SIJ/" target="_blank">ENCFF039SIJ</a> <span class="best">best</span> <span class="detail">rep 1 | 5.4 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR707XVJ</span></div></td>
+  <td><span class="complete">Complete</span></td>
+</tr>
+<tr>
+  <td class="eid">E120</td>
+  <td>HSMM</td>
+  <td class="enc-bio">skeletal muscle myoblast</td>
+  <td><span class="mq mq-close">close</span></td>
+  <td class="found"><div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF253FMQ/" target="_blank">ENCFF253FMQ</a> <span class="best">best</span> <span class="detail">rep 1 | 46.5 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR000EOO</span></div>
+<div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF372SZT/" target="_blank">ENCFF372SZT</a> <span class="detail">rep 2 | 2.7 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR000EOO</span></div></td>
+  <td class="found"><div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF899LQA/" target="_blank">ENCFF899LQA</a> <span class="best">best</span> <span class="detail">rep 1 | 836 MB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR000ANF</span></div>
+<div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF702NBI/" target="_blank">ENCFF702NBI</a> <span class="detail">rep 2 | 806 MB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR000ANF</span></div></td>
+  <td class="missing">-</td>
+  <td><span class="partial">DNase+H3K</span></td>
+</tr>
+<tr>
+  <td class="eid">E122</td>
+  <td>HUVEC</td>
+  <td class="enc-bio">endothelial cell of umbilical vein</td>
+  <td><span class="mq mq-close">close</span></td>
+  <td class="found"><div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF309JXB/" target="_blank">ENCFF309JXB</a> <span class="best">best</span> <span class="detail">rep 1 | 1.6 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR000EKF</span></div></td>
+  <td class="found"><div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF228PAD/" target="_blank">ENCFF228PAD</a> <span class="best">best</span> <span class="detail">rep 1 | 1.1 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR000ALB</span></div>
+<div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF034UBN/" target="_blank">ENCFF034UBN</a> <span class="detail">rep 2 | 801 MB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR000ALB</span></div></td>
+  <td class="found"><div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF091YKP/" target="_blank">ENCFF091YKP</a> <span class="best">best</span> <span class="detail">rep 1 | 6.2 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR788FBI</span></div></td>
+  <td><span class="complete">Complete</span></td>
+</tr>
+<tr>
+  <td class="eid">E123</td>
+  <td>K562</td>
+  <td class="enc-bio">K562</td>
+  <td><span class="mq mq-exact">exact</span></td>
+  <td class="found"><div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF987IUK/" target="_blank">ENCFF987IUK</a> <span class="best">best</span> <span class="detail">rep 1 | 21.1 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR000EKS</span></div></td>
+  <td class="found"><div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF867JTP/" target="_blank">ENCFF867JTP</a> <span class="detail">rep 1 | 952 MB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR000AKP</span></div>
+<div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF423WAK/" target="_blank">ENCFF423WAK</a> <span class="detail">rep 2 | 602 MB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR000AKP</span></div>
+<div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF353PVU/" target="_blank">ENCFF353PVU</a> <span class="best">best</span> <span class="detail">rep 3 | 2.9 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR000AKP</span></div></td>
+  <td class="found"><div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF822UUX/" target="_blank">ENCFF822UUX</a> <span class="best">best</span> <span class="detail">rep 9 | 29.9 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR408AJG</span></div></td>
+  <td><span class="complete">Complete</span></td>
+</tr>
+<tr>
+  <td class="eid">E127</td>
+  <td>NHEK</td>
+  <td class="enc-bio">keratinocyte</td>
+  <td><span class="mq mq-close">close</span></td>
+  <td class="found"><div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF478FRB/" target="_blank">ENCFF478FRB</a> <span class="best">best</span> <span class="detail">rep 1 | 2.2 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR000ELH</span></div></td>
+  <td class="found"><div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF660FOQ/" target="_blank">ENCFF660FOQ</a> <span class="best">best</span> <span class="detail">rep 1 | 1.2 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR000ALK</span></div>
+<div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF299ZJS/" target="_blank">ENCFF299ZJS</a> <span class="detail">rep 2 | 470 MB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR000ALK</span></div></td>
+  <td class="found"><div class="file-row"><a href="https://data.4dnucleome.org/files-processed/4DNFIL9M97T2/" target="_blank">4DNFIL9M97T2</a> <span class="best">best</span> <span class="detail">rep 0 | -</span> <span class="phase phase-4dn">4DN</span></div></td>
+  <td><span class="complete">Complete</span></td>
+</tr>
+<tr>
+  <td class="eid">E128</td>
+  <td>NHLF</td>
+  <td class="enc-bio">fibroblast of lung</td>
+  <td><span class="mq mq-close">close</span></td>
+  <td class="found"><div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF237FTW/" target="_blank">ENCFF237FTW</a> <span class="best">best</span> <span class="detail">rep 1 | 22.3 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR000EPR</span></div>
+<div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF807OQU/" target="_blank">ENCFF807OQU</a> <span class="detail">rep 2 | 2.1 GB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR000EPR</span></div></td>
+  <td class="found"><div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF174VQX/" target="_blank">ENCFF174VQX</a> <span class="best">best</span> <span class="detail">rep 1 | 461 MB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR000AMR</span></div>
+<div class="file-row"><a href="https://www.encodeproject.org/files/ENCFF960VIQ/" target="_blank">ENCFF960VIQ</a> <span class="detail">rep 2 | 446 MB</span> <span class="phase phase-4">ENCODE4</span> <span class="exp">ENCSR000AMR</span></div></td>
+  <td class="missing">-</td>
+  <td><span class="partial">DNase+H3K</span></td>
+</tr>
+</tbody>
+</table>
+
+<script>
+function filterTable() {
+  const q = document.getElementById('filter').value.toLowerCase();
+  document.querySelectorAll('#tbl tbody tr').forEach(r => {
+    r.style.display = r.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+}
+</script>
+
+<footer>
+  Generated: 2026-04-01 10:57<br>
+  Selection criteria: <b>Best experiment</b> = newest date (latest pipeline), then most replicates.
+  <b>Best replicate</b> (<span class="best">best</span>) = largest file size (deepest sequencing).<br>
+  All replicates included. Download: <code>python scripts/download_encode_data.py --from-manifest data/roadmap_download_manifest.json</code><br>
+  Manifest: <code>data/roadmap_download_manifest.tsv</code> (147 rows) | <code>data/roadmap_download_manifest.json</code>
+</footer>
+</body>
+</html>

@@ -16,16 +16,26 @@ python scripts/download_encode_data.py --cell-types HepG2,H1,NHEK
 
 # Download all replicates (one BAM per biological replicate)
 python scripts/download_encode_data.py --all-replicates --dry-run
+
+# Parallel download (4 files at once)
+python scripts/download_encode_data.py --from-manifest data/encode_manifest.json --parallel 4
+
+# Generate aria2c input for fast multi-connection download
+python scripts/download_encode_data.py --from-manifest data/roadmap_download_manifest.json --aria2c
 """
 
 from __future__ import annotations
 
 import argparse
+import concurrent.futures
 import csv
 import json
 import os
 import re
+import shutil
+import subprocess
 import sys
+import threading
 import time
 import urllib.error
 import urllib.parse
@@ -73,11 +83,11 @@ ROADMAP_BIOSAMPLE: dict[str, tuple[str, list[str]]] = {
     "E011": ("hESC_CD184_Endoderm", ["endodermal cell"]),
     "E012": ("hESC_CD56_Ectoderm", []),  # no match on ENCODE
     "E013": ("hESC_CD56_Mesoderm", ["mesodermal cell"]),
-    "E016": ("HUES64", []),  # no match on ENCODE
-    "E024": ("CD4_CD25_Treg", ["CD4-positive, CD25-positive, alpha-beta regulatory T cell"]),
+    "E016": ("HUES64", []),  # HUES64 on ENCODE but has 0 DNase BAMs
+    "E024": ("ES_UCSF4", []),  # ESC line (not T cell); no ENCODE match
     "E027": ("Breast_Myoepithelial", []),  # no match on ENCODE
     "E028": ("Breast_vHMEC", ["mammary epithelial cell"]),
-    "E037": ("CD4_Memory", ["CD4-positive, alpha-beta T cell"]),
+    "E037": ("CD4_Memory", ["CD4-positive, alpha-beta memory T cell", "CD4-positive, alpha-beta T cell"]),
     "E038": ("CD4_Naive", ["naive thymus-derived CD4-positive, alpha-beta T cell"]),
     "E047": ("CD8_Naive", ["naive thymus-derived CD8-positive, alpha-beta T cell"]),
     "E050": ("CD34_Mobilized", []),  # no match on ENCODE
@@ -134,6 +144,8 @@ FOURDN_HIC: dict[str, tuple[str, str]] = {
 }
 
 FOURDN_DOWNLOAD = "https://data.4dnucleome.org/files-processed/{acc}/@@download/{acc}.hic"
+
+DEFAULT_OUTPUT_DIR = "downloads"
 
 # Map our assay short names → ENCODE assay_title values
 ASSAY_TITLES: dict[str, list[str]] = {
@@ -473,6 +485,85 @@ def save_metadata(meta: dict, file_dest: str) -> None:
 
 
 # ---------------------------------------------------------------------------
+# Manifest I/O
+# ---------------------------------------------------------------------------
+
+MANIFEST_TSV_COLUMNS = [
+    "cell_type", "assay", "accession", "url", "ext", "file_size",
+    "bio_reps", "experiment", "encode_phase", "pipeline_version",
+    "date_created", "recommended", "dest_path", "output_type", "assembly",
+]
+
+
+def save_manifest(items: list[DownloadItem], path: str) -> None:
+    """Save download manifest as TSV + JSON."""
+    os.makedirs(os.path.dirname(path) if os.path.dirname(path) else ".", exist_ok=True)
+
+    # TSV
+    tsv_path = path if path.endswith(".tsv") else path + ".tsv"
+    with open(tsv_path, "w") as fh:
+        fh.write("\t".join(MANIFEST_TSV_COLUMNS) + "\n")
+        for item in items:
+            vals = []
+            for col in MANIFEST_TSV_COLUMNS:
+                v = getattr(item, col, "")
+                if isinstance(v, list):
+                    v = ",".join(str(x) for x in v)
+                elif isinstance(v, bool):
+                    v = "true" if v else "false"
+                vals.append(str(v))
+            fh.write("\t".join(vals) + "\n")
+    print(f"  [manifest] {tsv_path} ({len(items)} entries)")
+
+    # JSON
+    json_path = path.replace(".tsv", "") + ".json" if path.endswith(".tsv") else path + ".json"
+    with open(json_path, "w") as fh:
+        data = []
+        for item in items:
+            d = {k: v for k, v in item.__dict__.items()}
+            data.append(d)
+        json.dump(data, fh, indent=2, default=str)
+    print(f"  [manifest] {json_path}")
+
+
+def load_manifest(path: str) -> list[DownloadItem]:
+    """Load download manifest from JSON. Handles both download_encode and build_roadmap formats."""
+    with open(path) as fh:
+        data = json.load(fh)
+    items = []
+    for d in data:
+        # Support both formats: cell_type (download_encode) or eid+roadmap_name (build_roadmap)
+        cell_type = d.get("cell_type", "")
+        if not cell_type:
+            eid = d.get("eid", "")
+            name = d.get("roadmap_name", "")
+            cell_type = f"{eid}_{name}" if eid else name
+
+        item = DownloadItem(
+            cell_type=cell_type,
+            assay=d.get("assay", ""),
+            accession=d.get("accession", ""),
+            url=d.get("url", ""),
+            ext=d.get("ext", ""),
+        )
+        for k in ("file_size", "date_created", "experiment", "bio_reps",
+                   "assembly", "output_type", "dest_path", "exists",
+                   "recommended", "pipeline_version", "encode_phase"):
+            if k in d:
+                setattr(item, k, d[k])
+        # bio_rep (singular, from roadmap manifest) → bio_reps (list)
+        if "bio_rep" in d and not item.bio_reps:
+            v = d["bio_rep"]
+            item.bio_reps = [v] if v else []
+        # Re-check exists on disk
+        if item.dest_path:
+            item.exists = os.path.exists(item.dest_path)
+        items.append(item)
+    print(f"Loaded {len(items)} items from {path}")
+    return items
+
+
+# ---------------------------------------------------------------------------
 # Download
 # ---------------------------------------------------------------------------
 
@@ -524,6 +615,194 @@ def download_file(url: str, dest: str, force: bool = False) -> bool:
 
 
 # ---------------------------------------------------------------------------
+# Download log
+# ---------------------------------------------------------------------------
+
+class DownloadLog:
+    """Thread-safe download log that writes a TSV log and tracks failed items."""
+
+    def __init__(self, log_dir: str):
+        os.makedirs(log_dir, exist_ok=True)
+        ts = time.strftime("%Y%m%d_%H%M%S")
+        self.log_path = os.path.join(log_dir, f"download_{ts}.log")
+        self.failed_path = os.path.join(log_dir, f"download_{ts}_failed.json")
+        self._lock = threading.Lock()
+        self._failed: list[dict] = []
+        self._ok = 0
+        self._skip = 0
+        self._fail = 0
+        # Write header
+        with open(self.log_path, "w") as fh:
+            fh.write("timestamp\tstatus\taccession\tcell_type\tassay\tfile_size\tdest_path\terror\n")
+
+    def record(self, status: str, item: DownloadItem, error: str = ""):
+        ts = time.strftime("%Y-%m-%d %H:%M:%S")
+        with self._lock:
+            if status == "ok":
+                self._ok += 1
+            elif status == "skip":
+                self._skip += 1
+            elif status == "fail":
+                self._fail += 1
+                self._failed.append(item.__dict__)
+            with open(self.log_path, "a") as fh:
+                fh.write(f"{ts}\t{status}\t{item.accession}\t{item.cell_type}\t"
+                         f"{item.assay}\t{item.file_size}\t{item.dest_path}\t{error}\n")
+
+    def finish(self):
+        if self._failed:
+            with open(self.failed_path, "w") as fh:
+                json.dump(self._failed, fh, indent=2, default=str)
+            print(f"\n  [log] {self._fail} failed — retry with: "
+                  f"--from-manifest {self.failed_path}")
+        print(f"  [log] {self.log_path}  "
+              f"(ok={self._ok}, skip={self._skip}, fail={self._fail})")
+
+    @property
+    def n_failed(self) -> int:
+        return self._fail
+
+
+# ---------------------------------------------------------------------------
+# Parallel download
+# ---------------------------------------------------------------------------
+
+_print_lock = threading.Lock()
+
+
+def _download_one(
+    idx: int, total: int, item: DownloadItem, force: bool, no_metadata: bool,
+    log: DownloadLog | None = None,
+) -> bool:
+    """Download a single item (called from thread pool)."""
+    tag = f"[{idx}/{total}]"
+    if item.exists and not force:
+        with _print_lock:
+            print(f"{tag} [skip] {item.dest_path}")
+        if log:
+            log.record("skip", item)
+        return True
+
+    with _print_lock:
+        print(f"{tag} [start] {item.cell_type}/{item.assay}: {item.accession} "
+              f"({_fmt_size(item.file_size)})")
+
+    os.makedirs(os.path.dirname(item.dest_path), exist_ok=True)
+    part = item.dest_path + ".part"
+    req = urllib.request.Request(item.url)
+    try:
+        with urllib.request.urlopen(req, timeout=60) as resp:
+            downloaded = 0
+            chunk_size = 1024 * 1024
+
+            with open(part, "wb") as fh:
+                while True:
+                    chunk = resp.read(chunk_size)
+                    if not chunk:
+                        break
+                    fh.write(chunk)
+                    downloaded += len(chunk)
+
+        os.rename(part, item.dest_path)
+        with _print_lock:
+            print(f"{tag} [done]  {item.accession} → {item.dest_path}")
+        if log:
+            log.record("ok", item)
+    except Exception as exc:
+        with _print_lock:
+            print(f"{tag} [error] {item.accession}: {exc}", file=sys.stderr)
+        if os.path.exists(part):
+            os.remove(part)
+        if log:
+            log.record("fail", item, str(exc))
+        return False
+
+    if not no_metadata:
+        meta = fetch_metadata(item.accession)
+        meta["cell_type"] = item.cell_type
+        meta["assay_short"] = item.assay
+        meta["recommended"] = item.recommended
+        meta["biological_replicates_in_file"] = item.bio_reps
+        save_metadata(meta, item.dest_path)
+
+    return True
+
+
+def download_parallel(
+    items: list[DownloadItem], n_workers: int, force: bool, no_metadata: bool,
+    log: DownloadLog | None = None,
+) -> None:
+    """Download items using a thread pool."""
+    downloadable = [
+        it for it in items
+        if it.accession not in ("NOT_FOUND", "NO_MAPPING")
+    ]
+    total = len(downloadable)
+    print(f"\nDownloading {total} files with {n_workers} parallel workers ...\n")
+
+    ok = 0
+    fail = 0
+    with concurrent.futures.ThreadPoolExecutor(max_workers=n_workers) as pool:
+        futures = {
+            pool.submit(_download_one, i + 1, total, it, force, no_metadata, log): it
+            for i, it in enumerate(downloadable)
+        }
+        for future in concurrent.futures.as_completed(futures):
+            if future.result():
+                ok += 1
+            else:
+                fail += 1
+
+    print(f"\nParallel download complete: {ok} succeeded, {fail} failed.")
+
+
+# ---------------------------------------------------------------------------
+# aria2c support
+# ---------------------------------------------------------------------------
+
+def generate_aria2c_input(items: list[DownloadItem], output_path: str) -> str:
+    """Write an aria2c input file and return its path."""
+    downloadable = [
+        it for it in items
+        if it.accession not in ("NOT_FOUND", "NO_MAPPING")
+    ]
+    os.makedirs(os.path.dirname(output_path) or ".", exist_ok=True)
+    with open(output_path, "w") as fh:
+        for it in downloadable:
+            dest_dir = os.path.dirname(it.dest_path)
+            dest_file = os.path.basename(it.dest_path)
+            fh.write(f"{it.url}\n")
+            fh.write(f"  dir={dest_dir}\n")
+            fh.write(f"  out={dest_file}\n")
+    print(f"aria2c input file: {output_path} ({len(downloadable)} files)")
+    return output_path
+
+
+def run_aria2c(
+    input_path: str, connections: int = 4, parallel: int = 3,
+) -> None:
+    """Run aria2c with the given input file."""
+    aria2c = shutil.which("aria2c")
+    if not aria2c:
+        print("aria2c not found on PATH. Install it or use the input file manually:")
+        print(f"  aria2c -i {input_path} -x {connections} -j {parallel} -c "
+              f"--auto-file-renaming=false")
+        return
+
+    cmd = [
+        aria2c,
+        f"-i{input_path}",
+        f"-x{connections}",
+        f"-j{parallel}",
+        "-c",  # resume
+        "--auto-file-renaming=false",
+        "--console-log-level=notice",
+    ]
+    print(f"Running: {' '.join(cmd)}\n")
+    subprocess.run(cmd)
+
+
+# ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
 
@@ -556,7 +835,7 @@ def parse_args() -> argparse.Namespace:
     )
     p.add_argument(
         "--output-dir",
-        default="data",
+        default=DEFAULT_OUTPUT_DIR,
         help="Base output directory (default: %(default)s)",
     )
     p.add_argument(
@@ -584,6 +863,48 @@ def parse_args() -> argparse.Namespace:
         default=None,
         metavar="PATH",
         help="Generate HTML summary report (e.g., --report data/encode_download_report.html)",
+    )
+    p.add_argument(
+        "--save-manifest",
+        default=None,
+        metavar="PATH",
+        help="Save download manifest as TSV + JSON (e.g., --save-manifest data/encode_manifest)",
+    )
+    p.add_argument(
+        "--from-manifest",
+        default=None,
+        metavar="PATH",
+        help="Load manifest JSON instead of querying ENCODE API (e.g., --from-manifest data/encode_manifest.json)",
+    )
+    p.add_argument(
+        "--parallel",
+        type=int,
+        default=1,
+        metavar="N",
+        help="Download N files in parallel using threads (default: 1 = sequential)",
+    )
+    p.add_argument(
+        "--aria2c",
+        nargs="?",
+        const="auto",
+        default=None,
+        metavar="INPUT_FILE",
+        help="Generate aria2c input file and run aria2c. Optionally specify output path "
+             "(default: data/aria2c_download.txt). Much faster than Python downloads.",
+    )
+    p.add_argument(
+        "--aria2c-connections",
+        type=int,
+        default=4,
+        metavar="N",
+        help="Connections per file for aria2c -x (default: 4)",
+    )
+    p.add_argument(
+        "--aria2c-parallel",
+        type=int,
+        default=3,
+        metavar="N",
+        help="Parallel file downloads for aria2c -j (default: 3)",
     )
     return p.parse_args()
 
@@ -908,34 +1229,42 @@ def _query_for_sample(
 def main() -> None:
     args = parse_args()
 
-    samples = _resolve_cell_types(args)
-    assays = [a.strip() for a in args.assays.split(",")]
+    if args.from_manifest:
+        # Load from saved manifest — skip API queries
+        items = load_manifest(args.from_manifest)
+    else:
+        # Query ENCODE API
+        samples = _resolve_cell_types(args)
+        assays = [a.strip() for a in args.assays.split(",")]
 
-    print(f"Querying ENCODE for {len(samples)} samples × {len(assays)} assays ...\n")
+        print(f"Querying ENCODE for {len(samples)} samples × {len(assays)} assays ...\n")
 
-    items: list[DownloadItem] = []
+        items: list[DownloadItem] = []
 
-    for display_name, ontology_names in samples:
-        for assay in assays:
-            print(f"  Searching: {display_name} / {assay} ...", end=" ", flush=True)
+        for display_name, ontology_names in samples:
+            for assay in assays:
+                print(f"  Searching: {display_name} / {assay} ...", end=" ", flush=True)
 
-            new_items = _query_for_sample(display_name, ontology_names, assay, args)
-            items.extend(new_items)
+                new_items = _query_for_sample(display_name, ontology_names, assay, args)
+                items.extend(new_items)
 
-            # Print summary
-            if len(new_items) == 1 and new_items[0].accession in ("NOT_FOUND", "NO_MAPPING"):
-                label = "no mapping" if new_items[0].accession == "NO_MAPPING" else "not found"
-                print(label)
-            elif len(new_items) == 1:
-                it = new_items[0]
-                source = " (4DN)" if it.accession.startswith("4DNF") else ""
-                print(f"{it.accession} ({_fmt_size(it.file_size)}, "
-                      f"reps={it.bio_reps}){source}")
-            else:
-                print(f"{len(new_items)} files")
+                # Print summary
+                if len(new_items) == 1 and new_items[0].accession in ("NOT_FOUND", "NO_MAPPING"):
+                    label = "no mapping" if new_items[0].accession == "NO_MAPPING" else "not found"
+                    print(label)
+                elif len(new_items) == 1:
+                    it = new_items[0]
+                    source = " (4DN)" if it.accession.startswith("4DNF") else ""
+                    print(f"{it.accession} ({_fmt_size(it.file_size)}, "
+                          f"reps={it.bio_reps}){source}")
+                else:
+                    print(f"{len(new_items)} files")
 
     # Print plan
     print_download_plan(items)
+
+    if args.save_manifest:
+        save_manifest(items, args.save_manifest)
 
     if args.report:
         generate_html_report(items, args.report)
@@ -944,25 +1273,49 @@ def main() -> None:
         print("Dry run — no files downloaded.")
         return
 
-    # Download
-    for item in items:
-        if item.accession in ("NOT_FOUND", "NO_MAPPING"):
-            continue
+    # aria2c mode
+    if args.aria2c is not None:
+        input_path = args.aria2c if args.aria2c != "auto" else "data/aria2c_download.txt"
+        generate_aria2c_input(items, input_path)
+        run_aria2c(input_path, args.aria2c_connections, args.aria2c_parallel)
+        return
+
+    # Create download log
+    log = DownloadLog(os.path.join(args.output_dir, ".logs"))
+
+    # Parallel mode
+    if args.parallel > 1:
+        download_parallel(items, args.parallel, args.force, args.no_metadata, log)
+        log.finish()
+        return
+
+    # Sequential download (default)
+    downloadable = [
+        it for it in items
+        if it.accession not in ("NOT_FOUND", "NO_MAPPING")
+    ]
+    for i, item in enumerate(downloadable, 1):
         if item.exists and not args.force:
-            print(f"[skip] {item.dest_path}")
+            print(f"[{i}/{len(downloadable)}] [skip] {item.dest_path}")
+            log.record("skip", item)
             continue
 
-        print(f"\n[download] {item.cell_type}/{item.assay}: {item.accession}")
+        print(f"\n[{i}/{len(downloadable)}] {item.cell_type}/{item.assay}: {item.accession}")
         ok = download_file(item.url, item.dest_path, force=args.force)
 
-        if ok and not args.no_metadata:
-            meta = fetch_metadata(item.accession)
-            meta["cell_type"] = item.cell_type
-            meta["assay_short"] = item.assay
-            meta["recommended"] = item.recommended
-            meta["biological_replicates_in_file"] = item.bio_reps
-            save_metadata(meta, item.dest_path)
+        if ok:
+            log.record("ok", item)
+            if not args.no_metadata:
+                meta = fetch_metadata(item.accession)
+                meta["cell_type"] = item.cell_type
+                meta["assay_short"] = item.assay
+                meta["recommended"] = item.recommended
+                meta["biological_replicates_in_file"] = item.bio_reps
+                save_metadata(meta, item.dest_path)
+        else:
+            log.record("fail", item)
 
+    log.finish()
     print("\nDone.")
 
 

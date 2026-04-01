@@ -1,0 +1,370 @@
+biosample	classification	organ_slims	n_dnase_files	n_bio_reps	n_experiments	best_accession	best_file_size	best_experiment	best_date	encode_phase	pipeline_version	has_h3k27ac	has_rna_seq
+8988T	cell line	pancreas	3	1	1	ENCFF590FGE	7196890561	ENCSR000EID	2020-11-20	ENCODE4	dnase-alignment-step-v-1-0	False	False
+A172	cell line	brain	4	2	1	ENCFF945VVV	24146000835	ENCSR932KWJ	2020-11-06	ENCODE4	dnase-alignment-step-v-1-0	False	True
+A549	cell line	lung	58	5	14	ENCFF995HBI	8256206864	ENCSR000EIE	2020-11-20	ENCODE4	dnase-alignment-step-v-1-0	True	True
+A673	cell line	musculature of body	5	2	2	ENCFF565WZW	6641974850	ENCSR114QAK	2022-08-05	ENCODE4	dnase-alignment-step-v-1-0	True	True
+ACHN	cell line	kidney	5	2	1	ENCFF347OEU	23813930138	ENCSR257BGZ	2020-11-06	ENCODE4	dnase-alignment-step-v-1-0	False	False
+AG04449	cell line	connective tissue,skin of body	4	2	1	ENCFF218KYK	2456272199	ENCSR000ELX	2020-11-12	ENCODE4	dnase-alignment-step-v-1-0	False	False
+AG04450	cell line	connective tissue,lung	4	2	1	ENCFF477CQU	2710026979	ENCSR000ELY	2020-11-12	ENCODE4	dnase-alignment-step-v-1-0	True	True
+AG08395	cell line	connective tissue,skin of body	4	1	1	ENCFF296IFK	18268346342	ENCSR000EIV	2020-11-22	ENCODE4	dnase-alignment-step-v-1-0	False	False
+AG08396	cell line	connective tissue,lung	4	1	1	ENCFF506CPQ	14380133495	ENCSR000EIW	2020-11-22	ENCODE4	dnase-alignment-step-v-1-0	False	False
+AG09309	cell line	connective tissue,skin of body	4	2	1	ENCFF112HRI	2959311814	ENCSR000ELZ	2020-11-12	ENCODE4	dnase-alignment-step-v-1-0	False	False
+AG09319	cell line	connective tissue,mouth	4	2	1	ENCFF605ZWW	2284252696	ENCSR000EMA	2020-11-12	ENCODE4	dnase-alignment-step-v-1-0	False	False
+AG10803	cell line	connective tissue,skin of body	4	2	1	ENCFF056XGB	20283934851	ENCSR000EMB	2021-02-08	ENCODE4	dnase-alignment-step-v-1-0	False	False
+AG20443	cell line	connective tissue,skin of body	4	1	1	ENCFF529VPM	22212414531	ENCSR000EIX	2020-11-22	ENCODE4	dnase-alignment-step-v-1-0	False	False
+Ammon's horn	tissue	brain	2	1	1	ENCFF772JJM	27443039471	ENCSR584LUZ	2020-11-06	ENCODE4	dnase-alignment-step-v-1-0	False	False
+B cell	primary cell	bodily fluid,blood	15	2	6	ENCFF047WQS	13906338320	ENCSR000EII	2020-11-22	ENCODE4	dnase-alignment-step-v-1-0	True	True
+BE2C	cell line	brain	6	2	2	ENCFF863PDL	3412853341	ENCSR000EMD	2020-11-12	ENCODE4	dnase-alignment-step-v-1-0	False	True
+BJ	cell line	penis,connective tissue,skin of body	4	2	1	ENCFF844POF	2240751228	ENCSR000EME	2020-11-12	ENCODE4	dnase-alignment-step-v-1-0	False	True
+C803	cell line	nose,epithelium	4	1	1	ENCFF442TUD	21289595983	ENCSR000ELI	2020-11-22	ENCODE4	dnase-alignment-step-v-1-0	False	False
+CD14-positive monocyte	primary cell	bodily fluid,blood	16	2	8	ENCFF175LRM	8412876029	ENCSR000ELE	2020-11-20	ENCODE4	dnase-alignment-step-v-1-0	True	True
+CD1c-positive myeloid dendritic cell	primary cell	blood,bodily fluid	4	2	1	ENCFF826QGE	10919143359	ENCSR373BIX	2020-11-06	ENCODE4	dnase-alignment-step-v-1-0	False	False
+CD4-positive, CD25-positive, alpha-beta regulatory T cell	primary cell	bodily fluid,blood	9	1	6	ENCFF212NUC	10503258855	ENCSR234FTX	2022-05-23	ENCODE4	dnase-alignment-step-v-1-0	False	True
+CD4-positive, alpha-beta T cell	primary cell	blood,bodily fluid	56	2	49	ENCFF954CKW	43274190548	ENCSR167JFX	2020-11-16	ENCODE4	dnase-alignment-step-v-1-0	True	True
+CD4-positive, alpha-beta memory T cell	primary cell	bodily fluid,blood	5	1	5	ENCFF105DXR	9131872855	ENCSR526TFD	2022-02-15	ENCODE4	dnase-alignment-step-v-1-0	False	True
+CD8-positive, alpha-beta T cell	primary cell	blood,bodily fluid	29	1	22	ENCFF376DAI	2371941972	ENCSR840TVG	2020-11-16	ENCODE4	dnase-alignment-step-v-1-0	True	True
+CD8-positive, alpha-beta memory T cell	primary cell	bodily fluid,blood	5	1	5	ENCFF375DIH	12367486154	ENCSR295UXT	2022-02-15	ENCODE4	dnase-alignment-step-v-1-0	False	True
+CMK	cell line	bodily fluid,bone element,blood,bone marrow	2	1	1	ENCFF721UJT	2442112424	ENCSR000EMN	2020-11-12	ENCODE4	dnase-alignment-step-v-1-0	False	False
+COLO829	cell line	connective tissue,skin of body	3	1	1	ENCFF746AXH	8591903861	ENCSR000EIN	2020-11-20	ENCODE4	dnase-alignment-step-v-1-0	False	False
+CWRU1	cell line	connective tissue	3	1	1	ENCFF085KLV	11510490948	ENCSR000EKI	2020-11-22	ENCODE4	dnase-alignment-step-v-1-0	False	False
+Caco-2	cell line	colon,large intestine,intestine	8	2	3	ENCFF610ZBH	7296827265	ENCSR255STJ	2021-11-30	ENCODE4	dnase-alignment-step-v-1-0	False	True
+Caki2	cell line	kidney,epithelium	6	2	1	ENCFF286HCJ	3918264201	ENCSR515EWI	2020-11-06	ENCODE4	dnase-alignment-step-v-1-0	False	True
+Calu3	cell line		2	2	1	ENCFF547MWL	6450151416	ENCSR366NBE	2021-11-30	ENCODE4	dnase-alignment-step-v-1-0	False	True
+D341Med	cell line	brain	3	1	1	ENCFF550SER	18961965040	ENCSR000ELB	2020-11-22	ENCODE4	dnase-alignment-step-v-1-0	False	False
+D721Med	cell line	brain	3	1	1	ENCFF271DNF	5623739006	ENCSR000ELA	2020-11-20	ENCODE4	dnase-alignment-step-v-1-0	False	False
+DND-41	cell line	blood,bodily fluid	2	2	1	ENCFF633MBP	17750075990	ENCSR903SKE	2020-09-22	ENCODE4	dnase-alignment-step-v-1-0	True	False
+Daoy	cell line	brain	6	2	1	ENCFF401DQF	3496599360	ENCSR346IHH	2020-10-23	ENCODE4	dnase-alignment-step-v-1-0	False	True
+EH	cell line	connective tissue,penis	6	2	1	ENCFF233TZU	3909168290	ENCSR548MMD	2020-11-06	ENCODE4	dnase-alignment-step-v-1-0	False	False
+EL	cell line	connective tissue,penis	5	2	1	ENCFF485JAR	3902185449	ENCSR691MQJ	2020-11-06	ENCODE4	dnase-alignment-step-v-1-0	False	False
+ELF-1	cell line	embryo	5	2	1	ENCFF805ZGK	23042227119	ENCSR678ILN	2020-11-06	ENCODE4	dnase-alignment-step-v-1-0	False	False
+ELR	cell line	connective tissue,penis	4	2	1	ENCFF364GGY	3049068691	ENCSR240TPI	2020-11-06	ENCODE4	dnase-alignment-step-v-1-0	False	False
+G401	cell line	kidney	5	2	1	ENCFF381UWT	21610229480	ENCSR269SIA	2020-11-06	ENCODE4	dnase-alignment-step-v-1-0	False	True
+GM03348	cell line	connective tissue,skin of body	9	1	3	ENCFF969RTD	19732137023	ENCSR000EIT	2020-11-22	ENCODE4	dnase-alignment-step-v-1-0	False	False
+GM04503	cell line	skin of body,connective tissue	4	2	1	ENCFF992AZC	1996685311	ENCSR000EMO	2020-11-12	ENCODE4	dnase-alignment-step-v-1-0	False	False
+GM04504	cell line	connective tissue,skin of body	4	2	1	ENCFF823CSM	2598934885	ENCSR000EMP	2020-11-12	ENCODE4	dnase-alignment-step-v-1-0	False	False
+GM06990	cell line	bodily fluid,blood	4	2	1	ENCFF825OQI	3595516164	ENCSR000EMQ	2020-11-18	ENCODE4	dnase-alignment-step-v-1-0	False	False
+GM10248	cell line	bodily fluid,blood	3	1	1	ENCFF662QWY	20361492896	ENCSR000EJB	2020-11-22	ENCODE4	dnase-alignment-step-v-1-0	False	False
+GM10266	cell line	bodily fluid,blood	3	1	1	ENCFF946JDS	20018941673	ENCSR000EJC	2020-11-22	ENCODE4	dnase-alignment-step-v-1-0	False	False
+GM12864	cell line	blood,bodily fluid	2	1	1	ENCFF123NPP	7431722529	ENCSR000EMR	2020-11-18	ENCODE4	dnase-alignment-step-v-1-0	False	False
+GM12865	cell line	bodily fluid,blood	4	2	1	ENCFF501BQO	2694575634	ENCSR000EMS	2021-02-08	ENCODE4	dnase-alignment-step-v-1-0	False	False
+GM12878	cell line	blood,bodily fluid	4	2	1	ENCFF940NSD	7454165894	ENCSR000EMT	2020-11-18	ENCODE4	dnase-alignment-step-v-1-0	True	True
+GM12891	cell line	bodily fluid,blood	3	1	1	ENCFF755VVY	3910789512	ENCSR000EJE	2020-11-20	ENCODE4	dnase-alignment-step-v-1-0	False	True
+GM12892	cell line	bodily fluid,blood	3	1	1	ENCFF674CWG	4297623736	ENCSR000EJF	2020-11-20	ENCODE4	dnase-alignment-step-v-1-0	False	True
+GM13976	cell line	bodily fluid,blood	3	1	1	ENCFF067HUR	19740372424	ENCSR000EJG	2020-11-22	ENCODE4	dnase-alignment-step-v-1-0	False	False
+GM13977	cell line	bodily fluid,blood	3	1	1	ENCFF885UZH	20796117712	ENCSR000EJH	2020-11-22	ENCODE4	dnase-alignment-step-v-1-0	False	False
+GM18507	cell line	lymphoid tissue	4	1	1	ENCFF526HRB	2504221974	ENCSR000EJI	2020-11-20	ENCODE4	dnase-alignment-step-v-1-0	False	False
+GM19238	cell line	bodily fluid,blood	3	1	1	ENCFF141NCQ	4227804963	ENCSR000EJJ	2020-11-20	ENCODE4	dnase-alignment-step-v-1-0	False	False
+GM19239	cell line	bodily fluid,blood	3	1	1	ENCFF314DTG	4322135205	ENCSR000EJK	2020-11-20	ENCODE4	dnase-alignment-step-v-1-0	False	False
+GM19240	cell line	bodily fluid,blood	3	1	1	ENCFF437NVY	4012001142	ENCSR000EJL	2020-11-20	ENCODE4	dnase-alignment-step-v-1-0	False	False
+GM20000	cell line	bodily fluid,blood	3	1	1	ENCFF587WEN	20025630088	ENCSR000EJM	2020-11-22	ENCODE4	dnase-alignment-step-v-1-0	False	False
+GM23248	cell line	connective tissue,skin of body,limb	4	2	1	ENCFF868LKT	9187904218	ENCSR217TAW	2020-11-06	ENCODE4	dnase-alignment-step-v-1-0	True	True
+GM23338	cell line	skin of body	5	2	2	ENCFF224SDJ	27215261784	ENCSR004SUL	2020-11-06	ENCODE4	dnase-alignment-step-v-1-0	True	True
+H1	cell line	embryo	7	2	3	ENCFF966UXQ	17312399278	ENCSR951BNY	2021-11-05	ENCODE4	dnase-alignment-step-v-1-0	True	True
+H4	cell line	epithelium,brain	4	2	1	ENCFF967OAF	34201835596	ENCSR809CEA	2020-11-06	ENCODE4	dnase-alignment-step-v-1-0	False	True
+H54	cell line	brain	3	1	1	ENCFF887RRT	5623352695	ENCSR000EJA	2020-11-20	ENCODE4	dnase-alignment-step-v-1-0	False	False
+H7	cell line	embryo	8	2	2	ENCFF930YYX	25833844238	ENCSR000EJO	2020-11-22	ENCODE4	dnase-alignment-step-v-1-0	False	True
+H9	cell line	embryo	24	2	7	ENCFF501ROB	8718961472	ENCSR662RIZ	2021-02-25	ENCODE4	dnase-alignment-step-v-1-0	True	True
+HAP-1	cell line	bone marrow,bone element	6	2	2	ENCFF156ODF	17139188112	ENCSR620QNS	2020-11-06	ENCODE4	dnase-alignment-step-v-1-0	True	False
+HCEC 1CT	cell line	colon,large intestine,intestine	4	2	1	ENCFF886ITZ	20243252993	ENCSR038XTK	2020-11-06	ENCODE4	dnase-alignment-step-v-1-0	False	False
+HCT116	cell line	epithelium,colon,large intestine,intestine	30	2	16	ENCFF148CGT	8281924337	ENCSR542UWN	2023-01-05	ENCODE4	dnase-alignment-step-v-1-0	True	True
+HEK293T	cell line	kidney,epithelium	3	1	1	ENCFF283AWX	15115582966	ENCSR000EJR	2020-11-22	ENCODE4	dnase-alignment-step-v-1-0	False	False
+HFF-Myc	cell line	connective tissue,penis	4	2	1	ENCFF611LBU	1754494378	ENCSR000ENR	2020-11-12	ENCODE4	dnase-alignment-step-v-1-0	False	False
+HFFc6	cell line	penis,connective tissue	4	2	1	ENCFF260GYW	26321774054	ENCSR672EWY	2020-09-24	ENCODE4	dnase-alignment-step-v-1-0	False	True
+HK-2	cell line	kidney,epithelium	3	1	1	ENCFF921UJC	5941363535	ENCSR634YVQ	2020-10-23	ENCODE4	dnase-alignment-step-v-1-0	False	False
+HL-60	cell line	bodily fluid,blood	6	2	2	ENCFF311KST	2395595892	ENCSR000ENU	2020-11-12	ENCODE4	dnase-alignment-step-v-1-0	True	False
+HPDE6-E6E7	cell line	epithelium,exocrine gland,pancreas	3	1	1	ENCFF376RHW	6573051486	ENCSR000EJX	2020-11-20	ENCODE4	dnase-alignment-step-v-1-0	False	False
+HS-27A	cell line	bone element,epithelium,bone marrow	2	1	1	ENCFF299GDE	2287327397	ENCSR000EMF	2020-11-16	ENCODE4	dnase-alignment-step-v-1-0	False	False
+HS-5	cell line	bone element,bone marrow,connective tissue	2	1	1	ENCFF615UMS	2730473893	ENCSR000EMG	2020-11-12	ENCODE4	dnase-alignment-step-v-1-0	False	False
+HT-29	cell line	epithelium,colon,large intestine,intestine	8	4	1	ENCFF936FKI	15385620984	ENCSR814KRX	2020-11-06	ENCODE4	dnase-alignment-step-v-1-0	False	True
+HT1080	cell line	connective tissue,epithelium	6	2	1	ENCFF033IBX	43542785860	ENCSR000FDI	2020-11-06	ENCODE4	dnase-alignment-step-v-1-0	False	True
+HTR-8/SVneo	cell line	placenta,embryo,extraembryonic component	3	1	1	ENCFF740ABP	5917206713	ENCSR000EKC	2020-11-20	ENCODE4	dnase-alignment-step-v-1-0	False	False
+HeLa-S3	cell line	epithelium,uterus	15	2	4	ENCFF187PXI	3024968786	ENCSR000EJT	2020-11-20	ENCODE4	dnase-alignment-step-v-1-0	True	True
+HepG2	cell line	endocrine gland,exocrine gland,liver,epithelium	8	2	2	ENCFF878RGP	2820951988	ENCSR000EJV	2020-11-20	ENCODE4	dnase-alignment-step-v-1-0	True	True
+HuH-7	cell line	endocrine gland,exocrine gland,liver,epithelium	3	1	1	ENCFF070RWR	6641113365	ENCSR000EKD	2020-11-20	ENCODE4	dnase-alignment-step-v-1-0	False	False
+HuH-7.5	cell line	endocrine gland,exocrine gland,liver,epithelium	3	1	1	ENCFF932RXN	6697763960	ENCSR000EKE	2020-11-20	ENCODE4	dnase-alignment-step-v-1-0	False	False
+IMR-90	cell line	connective tissue,lung	8	1	2	ENCFF361OWP	17605668309	ENCSR000EKG	2020-11-22	ENCODE4	dnase-alignment-step-v-1-0	True	True
+Ishikawa	cell line	uterus	12	1	4	ENCFF025PVR	14221856919	ENCSR000EIP	2020-11-22	ENCODE4	dnase-alignment-step-v-1-0	False	True
+Jurkat, Clone E6-1	cell line	bodily fluid,blood	4	2	1	ENCFF443NXJ	2387124811	ENCSR000EOS	2020-11-12	ENCODE4	dnase-alignment-step-v-1-0	False	True
+K562	cell line	bodily fluid,blood	27	2	7	ENCFF987IUK	22618360899	ENCSR000EKS	2020-11-22	ENCODE4	dnase-alignment-step-v-1-0	True	True
+KBM-7	cell line	bone element,bone marrow	6	2	1	ENCFF747BBS	6821968829	ENCSR426IEA	2020-09-24	ENCODE4	dnase-alignment-step-v-1-0	False	False
+Karpas-422	cell line	bodily fluid,blood,lymph node	4	2	1	ENCFF810JOU	15984341297	ENCSR019JDO	2020-11-06	ENCODE4	dnase-alignment-step-v-1-0	True	True
+L1-S8	cell line	bone element,bone marrow	4	2	1	ENCFF076DNT	18900937830	ENCSR314EZY	2020-11-06	ENCODE4	dnase-alignment-step-v-1-0	False	False
+L1-S8R	cell line	bone marrow,bone element	4	2	1	ENCFF861XDW	23305697422	ENCSR746ZPP	2020-11-06	ENCODE4	dnase-alignment-step-v-1-0	False	False
+LHCN-M2	cell line	musculature of body	5	2	1	ENCFF541EQR	3617397834	ENCSR000EPE	2020-11-18	ENCODE4	dnase-alignment-step-v-1-0	False	True
+LNCaP clone FGC	cell line	prostate gland,epithelium	11	2	3	ENCFF388UWK	9737289372	ENCSR000EKT	2020-11-20	ENCODE4	dnase-alignment-step-v-1-0	False	False
+LoVo	cell line	epithelium,colon,intestine,large intestine	4	2	1	ENCFF124QQQ	15019209802	ENCSR503BEM	2020-10-23	ENCODE4	dnase-alignment-step-v-1-0	False	False
+M059J	cell line	brain	5	2	1	ENCFF108IPV	3504773668	ENCSR000EPG	2020-11-18	ENCODE4	dnase-alignment-step-v-1-0	False	True
+MCF 10A	cell line	epithelium,exocrine gland,mammary gland	9	1	3	ENCFF416UGH	19747266344	ENCSR789VGQ	2020-11-06	ENCODE4	dnase-alignment-step-v-1-0	False	True
+MCF-7	cell line	exocrine gland,epithelium,mammary gland	25	2	7	ENCFF925RMV	18588415429	ENCSR000EKX	2020-11-22	ENCODE4	dnase-alignment-step-v-1-0	True	True
+MG63	cell line	bone element	8	2	2	ENCFF438MPJ	4917276207	ENCSR083STA	2020-11-06	ENCODE4	dnase-alignment-step-v-1-0	False	True
+MM.1S	cell line	blood,bodily fluid	2	1	1	ENCFF698CJU	26830655242	ENCSR458LIB	2020-11-06	ENCODE4	dnase-alignment-step-v-1-0	True	False
+NAMALWA	cell line	bodily fluid,blood	12	2	2	ENCFF824ZLB	8670788264	ENCSR301OGM	2020-11-06	ENCODE4	dnase-alignment-step-v-1-0	False	False
+NB4	cell line	bone marrow,bone element	4	2	1	ENCFF015WQK	2447488650	ENCSR000EPL	2021-02-08	ENCODE4	dnase-alignment-step-v-1-0	False	False
+NCI-H226	cell line	lung	4	2	1	ENCFF739ISV	15946394444	ENCSR265TEK	2020-11-06	ENCODE4	dnase-alignment-step-v-1-0	False	False
+NCI-H460	cell line	lung,epithelium	5	2	1	ENCFF583DNU	3464007504	ENCSR000FJH	2020-10-23	ENCODE4	dnase-alignment-step-v-1-0	False	True
+NCI-H929	cell line	bone element,bone marrow	2	2	1	ENCFF042UCN	15591426268	ENCSR090SMP	2020-09-22	ENCODE4	dnase-alignment-step-v-1-0	True	False
+NT2/D1	cell line	gonad,testis,epithelium	4	2	1	ENCFF399OQU	1638972123	ENCSR000EPS	2020-11-12	ENCODE4	dnase-alignment-step-v-1-0	False	False
+OCI-LY7	cell line	bodily fluid,blood	4	2	1	ENCFF757XZK	14048837301	ENCSR489NAM	2020-11-06	ENCODE4	dnase-alignment-step-v-1-0	True	True
+PC-3	cell line	prostate gland	4	2	1	ENCFF699MXB	26858249133	ENCSR052AWE	2020-11-06	ENCODE4	dnase-alignment-step-v-1-0	True	True
+PC-9	cell line	lung	6	2	2	ENCFF121YFE	7715363847	ENCSR781TYE	2022-08-05	ENCODE4	dnase-alignment-step-v-1-0	True	True
+Panc1	cell line	epithelium,pancreas	4	2	1	ENCFF325RLI	2038247764	ENCSR000EPT	2020-11-12	ENCODE4	dnase-alignment-step-v-1-0	True	True
+Peyer's patch	tissue	intestine,lymphoid tissue	8	1	4	ENCFF480COA	17013607735	ENCSR689DSM	2020-10-06	ENCODE4	dnase-alignment-step-v-1-0	True	True
+RCC	cell line	kidney	6	2	1	ENCFF584VOD	24080009785	ENCSR337IRF	2020-11-06	ENCODE4	dnase-alignment-step-v-1-0	False	False
+RCC 7860	cell line	kidney,epithelium	4	2	1	ENCFF314QCK	13517660545	ENCSR037PGI	2020-11-06	ENCODE4	dnase-alignment-step-v-1-0	False	False
+RKO	cell line	epithelium,intestine,colon,large intestine	4	2	1	ENCFF306ENI	19022183545	ENCSR429RHR	2020-11-06	ENCODE4	dnase-alignment-step-v-1-0	False	False
+RPMI7951	cell line	epithelium,skin of body	5	2	1	ENCFF374UVG	2958996092	ENCSR000EPV	2020-11-18	ENCODE4	dnase-alignment-step-v-1-0	False	True
+RPMI8226	cell line	bodily fluid,blood	5	2	1	ENCFF245DSZ	20653359992	ENCSR594NOE	2020-11-06	ENCODE4	dnase-alignment-step-v-1-0	False	False
+RWPE1	cell line	prostate gland,epithelium	3	1	1	ENCFF407NBI	8050817503	ENCSR000ELP	2020-11-20	ENCODE4	dnase-alignment-step-v-1-0	True	False
+RWPE2	cell line	epithelium,prostate gland	2	2	1	ENCFF346MAI	12473979048	ENCSR306BHE	2020-09-26	ENCODE4	dnase-alignment-step-v-1-0	True	False
+Right ventricle myocardium inferior	tissue	heart	1	1	1	ENCFF880IHN	11394119564	ENCSR085MZL	2021-02-08	ENCODE4	dnase-alignment-step-v-1-0	False	True
+Right ventricle myocardium superior	tissue	heart	1	1	1	ENCFF712ABC	14339502459	ENCSR895GSY	2020-09-28	ENCODE4	dnase-alignment-step-v-1-0	False	True
+SJCRH30	cell line	connective tissue,musculature of body	7	2	2	ENCFF610BTY	29571616053	ENCSR000FFJ	2020-11-06	ENCODE4	dnase-alignment-step-v-1-0	True	True
+SJSA1	cell line	bone element	8	2	2	ENCFF468DCR	19890642609	ENCSR620WAR	2020-11-06	ENCODE4	dnase-alignment-step-v-1-0	True	True
+SK-MEL-5	cell line	epithelium,skin of body	5	2	1	ENCFF679LFL	3402290000	ENCSR000FEK	2020-11-06	ENCODE4	dnase-alignment-step-v-1-0	False	True
+SK-N-DZ	cell line	brain	11	2	2	ENCFF137RKG	2406914545	ENCSR000FJL	2020-11-06	ENCODE4	dnase-alignment-step-v-1-0	False	True
+SK-N-MC	cell line	epithelium,brain	4	2	1	ENCFF754VGI	2053449945	ENCSR000EPY	2020-11-12	ENCODE4	dnase-alignment-step-v-1-0	True	False
+SK-N-SH	cell line	brain	7	2	2	ENCFF264HFT	15699520965	ENCSR000ELQ	2020-11-22	ENCODE4	dnase-alignment-step-v-1-0	True	True
+SW480	cell line	colon,epithelium,intestine,large intestine	4	2	1	ENCFF449ERR	16246715857	ENCSR217SET	2020-11-06	ENCODE4	dnase-alignment-step-v-1-0	False	False
+T follicular helper cell	primary cell		1	1	1	ENCFF219RTG	2357939853	ENCSR486KKY	2020-09-22	ENCODE4	dnase-alignment-step-v-1-0	False	False
+T-cell	primary cell	bodily fluid,blood	67	1	62	ENCFF192LKJ	12451247247	ENCSR101RCL	2023-01-19	ENCODE4	dnase-alignment-step-v-1-0	True	True
+T-helper 1 cell	primary cell	bodily fluid,blood	20	2	9	ENCFF112GVG	6781210365	ENCSR000EIG	2020-11-20	ENCODE4	dnase-alignment-step-v-1-0	False	True
+T-helper 17 cell	primary cell	bodily fluid,blood	9	2	7	ENCFF679ZQU	11349636065	ENCSR731KDL	2021-09-01	ENCODE4	dnase-alignment-step-v-1-0	False	True
+T-helper 2 cell	primary cell	bodily fluid,blood	15	2	9	ENCFF462YCH	9126612869	ENCSR655LUX	2022-05-23	ENCODE4	dnase-alignment-step-v-1-0	False	True
+T-helper 22 cell	primary cell	bodily fluid,blood	1	1	1	ENCFF563FDF	2801266791	ENCSR944GPH	2020-09-25	ENCODE4	dnase-alignment-step-v-1-0	False	False
+T-helper 9 cell	primary cell	bodily fluid,blood	1	1	1	ENCFF801GLI	3702194740	ENCSR542GKI	2020-09-25	ENCODE4	dnase-alignment-step-v-1-0	False	False
+T47D	cell line	exocrine gland,epithelium,mammary gland	11	2	3	ENCFF661WZF	16848435025	ENCSR000ELS	2020-11-22	ENCODE4	dnase-alignment-step-v-1-0	False	True
+WERI-Rb-1	cell line	eye	6	2	2	ENCFF643TRD	3369559223	ENCSR000EQL	2020-11-12	ENCODE4	dnase-alignment-step-v-1-0	True	False
+WI38	cell line	connective tissue,lung	8	2	2	ENCFF760MER	1902325414	ENCSR000EQM	2020-11-12	ENCODE4	dnase-alignment-step-v-1-0	False	False
+WTC11	cell line	connective tissue,skin of body	2	2	1	ENCFF289QMY	11409603568	ENCSR785ZUI	2021-04-14	ENCODE4	dnase-alignment-step-v-1-0	False	True
+activated B cell	primary cell	blood,bodily fluid	1	1	1	ENCFF771GWV	7741991631	ENCSR109DTU	2021-11-30	ENCODE4	dnase-alignment-step-v-1-0	False	True
+activated CD4-positive, CD25-positive, alpha-beta regulatory T cell	primary cell	bodily fluid,blood	2	1	2	ENCFF892DGS	10184374948	ENCSR242CLA	2021-09-01	ENCODE4	dnase-alignment-step-v-1-0	False	False
+activated CD4-positive, alpha-beta T cell	primary cell	bodily fluid,blood	29	1	29	ENCFF273UXC	52508301366	ENCSR365CUB	2021-11-18	ENCODE4	dnase-alignment-step-v-1-0	False	True
+activated CD4-positive, alpha-beta memory T cell	primary cell	bodily fluid,blood	2	1	2	ENCFF948QBU	15074527552	ENCSR720TCN	2020-09-26	ENCODE4	dnase-alignment-step-v-1-0	False	True
+activated CD8-positive, alpha-beta T cell	primary cell		2	1	2	ENCFF563CJV	12440592918	ENCSR294YEJ	2020-09-28	ENCODE4	dnase-alignment-step-v-1-0	False	True
+activated CD8-positive, alpha-beta memory T cell	primary cell	blood,bodily fluid	15	1	15	ENCFF274OZI	2766371982	ENCSR134CIY	2020-09-28	ENCODE4	dnase-alignment-step-v-1-0	False	True
+activated T-cell	primary cell	bodily fluid,blood	15	1	15	ENCFF074TSD	9449923820	ENCSR300NZA	2022-11-22	ENCODE4	dnase-alignment-step-v-1-0	False	True
+activated T-helper 1 cell	primary cell	blood,bodily fluid	4	1	4	ENCFF253QIM	7279523556	ENCSR636DIR	2021-10-18	ENCODE4	dnase-alignment-step-v-1-0	False	True
+activated T-helper 2 cell	primary cell	blood,bodily fluid	1	1	1	ENCFF336VNQ	11404567328	ENCSR780ABS	2021-11-04	ENCODE4	dnase-alignment-step-v-1-0	False	True
+activated T-helper 9 cell	primary cell	bodily fluid,blood	1	1	1	ENCFF854EYP	3219659780	ENCSR433WOV	2020-09-25	ENCODE4	dnase-alignment-step-v-1-0	False	False
+activated effector memory CD4-positive, alpha-beta T cell	primary cell	bodily fluid,blood	3	1	3	ENCFF247KCG	22852903424	ENCSR732IFV	2020-10-04	ENCODE4	dnase-alignment-step-v-1-0	False	False
+activated gamma-delta T cell	primary cell	bodily fluid,blood	2	1	2	ENCFF192ISM	10453296243	ENCSR676GAW	2020-10-04	ENCODE4	dnase-alignment-step-v-1-0	False	False
+activated naive CD4-positive, alpha-beta T cell	primary cell	blood,bodily fluid	7	1	7	ENCFF887RET	11531210817	ENCSR515PDV	2021-11-30	ENCODE4	dnase-alignment-step-v-1-0	False	True
+activated naive CD8-positive, alpha-beta T cell	primary cell	bodily fluid,blood	4	1	4	ENCFF013LEW	11779698482	ENCSR009MDC	2021-11-04	ENCODE4	dnase-alignment-step-v-1-0	False	True
+adipocyte	in vitro differentiated cells	connective tissue	4	2	1	ENCFF306OLW	3179529187	ENCSR405TXU	2020-11-06	ENCODE4	dnase-alignment-step-v-1-0	False	False
+adrenal gland	tissue	adrenal gland,endocrine gland	27	1	15	ENCFF845RAP	3147382637	ENCSR060BFU	2020-11-11	ENCODE4	dnase-alignment-step-v-1-0	True	True
+amniotic epithelial cell	primary cell	placenta,epithelium,extraembryonic component	4	2	1	ENCFF635YGG	2439981425	ENCSR000END	2020-11-18	ENCODE4	dnase-alignment-step-v-1-0	False	False
+amniotic stem cell	primary cell	connective tissue,extraembryonic component	2	1	1	ENCFF194QJZ	20878929570	ENCSR207TUX	2020-11-06	ENCODE4	dnase-alignment-step-v-1-0	False	False
+aorta	tissue	vasculature,blood vessel,arterial blood vessel	2	1	2	ENCFF397WGK	18222442635	ENCSR595DQM	2020-09-25	ENCODE4	dnase-alignment-step-v-1-0	True	True
+ascending aorta	tissue	arterial blood vessel,vasculature,blood vessel	4	1	2	ENCFF454LLX	17425836111	ENCSR968TPO	2020-10-06	ENCODE4	dnase-alignment-step-v-1-0	True	True
+astrocyte	in vitro differentiated cells	spinal cord,brain	5	2	2	ENCFF351XMO	12292770652	ENCSR146KFX	2021-02-25	ENCODE4	dnase-alignment-step-v-1-0	True	True
+astrocyte of the cerebellum	primary cell	brain	4	2	1	ENCFF490FNY	2108431013	ENCSR000ENC	2020-11-12	ENCODE4	dnase-alignment-step-v-1-0	False	False
+astrocyte of the hippocampus	primary cell	brain	4	2	1	ENCFF222XQL	2146788735	ENCSR000ENA	2021-02-08	ENCODE4	dnase-alignment-step-v-1-0	False	False
+astrocyte of the spinal cord	primary cell	spinal cord	4	2	1	ENCFF960DBN	2411075241	ENCSR000ENB	2021-02-08	ENCODE4	dnase-alignment-step-v-1-0	False	False
+bipolar neuron	in vitro differentiated cells	eye,spinal cord,ear,brain	4	2	1	ENCFF440SZY	17592237397	ENCSR626RVD	2020-11-06	ENCODE4	dnase-alignment-step-v-1-0	True	True
+body of pancreas	tissue	pancreas	8	1	4	ENCFF488PQX	15868872023	ENCSR828FVZ	2020-10-06	ENCODE4	dnase-alignment-step-v-1-0	True	True
+brain	organoid	brain	39	2	16	ENCFF594ZYT	10889032921	ENCSR049SVH	2021-09-07	ENCODE4	dnase-alignment-step-v-1-0	False	True
+brain microvascular endothelial cell	primary cell	epithelium,vasculature,brain,blood vessel	6	2	2	ENCFF203RLS	2100342514	ENCSR000ENE	2020-11-12	ENCODE4	dnase-alignment-step-v-1-0	True	False
+brain pericyte	primary cell	connective tissue,brain	2	1	1	ENCFF582YGW	2977125164	ENCSR000ENF	2020-11-12	ENCODE4	dnase-alignment-step-v-1-0	False	False
+breast epithelium	tissue	breast,epithelium	4	1	2	ENCFF006XGN	10735057678	ENCSR859LTL	2020-10-06	ENCODE4	dnase-alignment-step-v-1-0	True	True
+bronchial epithelial cell	primary cell	epithelium,lung,bronchus	8	2	2	ENCFF760VZX	1659522286	ENCSR000EPX	2020-09-19	ENCODE4	dnase-alignment-step-v-1-0	False	True
+cardiac fibroblast	primary cell	connective tissue,heart	13	2	3	ENCFF628HTA	2583349723	ENCSR000ENH	2021-02-08	ENCODE4	dnase-alignment-step-v-1-0	False	False
+cardiac muscle cell	primary cell	musculature of body,heart	12	2	3	ENCFF638HIX	2202486451	ENCSR000ENJ	2021-02-08	ENCODE4	dnase-alignment-step-v-1-0	True	True
+cardiac myoblast	in vitro differentiated cells	musculature of body,heart	2	1	1	ENCFF426WHF	5361244890	ENCSR000EMV	2020-11-18	ENCODE4	dnase-alignment-step-v-1-0	False	False
+cardiac septum	tissue	heart	1	1	1	ENCFF555LVN	16215472599	ENCSR524QBS	2020-09-25	ENCODE4	dnase-alignment-step-v-1-0	False	True
+cardiovascular progenitor cell	in vitro differentiated cells		4	2	1	ENCFF130IKC	2492565350	ENCSR000EMW	2020-11-16	ENCODE4	dnase-alignment-step-v-1-0	False	False
+caudate nucleus	tissue	brain	3	1	1	ENCFF152WNP	36150641594	ENCSR015BGH	2020-11-06	ENCODE4	dnase-alignment-step-v-1-0	False	False
+central memory CD4-positive, alpha-beta T cell	primary cell		3	1	3	ENCFF244GTJ	14196293307	ENCSR467YCD	2022-05-23	ENCODE4	dnase-alignment-step-v-1-0	False	False
+central memory CD8-positive, alpha-beta T cell	primary cell		2	1	2	ENCFF888ITV	7996124814	ENCSR560UTV	2021-09-07	ENCODE4	dnase-alignment-step-v-1-0	False	False
+cerebellar cortex	tissue	brain	5	2	1	ENCFF462NEC	9654876107	ENCSR503HIB	2020-11-06	ENCODE4	dnase-alignment-step-v-1-0	False	False
+cerebellum	tissue	brain	4	2	1	ENCFF681FFX	9232650587	ENCSR000EIJ	2020-11-20	ENCODE4	dnase-alignment-step-v-1-0	False	True
+chondrocyte	in vitro differentiated cells	connective tissue	2	2	1	ENCFF082QHJ	12718175692	ENCSR970DQR	2021-10-18	ENCODE4	dnase-alignment-step-v-1-0	False	True
+chorion	tissue	extraembryonic component	3	1	1	ENCFF535TTP	6955683877	ENCSR000EIL	2020-11-20	ENCODE4	dnase-alignment-step-v-1-0	False	True
+choroid plexus epithelial cell	primary cell	epithelium,brain,vasculature	4	2	1	ENCFF727EOB	2505782531	ENCSR000ENL	2020-11-18	ENCODE4	dnase-alignment-step-v-1-0	False	False
+colonic mucosa	tissue	colon,intestine,large intestine	2	1	2	ENCFF894ICA	13093390204	ENCSR994KTY	2021-08-30	ENCODE4	dnase-alignment-step-v-1-0	True	True
+common myeloid progenitor, CD34-positive	primary cell	bone marrow,bone element	30	2	12	ENCFF971TCE	30594087188	ENCSR468ZXN	2021-02-08	ENCODE4	dnase-alignment-step-v-1-0	False	True
+coronary artery	tissue	arterial blood vessel,blood vessel,vasculature,heart	4	1	2	ENCFF384OUM	14465578724	ENCSR999TSD	2020-10-24	ENCODE4	dnase-alignment-step-v-1-0	True	False
+dedifferentiated amniotic fluid mesenchymal stem cell	primary cell	connective tissue,extraembryonic component	4	2	1	ENCFF919RMZ	15345049756	ENCSR820WLP	2020-11-06	ENCODE4	dnase-alignment-step-v-1-0	False	False
+dermis blood vessel endothelial cell	primary cell	epithelium,vasculature,skin of body,blood vessel	16	2	4	ENCFF320KKF	4044538057	ENCSR000ENZ	2021-02-08	ENCODE4	dnase-alignment-step-v-1-0	False	True
+dermis microvascular lymphatic vessel endothelial cell	primary cell	skin of body,lymphatic vessel,vasculature,epithelium,blood vessel	8	2	2	ENCFF627UXJ	3282720089	ENCSR000EOB	2021-02-08	ENCODE4	dnase-alignment-step-v-1-0	False	True
+dorsolateral prefrontal cortex	tissue	brain	56	1	56	ENCFF114ZVW	15848565204	ENCSR306LNA	2021-08-30	ENCODE4	dnase-alignment-step-v-1-0	True	True
+ecto neural progenitor cell	in vitro differentiated cells		2	1	1	ENCFF379BUG	18791665243	ENCSR360XIS	2020-10-24	ENCODE4	dnase-alignment-step-v-1-0	False	False
+effector CD4-positive, alpha-beta T cell	primary cell		2	1	2	ENCFF592KGP	6869116973	ENCSR525VCH	2020-10-04	ENCODE4	dnase-alignment-step-v-1-0	False	False
+effector memory CD4-positive, alpha-beta T cell	primary cell	bodily fluid,blood	3	1	3	ENCFF864BTN	4052514006	ENCSR724INK	2020-10-04	ENCODE4	dnase-alignment-step-v-1-0	False	False
+effector memory CD8-positive, alpha-beta T cell	primary cell	bodily fluid,blood	3	1	3	ENCFF485FNB	7474380884	ENCSR232FAS	2021-09-07	ENCODE4	dnase-alignment-step-v-1-0	False	False
+embryonic facial prominence	tissue	embryo	4	2	1	ENCFF967IXP	17414668160	ENCSR435NHO	2020-11-06	ENCODE4	dnase-alignment-step-v-1-0	False	False
+endodermal cell	in vitro differentiated cells	embryo	5	2	2	ENCFF800HSD	21611433840	ENCSR940CXU	2021-11-30	ENCODE4	dnase-alignment-step-v-1-0	True	True
+endothelial cell	in vitro differentiated cells	epithelium	2	2	1	ENCFF299GXP	11059235114	ENCSR541IET	2021-08-30	ENCODE4	dnase-alignment-step-v-1-0	False	True
+endothelial cell of umbilical vein	primary cell	vasculature,placenta,blood vessel,vein,epithelium,extraembryonic component	7	2	2	ENCFF309JXB	1708935246	ENCSR000EKF	2020-11-20	ENCODE4	dnase-alignment-step-v-1-0	True	True
+epidermal melanocyte	primary cell	epithelium,skin of body	3	1	1	ENCFF786HBB	10180937816	ENCSR000ELD	2020-11-20	ENCODE4	dnase-alignment-step-v-1-0	False	False
+epithelial cell of esophagus	primary cell	esophagus,epithelium	4	2	1	ENCFF283GDN	2427384370	ENCSR000ENN	2021-02-08	ENCODE4	dnase-alignment-step-v-1-0	False	False
+epithelial cell of prostate	primary cell	prostate gland,epithelium	4	2	1	ENCFF477OTZ	2461501933	ENCSR000EPU	2020-11-12	ENCODE4	dnase-alignment-step-v-1-0	True	False
+epithelial cell of proximal tubule	primary cell	kidney,epithelium	4	2	1	ENCFF890QZF	2722483649	ENCSR000EPW	2020-11-12	ENCODE4	dnase-alignment-step-v-1-0	False	True
+esophagus muscularis mucosa	tissue	esophagus,musculature of body	2	1	1	ENCFF054FLU	15397226937	ENCSR944JCE	2020-10-24	ENCODE4	dnase-alignment-step-v-1-0	True	True
+esophagus squamous epithelium	tissue	esophagus,epithelium	2	1	1	ENCFF699UQU	15476706882	ENCSR783OCW	2020-10-24	ENCODE4	dnase-alignment-step-v-1-0	True	True
+eye	tissue	eye	8	2	2	ENCFF597SAZ	27881122849	ENCSR127PWK	2020-11-06	ENCODE4	dnase-alignment-step-v-1-0	False	False
+femur	tissue	skeleton,limb,bone element	2	1	1	ENCFF152OOX	13233914402	ENCSR805XIF	2020-10-24	ENCODE4	dnase-alignment-step-v-1-0	False	False
+fibroblast of dermis	primary cell	connective tissue,skin of body	4	2	1	ENCFF293BEP	2782965552	ENCSR000EPO	2020-11-18	ENCODE4	dnase-alignment-step-v-1-0	True	True
+fibroblast of gingiva	primary cell	connective tissue,mouth	5	2	1	ENCFF651XJD	1776912410	ENCSR000ENS	2020-11-18	ENCODE4	dnase-alignment-step-v-1-0	False	False
+fibroblast of lung	primary cell	connective tissue,lung	8	2	2	ENCFF807OQU	2276747074	ENCSR000EPR	2021-02-08	ENCODE4	dnase-alignment-step-v-1-0	True	True
+fibroblast of mammary gland	primary cell	connective tissue,exocrine gland,mammary gland	4	2	1	ENCFF698PYM	17714793110	ENCSR000ENW	2020-11-18	ENCODE4	dnase-alignment-step-v-1-0	False	False
+fibroblast of peridontal ligament	primary cell	connective tissue,mouth	4	2	1	ENCFF087PPY	1314338494	ENCSR000EOI	2020-11-18	ENCODE4	dnase-alignment-step-v-1-0	False	False
+fibroblast of pulmonary artery	primary cell	arterial blood vessel,connective tissue,vasculature,blood vessel	4	2	1	ENCFF141EHE	1998327013	ENCSR000EOH	2020-11-18	ENCODE4	dnase-alignment-step-v-1-0	False	False
+fibroblast of skin of abdomen	primary cell	connective tissue,skin of body	5	1	2	ENCFF906YYA	20250778877	ENCSR622TWS	2020-11-16	ENCODE4	dnase-alignment-step-v-1-0	False	True
+fibroblast of skin of back	primary cell	skin of body,connective tissue	4	1	1	ENCFF486ECD	22412198052	ENCSR184LMY	2020-11-16	ENCODE4	dnase-alignment-step-v-1-0	False	True
+fibroblast of skin of left biceps	primary cell	skin of body	4	1	2	ENCFF720NZB	2590180511	ENCSR648GDP	2020-11-11	ENCODE4	dnase-alignment-step-v-1-0	False	False
+fibroblast of skin of left quadriceps	primary cell	skin of body	4	1	2	ENCFF156CPF	3693440485	ENCSR371KRY	2020-11-11	ENCODE4	dnase-alignment-step-v-1-0	False	False
+fibroblast of skin of right biceps	primary cell	skin of body	4	1	1	ENCFF623ERH	27298979717	ENCSR383BLX	2020-11-16	ENCODE4	dnase-alignment-step-v-1-0	False	False
+fibroblast of skin of right quadriceps	primary cell	skin of body	4	1	1	ENCFF104BQJ	23643071299	ENCSR217RVH	2020-11-16	ENCODE4	dnase-alignment-step-v-1-0	False	False
+fibroblast of skin of scalp	primary cell	connective tissue,skin of body	5	1	2	ENCFF351UST	20484155852	ENCSR770DEN	2020-11-16	ENCODE4	dnase-alignment-step-v-1-0	False	True
+fibroblast of the aortic adventitia	primary cell	arterial blood vessel,connective tissue,vasculature,blood vessel	4	2	1	ENCFF074KNZ	20484694006	ENCSR000EMC	2020-11-18	ENCODE4	dnase-alignment-step-v-1-0	False	True
+fibroblast of the conjunctiva	primary cell	connective tissue,eye	4	2	1	ENCFF530SXH	3180116771	ENCSR000ENK	2020-11-12	ENCODE4	dnase-alignment-step-v-1-0	False	False
+fibroblast of upper back skin	primary cell	connective tissue,skin of body	5	1	2	ENCFF413DAA	20535025693	ENCSR325LYJ	2020-11-16	ENCODE4	dnase-alignment-step-v-1-0	False	False
+fibroblast of villous mesenchyme	primary cell	connective tissue,placenta,extraembryonic component	4	2	1	ENCFF626XTB	1434129676	ENCSR000EOR	2020-11-18	ENCODE4	dnase-alignment-step-v-1-0	False	True
+forelimb muscle	tissue	musculature of body,limb	2	1	1	ENCFF513HSP	1463742437	ENCSR166TEE	2020-11-06	ENCODE4	dnase-alignment-step-v-1-0	False	True
+foreskin fibroblast	primary cell	connective tissue,penis,skin of body	14	2	4	ENCFF443DQB	2850621541	ENCSR000EPP	2021-02-08	ENCODE4	dnase-alignment-step-v-1-0	False	True
+foreskin keratinocyte	primary cell	epithelium,penis,skin of body	7	1	2	ENCFF218LFH	4658540768	ENCSR724CND	2020-11-16	ENCODE4	dnase-alignment-step-v-1-0	True	True
+foreskin melanocyte	primary cell	penis	7	1	2	ENCFF768NBD	23039074924	ENCSR434OBM	2020-11-16	ENCODE4	dnase-alignment-step-v-1-0	False	True
+frontal cortex	tissue	brain	8	2	2	ENCFF806OZU	9769916991	ENCSR000EIY	2020-11-22	ENCODE4	dnase-alignment-step-v-1-0	False	True
+gastrocnemius medialis	tissue	musculature of body,limb	12	1	6	ENCFF705QKE	12024171341	ENCSR171ADO	2020-11-06	ENCODE4	dnase-alignment-step-v-1-0	True	True
+germinal center	tissue	lymphoid tissue	3	1	1	ENCFF312VPD	12797156598	ENCSR000EIZ	2020-11-22	ENCODE4	dnase-alignment-step-v-1-0	False	False
+globus pallidus	tissue	brain	6	2	1	ENCFF686XUA	11241619297	ENCSR771DAX	2020-11-06	ENCODE4	dnase-alignment-step-v-1-0	False	False
+glomerular endothelial cell	primary cell	kidney,epithelium,vasculature	4	2	1	ENCFF637XTZ	1604267384	ENCSR000EOM	2020-11-12	ENCODE4	dnase-alignment-step-v-1-0	False	True
+glomerular visceral epithelial cell	primary cell	kidney,epithelium	4	2	1	ENCFF266BCP	13224809265	ENCSR785BDQ	2020-10-24	ENCODE4	dnase-alignment-step-v-1-0	False	False
+glutamatergic neuron	in vitro differentiated cells		2	2	1	ENCFF812NDP	11640865745	ENCSR109RIQ	2021-12-13	ENCODE4	dnase-alignment-step-v-1-0	False	True
+head of caudate nucleus	tissue	brain	86	1	86	ENCFF548UIU	11204042378	ENCSR042DVU	2021-08-30	ENCODE4	dnase-alignment-step-v-1-0	False	False
+heart	tissue	heart	44	2	18	ENCFF360YPK	9637988853	ENCSR000EJQ	2020-11-22	ENCODE4	dnase-alignment-step-v-1-0	False	True
+heart left ventricle	tissue	heart	15	2	10	ENCFF776NLW	13891415936	ENCSR946DXB	2020-11-06	ENCODE4	dnase-alignment-step-v-1-0	True	True
+heart right ventricle	tissue	heart	13	2	10	ENCFF788XKC	18009838097	ENCSR746RDJ	2020-11-06	ENCODE4	dnase-alignment-step-v-1-0	True	True
+hematopoietic multipotent progenitor cell	in vitro differentiated cells	blood,bodily fluid	48	3	12	ENCFF904FRI	3158078477	ENCSR000EMK	2020-11-12	ENCODE4	dnase-alignment-step-v-1-0	False	True
+hepatic stellate cell	primary cell	endocrine gland,connective tissue,liver,exocrine gland	3	1	1	ENCFF450TQE	8143543656	ENCSR000ELR	2020-11-20	ENCODE4	dnase-alignment-step-v-1-0	False	False
+hepatocyte	primary cell	endocrine gland,exocrine gland,liver,epithelium	7	2	2	ENCFF071UJW	7285461680	ENCSR000EJU	2020-11-20	ENCODE4	dnase-alignment-step-v-1-0	True	True
+hindlimb muscle	tissue	musculature of body,limb	2	1	1	ENCFF028KIR	4664691759	ENCSR385AMY	2020-11-16	ENCODE4	dnase-alignment-step-v-1-0	False	True
+iPS DF 19.11	cell line	skin of prepuce of penis,penis,skin of body	2	1	1	ENCFF966PEX	17845458724	ENCSR383SNM	2020-11-16	ENCODE4	dnase-alignment-step-v-1-0	True	False
+iPS DF 19.7	cell line	skin of prepuce of penis,penis,skin of body	2	1	1	ENCFF984DFA	1682859531	ENCSR440QMR	2020-11-06	ENCODE4	dnase-alignment-step-v-1-0	False	False
+iPS DF 4.7	cell line	skin of prepuce of penis,penis,skin of body	2	1	1	ENCFF500VCT	1633105450	ENCSR014FPY	2020-11-06	ENCODE4	dnase-alignment-step-v-1-0	False	False
+iPS DF 6.9	cell line	skin of prepuce of penis,penis,skin of body	2	1	1	ENCFF138HXB	1722142578	ENCSR261SMF	2020-11-06	ENCODE4	dnase-alignment-step-v-1-0	True	False
+iPS-NIHi11	cell line	skin of body	4	1	1	ENCFF689MGG	19857287038	ENCSR000EKJ	2020-11-22	ENCODE4	dnase-alignment-step-v-1-0	False	False
+iPS-NIHi7	cell line	skin of body	4	1	1	ENCFF867SEB	21827035444	ENCSR000EKK	2020-11-22	ENCODE4	dnase-alignment-step-v-1-0	False	False
+immature natural killer cell	primary cell	bone marrow,thymus,lymph node,bone element,spleen	3	1	3	ENCFF104IZR	11321493367	ENCSR696ZDW	2022-03-21	ENCODE4	dnase-alignment-step-v-1-0	False	True
+inferior parietal cortex	tissue	brain	2	1	1	ENCFF257XRV	20395945089	ENCSR986YWZ	2020-11-06	ENCODE4	dnase-alignment-step-v-1-0	False	False
+inflammatory macrophage	primary cell	bodily fluid,blood	6	3	5	ENCFF075CXL	14621538201	ENCSR721XAP	2020-10-04	ENCODE4	dnase-alignment-step-v-1-0	False	False
+iris pigment epithelial cell	primary cell	epithelium,eye	4	2	1	ENCFF029GGS	2456448364	ENCSR000ENT	2020-11-18	ENCODE4	dnase-alignment-step-v-1-0	False	False
+islet precursor cell	in vitro differentiated cells	pancreas	2	1	1	ENCFF071OAX	25868458292	ENCSR224FOA	2020-11-06	ENCODE4	dnase-alignment-step-v-1-0	False	False
+keratinocyte	primary cell	epithelium,skin of body	7	2	2	ENCFF478FRB	2404225843	ENCSR000ELH	2020-11-20	ENCODE4	dnase-alignment-step-v-1-0	True	True
+kidney	tissue	kidney	33	2	14	ENCFF111KOD	2097384454	ENCSR106OKX	2020-11-11	ENCODE4	dnase-alignment-step-v-1-0	False	True
+kidney capillary endothelial cell	primary cell	kidney,vasculature,blood vessel,epithelium	3	1	1	ENCFF566YML	10349113397	ENCSR988YKR	2020-10-24	ENCODE4	dnase-alignment-step-v-1-0	False	False
+kidney epithelial cell	primary cell	kidney,epithelium	4	2	1	ENCFF889IWS	1979880738	ENCSR000EOL	2020-11-12	ENCODE4	dnase-alignment-step-v-1-0	False	True
+kidney glomerular epithelial cell	primary cell	kidney,epithelium	4	2	1	ENCFF930JHG	23449452316	ENCSR136KEL	2020-11-06	ENCODE4	dnase-alignment-step-v-1-0	False	False
+kidney tubule cell	primary cell	kidney,epithelium	9	2	2	ENCFF212KVO	15322440240	ENCSR257CIZ	2020-11-06	ENCODE4	dnase-alignment-step-v-1-0	False	False
+large intestine	tissue	large intestine,intestine	28	1	14	ENCFF091HXM	3076230581	ENCSR047FNH	2020-11-16	ENCODE4	dnase-alignment-step-v-1-0	True	True
+left cardiac atrium	tissue	heart	3	1	2	ENCFF608NUI	16287641609	ENCSR412NMI	2020-11-06	ENCODE4	dnase-alignment-step-v-1-0	False	True
+left colon	tissue	colon,large intestine,intestine	2	1	2	ENCFF873BRQ	12067294520	ENCSR867XFA	2020-09-27	ENCODE4	dnase-alignment-step-v-1-0	False	True
+left forelimb	tissue	skeleton,limb,bone element	2	1	1	ENCFF771KYO	11197578553	ENCSR976XOY	2020-10-24	ENCODE4	dnase-alignment-step-v-1-0	False	False
+left hindlimb	tissue	bone element,limb,skeleton	2	1	1	ENCFF945PTG	10038762757	ENCSR431UEM	2020-10-23	ENCODE4	dnase-alignment-step-v-1-0	False	False
+left kidney	tissue	kidney	21	2	9	ENCFF377XPX	3922112452	ENCSR120LVW	2020-11-11	ENCODE4	dnase-alignment-step-v-1-0	False	True
+left lobe of liver	tissue	liver,endocrine gland,exocrine gland	1	1	1	ENCFF566UVH	16456082133	ENCSR802ZYE	2020-09-27	ENCODE4	dnase-alignment-step-v-1-0	False	True
+left lung	tissue	lung	28	1	15	ENCFF799RBH	16863274387	ENCSR723VNG	2020-09-27	ENCODE4	dnase-alignment-step-v-1-0	True	True
+left renal cortex interstitium	tissue	kidney	8	1	4	ENCFF559KDW	1861487385	ENCSR092WMD	2020-11-16	ENCODE4	dnase-alignment-step-v-1-0	False	True
+left renal pelvis	tissue	ureter,kidney	8	1	4	ENCFF073KIB	2278665540	ENCSR258IBL	2020-11-11	ENCODE4	dnase-alignment-step-v-1-0	False	True
+left ventricle myocardium inferior	tissue	heart	1	1	1	ENCFF570JPA	9158467988	ENCSR770OTB	2020-09-27	ENCODE4	dnase-alignment-step-v-1-0	True	True
+left ventricle myocardium superior	tissue	heart	1	1	1	ENCFF318PTL	16612002932	ENCSR355WAJ	2020-09-27	ENCODE4	dnase-alignment-step-v-1-0	False	True
+limb	tissue	limb	8	3	2	ENCFF849PMD	15034920571	ENCSR532CRI	2020-11-06	ENCODE4	dnase-alignment-step-v-1-0	False	False
+liver	tissue	exocrine gland,endocrine gland,liver	6	2	2	ENCFF623XDR	21314605359	ENCSR158YXM	2020-11-06	ENCODE4	dnase-alignment-step-v-1-0	True	True
+lower leg skin	tissue	skin of body,limb	4	1	2	ENCFF191TTX	22259431659	ENCSR579KDC	2020-10-06	ENCODE4	dnase-alignment-step-v-1-0	False	True
+lower lobe of left lung	tissue	lung	3	1	3	ENCFF638DOH	22695356851	ENCSR757NJT	2020-09-27	ENCODE4	dnase-alignment-step-v-1-0	True	True
+lower lobe of right lung	tissue	lung	1	1	1	ENCFF708FAL	13190042904	ENCSR785JXR	2020-09-27	ENCODE4	dnase-alignment-step-v-1-0	True	True
+lung	tissue	lung	35	2	14	ENCFF416BED	16104941475	ENCSR945JJB	2020-09-27	ENCODE4	dnase-alignment-step-v-1-0	True	True
+lung microvascular endothelial cell	primary cell	epithelium,vasculature,lung,blood vessel	9	2	2	ENCFF475NUI	2877828556	ENCSR000EOE	2021-02-08	ENCODE4	dnase-alignment-step-v-1-0	False	True
+mammary epithelial cell	primary cell	exocrine gland,epithelium,mammary gland	9	2	3	ENCFF037PGN	7374449029	ENCSR817ALC	2021-10-18	ENCODE4	dnase-alignment-step-v-1-0	True	True
+medulla oblongata	tissue	brain	6	2	1	ENCFF666SVG	28779130251	ENCSR224IYD	2020-11-06	ENCODE4	dnase-alignment-step-v-1-0	False	False
+memory B cell	primary cell	bodily fluid,blood	2	1	2	ENCFF256DRM	7780523583	ENCSR229BGG	2021-11-30	ENCODE4	dnase-alignment-step-v-1-0	False	False
+mesenchymal stem cell	in vitro differentiated cells	connective tissue	4	1	1	ENCFF701GQV	29143076786	ENCSR731QLJ	2020-11-16	ENCODE4	dnase-alignment-step-v-1-0	True	True
+mesendoderm	in vitro differentiated cells	embryo	3	1	1	ENCFF585KAH	22055547724	ENCSR714DIF	2020-11-16	ENCODE4	dnase-alignment-step-v-1-0	True	True
+mesenteric fat pad	tissue	connective tissue,adipose tissue	1	1	1	ENCFF188MPX	16685110462	ENCSR197BFD	2020-09-27	ENCODE4	dnase-alignment-step-v-1-0	False	True
+mesodermal cell	in vitro differentiated cells	embryo	2	1	1	ENCFF604YMS	1546502242	ENCSR000EMX	2020-11-12	ENCODE4	dnase-alignment-step-v-1-0	False	True
+mesothelial cell of epicardium	in vitro differentiated cells	epithelium,pericardium,heart	2	1	2	ENCFF353ILO	12616042850	ENCSR658EHM	2021-09-07	ENCODE4	dnase-alignment-step-v-1-0	False	True
+midbrain	tissue	brain	5	2	1	ENCFF325QQS	45930342660	ENCSR706IDL	2020-11-06	ENCODE4	dnase-alignment-step-v-1-0	False	False
+middle frontal gyrus	tissue	brain	4	2	1	ENCFF951FGT	13879781874	ENCSR318PRQ	2020-10-23	ENCODE4	dnase-alignment-step-v-1-0	False	False
+mucosa of descending colon	tissue	colon,intestine,large intestine	3	1	3	ENCFF314XUO	17129601594	ENCSR612CTW	2020-09-27	ENCODE4	dnase-alignment-step-v-1-0	False	True
+mucosa of gallbladder	tissue	gallbladder	1	1	1	ENCFF615WJV	13359584392	ENCSR011SAG	2020-09-27	ENCODE4	dnase-alignment-step-v-1-0	False	True
+muscle of arm	tissue	musculature of body,limb	34	1	17	ENCFF159SCX	4826605732	ENCSR517NHP	2020-11-16	ENCODE4	dnase-alignment-step-v-1-0	False	True
+muscle of back	tissue	musculature of body	30	1	15	ENCFF452GYC	28824399067	ENCSR317SIH	2020-11-16	ENCODE4	dnase-alignment-step-v-1-0	False	True
+muscle of leg	tissue	musculature of body,limb	26	1	13	ENCFF408FZW	2131037036	ENCSR033DQS	2020-11-16	ENCODE4	dnase-alignment-step-v-1-0	True	True
+muscle of trunk	tissue	musculature of body	6	1	3	ENCFF905COX	25818221868	ENCSR440FZS	2020-11-16	ENCODE4	dnase-alignment-step-v-1-0	True	True
+myocyte	in vitro differentiated cells	musculature of body	5	2	1	ENCFF517TZQ	28553869383	ENCSR000EPD	2020-11-18	ENCODE4	dnase-alignment-step-v-1-0	False	True
+myotube	in vitro differentiated cells	musculature of body	4	2	1	ENCFF806BLV	2129743151	ENCSR000EOP	2020-11-16	ENCODE4	dnase-alignment-step-v-1-0	True	True
+naive B cell	primary cell	bodily fluid,blood	10	1	8	ENCFF870DTG	9574744739	ENCSR011VHK	2022-02-15	ENCODE4	dnase-alignment-step-v-1-0	False	True
+naive thymus-derived CD4-positive, alpha-beta T cell	primary cell	bodily fluid,blood	19	1	15	ENCFF441QOR	14393840537	ENCSR181OGW	2022-02-15	ENCODE4	dnase-alignment-step-v-1-0	False	True
+naive thymus-derived CD8-positive, alpha-beta T cell	primary cell	bodily fluid,blood	12	1	12	ENCFF141NLE	11196917199	ENCSR291HMM	2022-07-25	ENCODE4	dnase-alignment-step-v-1-0	False	True
+natural killer cell	primary cell	blood,bodily fluid	11	1	7	ENCFF880CFI	13710735776	ENCSR409ZBD	2021-11-30	ENCODE4	dnase-alignment-step-v-1-0	True	True
+nephron progenitor cell	in vitro differentiated cells	kidney	2	2	1	ENCFF576RND	9486452951	ENCSR503UNA	2021-02-25	ENCODE4	dnase-alignment-step-v-1-0	False	False
+neural crest cell	in vitro differentiated cells	embryo	2	2	1	ENCFF470PUW	7725803586	ENCSR826URD	2021-10-18	ENCODE4	dnase-alignment-step-v-1-0	False	True
+neural progenitor cell	in vitro differentiated cells		4	2	1	ENCFF281RRN	19900670677	ENCSR963ALV	2020-11-06	ENCODE4	dnase-alignment-step-v-1-0	True	True
+neuronal stem cell	in vitro differentiated cells	embryo	3	1	1	ENCFF204GFI	6035047903	ENCSR278FVO	2020-11-16	ENCODE4	dnase-alignment-step-v-1-0	True	True
+non-pigmented ciliary epithelial cell	primary cell	epithelium	4	2	1	ENCFF887UAC	2286472537	ENCSR000EOF	2020-11-12	ENCODE4	dnase-alignment-step-v-1-0	False	False
+occipital lobe	tissue	brain	2	1	1	ENCFF002NJP	32213942297	ENCSR859CZM	2020-11-06	ENCODE4	dnase-alignment-step-v-1-0	False	True
+omental fat pad	tissue	connective tissue,adipose tissue	4	1	2	ENCFF114DZC	18988702701	ENCSR154OUQ	2020-11-06	ENCODE4	dnase-alignment-step-v-1-0	False	True
+osteoblast	primary cell	connective tissue	4	1	1	ENCFF977LFT	11982722383	ENCSR000ELJ	2021-02-08	ENCODE4	dnase-alignment-step-v-1-0	True	True
+osteocyte	in vitro differentiated cells	bone element,connective tissue	1	1	1	ENCFF426FCA	18973723281	ENCSR818HHN	2021-10-18	ENCODE4	dnase-alignment-step-v-1-0	False	True
+ovary	tissue	gonad,ovary	13	1	9	ENCFF593QEZ	3585369221	ENCSR712PYJ	2020-11-10	ENCODE4	dnase-alignment-step-v-1-0	True	True
+pancreas	tissue	pancreas	10	1	8	ENCFF027VJJ	3034732695	ENCSR178JBL	2020-11-11	ENCODE4	dnase-alignment-step-v-1-0	True	True
+placenta	tissue	placenta,extraembryonic component	37	2	22	ENCFF173GOA	42878965165	ENCSR035QHH	2020-11-16	ENCODE4	dnase-alignment-step-v-1-0	True	True
+pons	tissue	brain	3	1	1	ENCFF839GGU	21334004519	ENCSR829MXU	2020-11-06	ENCODE4	dnase-alignment-step-v-1-0	False	False
+posterior cingulate gyrus	tissue	brain	48	1	48	ENCFF340NDL	11026534710	ENCSR709PZI	2021-09-09	ENCODE4	dnase-alignment-step-v-1-0	False	False
+posterior vena cava	tissue	vein,vasculature,blood vessel	1	1	1	ENCFF622SVF	18754842346	ENCSR324NVG	2020-09-28	ENCODE4	dnase-alignment-step-v-1-0	False	True
+progenitor cell of endocrine pancreas	in vitro differentiated cells	endocrine gland,pancreas	1	1	1	ENCFF156CDQ	9451496304	ENCSR169KNO	2021-02-25	ENCODE4	dnase-alignment-step-v-1-0	False	True
+prostate gland	tissue	prostate gland	2	1	1	ENCFF055JKU	11930194085	ENCSR564FZH	2020-10-06	ENCODE4	dnase-alignment-step-v-1-0	True	True
+psoas muscle	tissue	musculature of body	10	2	5	ENCFF901DPU	8396275415	ENCSR000ELO	2020-11-22	ENCODE4	dnase-alignment-step-v-1-0	True	True
+pulmonary artery endothelial cell	primary cell	arterial blood vessel,epithelium,vasculature,blood vessel	2	1	1	ENCFF186ZTP	2231805900	ENCSR000EOG	2020-11-12	ENCODE4	dnase-alignment-step-v-1-0	False	True
+putamen	tissue	brain	3	1	1	ENCFF607EJH	9283477994	ENCSR493VDS	2020-10-23	ENCODE4	dnase-alignment-step-v-1-0	False	False
+renal cortex interstitium	tissue	kidney	22	1	11	ENCFF857XLA	4466496078	ENCSR656QYL	2020-11-16	ENCODE4	dnase-alignment-step-v-1-0	False	True
+renal cortical epithelial cell	primary cell	kidney,epithelium	4	2	1	ENCFF570QNB	1718778272	ENCSR000EOK	2020-11-18	ENCODE4	dnase-alignment-step-v-1-0	False	True
+renal pelvis	tissue	kidney	20	1	10	ENCFF321HUE	4122331949	ENCSR554WUJ	2020-11-16	ENCODE4	dnase-alignment-step-v-1-0	False	True
+retina	tissue	eye	13	2	3	ENCFF088BRR	16013755095	ENCSR820ICX	2020-11-06	ENCODE4	dnase-alignment-step-v-1-0	False	False
+retinal pigment epithelial cell	primary cell	epithelium,eye	4	2	1	ENCFF227FDU	2332247709	ENCSR000EON	2020-11-12	ENCODE4	dnase-alignment-step-v-1-0	False	False
+right atrium auricular region	tissue	heart	4	1	2	ENCFF942IMH	15741908498	ENCSR278SKG	2020-10-23	ENCODE4	dnase-alignment-step-v-1-0	True	True
+right cardiac atrium	tissue	heart	3	1	3	ENCFF629PRO	11292034831	ENCSR622HTS	2020-09-28	ENCODE4	dnase-alignment-step-v-1-0	True	True
+right forelimb	tissue	bone element,limb,skeleton	2	1	1	ENCFF458SRL	11255431936	ENCSR274SDO	2020-10-23	ENCODE4	dnase-alignment-step-v-1-0	False	False
+right hindlimb	tissue	bone element,limb,skeleton	2	1	1	ENCFF971JAG	12814928137	ENCSR449HOQ	2020-10-23	ENCODE4	dnase-alignment-step-v-1-0	False	False
+right kidney	tissue	kidney	21	1	10	ENCFF549PCJ	1958403906	ENCSR414ZUA	2020-11-16	ENCODE4	dnase-alignment-step-v-1-0	False	False
+right lobe of liver	tissue	exocrine gland,endocrine gland,liver	6	1	5	ENCFF241TNZ	19016112485	ENCSR909HFI	2020-10-06	ENCODE4	dnase-alignment-step-v-1-0	True	True
+right lung	tissue	lung	22	1	11	ENCFF002TGJ	2672079825	ENCSR964VVW	2020-09-19	ENCODE4	dnase-alignment-step-v-1-0	False	True
+right renal cortex interstitium	tissue	kidney	6	1	3	ENCFF613UDL	2383538830	ENCSR014VAC	2020-11-11	ENCODE4	dnase-alignment-step-v-1-0	False	True
+right renal pelvis	tissue	ureter,kidney	8	1	4	ENCFF602RBS	1838744603	ENCSR540PVZ	2020-11-16	ENCODE4	dnase-alignment-step-v-1-0	False	True
+sciatic nerve	tissue	nerve	1	1	1	ENCFF659HLR	14434649647	ENCSR672MOG	2020-09-28	ENCODE4	dnase-alignment-step-v-1-0	False	True
+sigmoid colon	tissue	colon,large intestine,intestine	5	1	3	ENCFF092HJS	13175740754	ENCSR462XTM	2020-10-23	ENCODE4	dnase-alignment-step-v-1-0	True	True
+skeletal muscle cell	primary cell	musculature of body	2	1	1	ENCFF724SPV	2184596304	ENCSR000EQA	2020-09-24	ENCODE4	dnase-alignment-step-v-1-0	False	False
+skeletal muscle myoblast	primary cell	musculature of body	5	2	1	ENCFF372SZT	2945700325	ENCSR000EOO	2020-11-18	ENCODE4	dnase-alignment-step-v-1-0	True	True
+skin of body	tissue	skin of body	2	1	1	ENCFF399CAU	2532340126	ENCSR092OFK	2020-11-11	ENCODE4	dnase-alignment-step-v-1-0	False	True
+small intestine	tissue	intestine,small intestine	27	1	13	ENCFF931AYT	27952550481	ENCSR945RWN	2020-11-16	ENCODE4	dnase-alignment-step-v-1-0	True	True
+smooth muscle cell of the brain vasculature	primary cell	brain,vasculature	4	2	1	ENCFF980FWK	1669012388	ENCSR000ENG	2020-11-12	ENCODE4	dnase-alignment-step-v-1-0	False	False
+spinal cord	tissue	spinal cord	14	2	6	ENCFF472CKP	25506610968	ENCSR678PDD	2020-11-16	ENCODE4	dnase-alignment-step-v-1-0	True	True
+spleen	tissue	immune organ,spleen	7	1	5	ENCFF627PAP	20317672583	ENCSR128GBN	2020-10-06	ENCODE4	dnase-alignment-step-v-1-0	True	True
+stimulated activated CD4-positive, alpha-beta T cell	primary cell	blood,bodily fluid	55	1	55	ENCFF550ZQO	1610697990	ENCSR618HFT	2020-09-26	ENCODE4	dnase-alignment-step-v-1-0	False	False
+stimulated activated CD8-positive, alpha-beta memory T cell	primary cell	blood,bodily fluid	27	1	27	ENCFF731QFV	1623232968	ENCSR205ECC	2020-09-28	ENCODE4	dnase-alignment-step-v-1-0	False	False
+stimulated activated effector memory CD8-positive, alpha-beta T cell	primary cell	blood,bodily fluid	2	1	2	ENCFF272RYX	18908496320	ENCSR917BSW	2021-11-30	ENCODE4	dnase-alignment-step-v-1-0	False	False
+stimulated activated naive B cell	primary cell	bodily fluid,blood	1	1	1	ENCFF193AFN	7196743606	ENCSR438LZG	2021-09-01	ENCODE4	dnase-alignment-step-v-1-0	False	False
+stimulated activated naive CD8-positive, alpha-beta T cell	primary cell	bodily fluid,blood	3	1	3	ENCFF671CWY	8916105027	ENCSR208YDK	2021-11-30	ENCODE4	dnase-alignment-step-v-1-0	False	False
+stomach	tissue	stomach	43	2	21	ENCFF815LKJ	3009027957	ENCSR782SSS	2020-11-16	ENCODE4	dnase-alignment-step-v-1-0	True	True
+stromal cell of bone marrow	primary cell	connective tissue,bone marrow,bone element	4	2	1	ENCFF753KFY	1675346023	ENCSR000EMH	2020-09-19	ENCODE4	dnase-alignment-step-v-1-0	False	False
+superior temporal gyrus	tissue	brain	2	1	1	ENCFF480DYF	38756540638	ENCSR382JUJ	2020-11-06	ENCODE4	dnase-alignment-step-v-1-0	False	False
+suppressor macrophage	primary cell	bodily fluid,blood	9	3	8	ENCFF525LCW	13557968918	ENCSR405FAK	2020-10-01	ENCODE4	dnase-alignment-step-v-1-0	False	False
+suprapubic skin	tissue	skin of body	4	1	2	ENCFF859VQC	14191657054	ENCSR709IYR	2020-10-06	ENCODE4	dnase-alignment-step-v-1-0	True	True
+testis	tissue	testis,gonad	8	1	4	ENCFF419SVL	3401840316	ENCSR729DRB	2020-11-10	ENCODE4	dnase-alignment-step-v-1-0	True	True
+thoracic aorta	tissue	vasculature,blood vessel,arterial blood vessel	1	1	1	ENCFF477PJL	4107445055	ENCSR298SDT	2020-09-16	ENCODE4	dnase-alignment-step-v-1-0	True	True
+thymus	tissue	immune organ,endocrine gland,thymus	19	1	9	ENCFF706IXZ	2474606569	ENCSR544KDB	2020-09-21	ENCODE4	dnase-alignment-step-v-1-0	True	True
+thyroid gland	tissue	thyroid gland,endocrine gland	8	1	4	ENCFF107AQU	12244577885	ENCSR749MUH	2020-10-06	ENCODE4	dnase-alignment-step-v-1-0	True	True
+tibial artery	tissue	arterial blood vessel,vasculature,limb,blood vessel	6	1	3	ENCFF177FXK	11577099836	ENCSR080ISA	2020-10-23	ENCODE4	dnase-alignment-step-v-1-0	True	False
+tibial nerve	tissue	nerve,limb	6	1	3	ENCFF237FZE	16625509128	ENCSR401ESD	2020-10-23	ENCODE4	dnase-alignment-step-v-1-0	True	True
+tongue	tissue	tongue,mouth	6	2	2	ENCFF132CZK	24614598297	ENCSR559WMK	2020-11-06	ENCODE4	dnase-alignment-step-v-1-0	False	True
+transverse colon	tissue	colon,large intestine,intestine	8	1	4	ENCFF923VQN	11992855073	ENCSR760QZM	2020-10-24	ENCODE4	dnase-alignment-step-v-1-0	True	True
+trophoblast cell	in vitro differentiated cells	embryo,extraembryonic component	17	2	5	ENCFF235GOT	17012802786	ENCSR179CDH	2020-11-16	ENCODE4	dnase-alignment-step-v-1-0	True	True
+type B pancreatic cell	in vitro differentiated cells	epithelium,endocrine gland,pancreas	1	1	1	ENCFF876VGG	13556225119	ENCSR362ZFC	2021-10-18	ENCODE4	dnase-alignment-step-v-1-0	False	True
+umbilical cord	tissue	extraembryonic component	4	2	1	ENCFF479TTY	10505430751	ENCSR512CWR	2020-11-06	ENCODE4	dnase-alignment-step-v-1-0	False	True
+upper lobe of left lung	tissue	lung	11	1	7	ENCFF564JJQ	11520214332	ENCSR702DPD	2020-10-06	ENCODE4	dnase-alignment-step-v-1-0	True	True
+upper lobe of right lung	tissue	lung	1	1	1	ENCFF622KRL	18569178737	ENCSR357AWH	2020-09-28	ENCODE4	dnase-alignment-step-v-1-0	True	True
+ureter	tissue	kidney,ureter	1	1	1	ENCFF581SBD	15598381217	ENCSR398JUP	2020-09-28	ENCODE4	dnase-alignment-step-v-1-0	False	True
+urinary bladder	tissue	urinary bladder	2	1	1	ENCFF404UTY	4392293976	ENCSR813CKU	2020-10-24	ENCODE4	dnase-alignment-step-v-1-0	True	True
+urothelium cell line	cell line	epithelium	6	1	2	ENCFF417VEK	12480920651	ENCSR000ELV	2020-11-22	ENCODE4	dnase-alignment-step-v-1-0	False	False
+uterus	tissue	uterus	3	1	2	ENCFF806URB	10594810175	ENCSR129BZE	2020-10-06	ENCODE4	dnase-alignment-step-v-1-0	True	True
+vagina	tissue	vagina	4	1	2	ENCFF601HZE	11534516070	ENCSR733YNW	2020-10-24	ENCODE4	dnase-alignment-step-v-1-0	True	True

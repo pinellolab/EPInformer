@@ -1,0 +1,229 @@
+cell_type	assay	accession	url	ext	file_size	bio_reps	experiment	encode_phase	pipeline_version	date_created	recommended	dest_path	output_type	assembly
+E000_Universal_Human_Reference	DNase	NO_MAPPING			0						false			
+E000_Universal_Human_Reference	H3K27ac	NO_MAPPING			0						false			
+E000_Universal_Human_Reference	ATAC	NO_MAPPING			0						false			
+E000_Universal_Human_Reference	HiC	NO_MAPPING			0						false			
+E003_H1	DNase	ENCFF966UXQ	https://www.encodeproject.org/files/ENCFF966UXQ/@@download/ENCFF966UXQ.bam	bam	17312399278	2	ENCSR951BNY	ENCODE4	dnase-alignment-step-v-1-0	2021-11-05T17:30:21.380161+00:00	true	data/E003_H1/DNase/ENCFF966UXQ.bam	unfiltered alignments	GRCh38
+E003_H1	H3K27ac	ENCFF120QMN	https://www.encodeproject.org/files/ENCFF120QMN/@@download/ENCFF120QMN.bam	bam	888705774	2	ENCSR000ANP	ENCODE4	chip-seq-alignment-step-v-2-0	2021-02-01T19:22:29.183656+00:00	true	data/E003_H1/H3K27ac/ENCFF120QMN.bam	unfiltered alignments	GRCh38
+E003_H1	ATAC	NOT_FOUND			0						false			
+E003_H1	HiC	NOT_FOUND			0						false			
+E004_H1_BMP4_Mesendoderm	DNase	ENCFF585KAH	https://www.encodeproject.org/files/ENCFF585KAH/@@download/ENCFF585KAH.bam	bam	22055547724	1	ENCSR714DIF	ENCODE4	dnase-alignment-step-v-1-0	2020-11-16T22:06:39.890082+00:00	true	data/E004_H1_BMP4_Mesendoderm/DNase/ENCFF585KAH.bam	unfiltered alignments	GRCh38
+E004_H1_BMP4_Mesendoderm	H3K27ac	ENCFF613EMM	https://www.encodeproject.org/files/ENCFF613EMM/@@download/ENCFF613EMM.bam	bam	1758531551	2	ENCSR473PNT	ENCODE4	chip-seq-alignment-step-v-2-0	2020-10-19T17:55:12.864085+00:00	true	data/E004_H1_BMP4_Mesendoderm/H3K27ac/ENCFF613EMM.bam	unfiltered alignments	GRCh38
+E004_H1_BMP4_Mesendoderm	ATAC	NOT_FOUND			0						false			
+E004_H1_BMP4_Mesendoderm	HiC	NOT_FOUND			0						false			
+E005_H1_BMP4_Trophoblast	DNase	ENCFF235GOT	https://www.encodeproject.org/files/ENCFF235GOT/@@download/ENCFF235GOT.bam	bam	17012802786	1	ENCSR179CDH	ENCODE4	dnase-alignment-step-v-1-0	2020-11-16T22:18:06.231489+00:00	true	data/E005_H1_BMP4_Trophoblast/DNase/ENCFF235GOT.bam	unfiltered alignments	GRCh38
+E005_H1_BMP4_Trophoblast	H3K27ac	ENCFF102QDE	https://www.encodeproject.org/files/ENCFF102QDE/@@download/ENCFF102QDE.bam	bam	1549673745	2	ENCSR425PQI	ENCODE4	chip-seq-alignment-step-v-2-0	2020-10-19T18:28:38.556657+00:00	true	data/E005_H1_BMP4_Trophoblast/H3K27ac/ENCFF102QDE.bam	unfiltered alignments	GRCh38
+E005_H1_BMP4_Trophoblast	ATAC	NOT_FOUND			0						false			
+E005_H1_BMP4_Trophoblast	HiC	NOT_FOUND			0						false			
+E006_H1_Mesenchymal_SC	DNase	ENCFF701GQV	https://www.encodeproject.org/files/ENCFF701GQV/@@download/ENCFF701GQV.bam	bam	29143076786	1	ENCSR731QLJ	ENCODE4	dnase-alignment-step-v-1-0	2020-11-16T21:34:18.069055+00:00	true	data/E006_H1_Mesenchymal_SC/DNase/ENCFF701GQV.bam	unfiltered alignments	GRCh38
+E006_H1_Mesenchymal_SC	H3K27ac	ENCFF214ROW	https://www.encodeproject.org/files/ENCFF214ROW/@@download/ENCFF214ROW.bam	bam	5508673562	2	ENCSR013KEC	ENCODE4	chip-seq-alignment-step-v-2-0	2020-10-20T08:05:41.035354+00:00	true	data/E006_H1_Mesenchymal_SC/H3K27ac/ENCFF214ROW.bam	unfiltered alignments	GRCh38
+E006_H1_Mesenchymal_SC	ATAC	NOT_FOUND			0						false			
+E006_H1_Mesenchymal_SC	HiC	NOT_FOUND			0						false			
+E007_H1_Neuronal_Prog	DNase	ENCFF281RRN	https://www.encodeproject.org/files/ENCFF281RRN/@@download/ENCFF281RRN.bam	bam	19900670677	2	ENCSR963ALV	ENCODE4	dnase-alignment-step-v-1-0	2020-11-06T17:49:08.263610+00:00	true	data/E007_H1_Neuronal_Prog/DNase/ENCFF281RRN.bam	unfiltered alignments	GRCh38
+E007_H1_Neuronal_Prog	H3K27ac	ENCFF549PQA	https://www.encodeproject.org/files/ENCFF549PQA/@@download/ENCFF549PQA.bam	bam	2224331496	2	ENCSR449AXO	ENCODE4	chip-seq-alignment-step-v-2-0	2020-10-10T00:44:31.308717+00:00	true	data/E007_H1_Neuronal_Prog/H3K27ac/ENCFF549PQA.bam	unfiltered alignments	GRCh38
+E007_H1_Neuronal_Prog	ATAC	NOT_FOUND			0						false			
+E007_H1_Neuronal_Prog	HiC	NOT_FOUND			0						false			
+E011_hESC_CD184_Endoderm	DNase	ENCFF800HSD	https://www.encodeproject.org/files/ENCFF800HSD/@@download/ENCFF800HSD.bam	bam	21611433840	1	ENCSR940CXU	ENCODE4	dnase-alignment-step-v-1-0	2021-11-30T01:59:54.750008+00:00	true	data/E011_hESC_CD184_Endoderm/DNase/ENCFF800HSD.bam	unfiltered alignments	GRCh38
+E011_hESC_CD184_Endoderm	H3K27ac	ENCFF029GGZ	https://www.encodeproject.org/files/ENCFF029GGZ/@@download/ENCFF029GGZ.bam	bam	1749126013	2	ENCSR200ETW	ENCODE4	chip-seq-alignment-step-v-2-0	2020-10-10T19:51:42.148341+00:00	true	data/E011_hESC_CD184_Endoderm/H3K27ac/ENCFF029GGZ.bam	unfiltered alignments	GRCh38
+E011_hESC_CD184_Endoderm	ATAC	NOT_FOUND			0						false			
+E011_hESC_CD184_Endoderm	HiC	NOT_FOUND			0						false			
+E012_hESC_CD56_Ectoderm	DNase	NO_MAPPING			0						false			
+E012_hESC_CD56_Ectoderm	H3K27ac	NO_MAPPING			0						false			
+E012_hESC_CD56_Ectoderm	ATAC	NO_MAPPING			0						false			
+E012_hESC_CD56_Ectoderm	HiC	NO_MAPPING			0						false			
+E013_hESC_CD56_Mesoderm	DNase	ENCFF604YMS	https://www.encodeproject.org/files/ENCFF604YMS/@@download/ENCFF604YMS.bam	bam	1546502242	1	ENCSR000EMX	ENCODE4	dnase-alignment-step-v-1-0	2020-11-12T05:32:53.675266+00:00	true	data/E013_hESC_CD56_Mesoderm/DNase/ENCFF604YMS.bam	unfiltered alignments	GRCh38
+E013_hESC_CD56_Mesoderm	H3K27ac	NOT_FOUND			0						false			
+E013_hESC_CD56_Mesoderm	ATAC	NOT_FOUND			0						false			
+E013_hESC_CD56_Mesoderm	HiC	NOT_FOUND			0						false			
+E016_HUES64	DNase	NOT_FOUND			0						false			
+E016_HUES64	H3K27ac	NOT_FOUND			0						false			
+E016_HUES64	ATAC	NOT_FOUND			0						false			
+E016_HUES64	HiC	NOT_FOUND			0						false			
+E024_CD4_CD25_Treg	DNase	ENCFF212NUC	https://www.encodeproject.org/files/ENCFF212NUC/@@download/ENCFF212NUC.bam	bam	10503258855	1	ENCSR234FTX	ENCODE4	dnase-alignment-step-v-1-0	2022-05-23T18:29:21.720604+00:00	true	data/E024_CD4_CD25_Treg/DNase/ENCFF212NUC.bam	unfiltered alignments	GRCh38
+E024_CD4_CD25_Treg	H3K27ac	NOT_FOUND			0						false			
+E024_CD4_CD25_Treg	ATAC	ENCFF741EPO	https://www.encodeproject.org/files/ENCFF741EPO/@@download/ENCFF741EPO.bam	bam	7070752535	1	ENCSR504OUW	ENCODE4	atac-seq-alignment-step-v-2-1	2021-10-08T00:00:25.961809+00:00	true	data/E024_CD4_CD25_Treg/ATAC/ENCFF741EPO.bam	unfiltered alignments	GRCh38
+E024_CD4_CD25_Treg	HiC	NOT_FOUND			0						false			
+E027_Breast_Myoepithelial	DNase	NO_MAPPING			0						false			
+E027_Breast_Myoepithelial	H3K27ac	NO_MAPPING			0						false			
+E027_Breast_Myoepithelial	ATAC	NO_MAPPING			0						false			
+E027_Breast_Myoepithelial	HiC	NO_MAPPING			0						false			
+E028_Breast_vHMEC	DNase	ENCFF037PGN	https://www.encodeproject.org/files/ENCFF037PGN/@@download/ENCFF037PGN.bam	bam	7374449029	1	ENCSR817ALC	ENCODE4	dnase-alignment-step-v-1-0	2021-10-18T18:36:10.540522+00:00	true	data/E028_Breast_vHMEC/DNase/ENCFF037PGN.bam	unfiltered alignments	GRCh38
+E028_Breast_vHMEC	H3K27ac	ENCFF041ROD	https://www.encodeproject.org/files/ENCFF041ROD/@@download/ENCFF041ROD.bam	bam	587869952	2	ENCSR000ALW	ENCODE4	chip-seq-alignment-step-v-2-0	2020-09-30T05:44:40.244498+00:00	true	data/E028_Breast_vHMEC/H3K27ac/ENCFF041ROD.bam	unfiltered alignments	GRCh38
+E028_Breast_vHMEC	ATAC	NOT_FOUND			0						false			
+E028_Breast_vHMEC	HiC	ENCFF039SIJ	https://www.encodeproject.org/files/ENCFF039SIJ/@@download/ENCFF039SIJ.hic	hic	5796299950	1	ENCSR707XVJ	ENCODE4	hic-diploidification-step-v-1-1	2022-11-01T04:55:06.131853+00:00	true	data/E028_Breast_vHMEC/HiC/ENCFF039SIJ.hic	haplotype-specific contact matrix	GRCh38
+E037_CD4_Memory	DNase	ENCFF105DXR	https://www.encodeproject.org/files/ENCFF105DXR/@@download/ENCFF105DXR.bam	bam	9131872855	1	ENCSR526TFD	ENCODE4	dnase-alignment-step-v-1-0	2022-02-15T00:17:35.477756+00:00	true	data/E037_CD4_Memory/DNase/ENCFF105DXR.bam	unfiltered alignments	GRCh38
+E037_CD4_Memory	H3K27ac	ENCFF051JGL	https://www.encodeproject.org/files/ENCFF051JGL/@@download/ENCFF051JGL.bam	bam	2258303943	1	ENCSR561KOM	ENCODE4	chip-seq-alignment-step-v-2-0	2020-10-10T17:53:20.378818+00:00	true	data/E037_CD4_Memory/H3K27ac/ENCFF051JGL.bam	unfiltered alignments	GRCh38
+E037_CD4_Memory	ATAC	ENCFF085TSR	https://www.encodeproject.org/files/ENCFF085TSR/@@download/ENCFF085TSR.bam	bam	6218696899	1	ENCSR841LHT	ENCODE4	atac-seq-alignment-step-v-2-1	2021-06-21T15:29:46.794202+00:00	true	data/E037_CD4_Memory/ATAC/ENCFF085TSR.bam	unfiltered alignments	GRCh38
+E037_CD4_Memory	HiC	ENCFF543ROK	https://www.encodeproject.org/files/ENCFF543ROK/@@download/ENCFF543ROK.hic	hic	6751736074	1	ENCSR379TIE	ENCODE4	hic-diploidification-step-v-1-1	2024-11-23T23:11:19.332165+00:00	true	data/E037_CD4_Memory/HiC/ENCFF543ROK.hic	haplotype-specific contact matrix	GRCh38
+E038_CD4_Naive	DNase	ENCFF441QOR	https://www.encodeproject.org/files/ENCFF441QOR/@@download/ENCFF441QOR.bam	bam	14393840537	1	ENCSR181OGW	ENCODE4	dnase-alignment-step-v-1-0	2022-02-15T00:28:03.369982+00:00	true	data/E038_CD4_Naive/DNase/ENCFF441QOR.bam	unfiltered alignments	GRCh38
+E038_CD4_Naive	H3K27ac	NOT_FOUND			0						false			
+E038_CD4_Naive	ATAC	ENCFF898QLY	https://www.encodeproject.org/files/ENCFF898QLY/@@download/ENCFF898QLY.bam	bam	9311845359	2	ENCSR452COS	ENCODE4	atac-seq-alignment-step-v-2-1	2021-10-07T23:58:42.755568+00:00	true	data/E038_CD4_Naive/ATAC/ENCFF898QLY.bam	unfiltered alignments	GRCh38
+E038_CD4_Naive	HiC	ENCFF074JNR	https://www.encodeproject.org/files/ENCFF074JNR/@@download/ENCFF074JNR.hic	hic	6890400034	1	ENCSR458VJJ	ENCODE4	hic-diploidification-step-v-1-1	2024-11-23T23:13:04.501674+00:00	true	data/E038_CD4_Naive/HiC/ENCFF074JNR.hic	haplotype-specific contact matrix	GRCh38
+E047_CD8_Naive	DNase	ENCFF141NLE	https://www.encodeproject.org/files/ENCFF141NLE/@@download/ENCFF141NLE.bam	bam	11196917199	1	ENCSR291HMM	ENCODE4	dnase-alignment-step-v-1-0	2022-07-25T18:50:17.339795+00:00	true	data/E047_CD8_Naive/DNase/ENCFF141NLE.bam	unfiltered alignments	GRCh38
+E047_CD8_Naive	H3K27ac	NOT_FOUND			0						false			
+E047_CD8_Naive	ATAC	ENCFF549NJT	https://www.encodeproject.org/files/ENCFF549NJT/@@download/ENCFF549NJT.bam	bam	6980665176	2	ENCSR614JAG	ENCODE4	atac-seq-alignment-step-v-2-1	2021-10-08T00:02:58.698565+00:00	true	data/E047_CD8_Naive/ATAC/ENCFF549NJT.bam	unfiltered alignments	GRCh38
+E047_CD8_Naive	HiC	NOT_FOUND			0						false			
+E050_CD34_Mobilized	DNase	NO_MAPPING			0						false			
+E050_CD34_Mobilized	H3K27ac	NO_MAPPING			0						false			
+E050_CD34_Mobilized	ATAC	NO_MAPPING			0						false			
+E050_CD34_Mobilized	HiC	NO_MAPPING			0						false			
+E053_Neurosphere_Cortex	DNase	NO_MAPPING			0						false			
+E053_Neurosphere_Cortex	H3K27ac	NO_MAPPING			0						false			
+E053_Neurosphere_Cortex	ATAC	NO_MAPPING			0						false			
+E053_Neurosphere_Cortex	HiC	NO_MAPPING			0						false			
+E054_Neurosphere_GE	DNase	ENCFF470PUW	https://www.encodeproject.org/files/ENCFF470PUW/@@download/ENCFF470PUW.bam	bam	7725803586	2	ENCSR826URD	ENCODE4	dnase-alignment-step-v-1-0	2021-10-18T18:13:15.827986+00:00	true	data/E054_Neurosphere_GE/DNase/ENCFF470PUW.bam	unfiltered alignments	GRCh38
+E054_Neurosphere_GE	H3K27ac	NOT_FOUND			0						false			
+E054_Neurosphere_GE	ATAC	NOT_FOUND			0						false			
+E054_Neurosphere_GE	HiC	NOT_FOUND			0						false			
+E055_Foreskin_Fibro_1	DNase	ENCFF443DQB	https://www.encodeproject.org/files/ENCFF443DQB/@@download/ENCFF443DQB.bam	bam	2850621541	2	ENCSR000EPP	ENCODE4	dnase-alignment-step-v-1-0	2021-02-08T18:39:41.841591+00:00	true	data/E055_Foreskin_Fibro_1/DNase/ENCFF443DQB.bam	unfiltered alignments	GRCh38
+E055_Foreskin_Fibro_1	H3K27ac	NOT_FOUND			0						false			
+E055_Foreskin_Fibro_1	ATAC	NOT_FOUND			0						false			
+E055_Foreskin_Fibro_1	HiC	NOT_FOUND			0						false			
+E056_Foreskin_Fibro_2	DNase	ENCFF443DQB	https://www.encodeproject.org/files/ENCFF443DQB/@@download/ENCFF443DQB.bam	bam	2850621541	2	ENCSR000EPP	ENCODE4	dnase-alignment-step-v-1-0	2021-02-08T18:39:41.841591+00:00	true	data/E056_Foreskin_Fibro_2/DNase/ENCFF443DQB.bam	unfiltered alignments	GRCh38
+E056_Foreskin_Fibro_2	H3K27ac	NOT_FOUND			0						false			
+E056_Foreskin_Fibro_2	ATAC	NOT_FOUND			0						false			
+E056_Foreskin_Fibro_2	HiC	NOT_FOUND			0						false			
+E057_Foreskin_Kerat_2	DNase	ENCFF218LFH	https://www.encodeproject.org/files/ENCFF218LFH/@@download/ENCFF218LFH.bam	bam	4658540768	1	ENCSR724CND	ENCODE4	dnase-alignment-step-v-1-0	2020-11-16T21:35:13.216467+00:00	true	data/E057_Foreskin_Kerat_2/DNase/ENCFF218LFH.bam	unfiltered alignments	GRCh38
+E057_Foreskin_Kerat_2	H3K27ac	ENCFF661IMO	https://www.encodeproject.org/files/ENCFF661IMO/@@download/ENCFF661IMO.bam	bam	3643401903	2	ENCSR637ISS	ENCODE4	chip-seq-alignment-step-v-2-0	2020-10-01T21:44:51.611675+00:00	true	data/E057_Foreskin_Kerat_2/H3K27ac/ENCFF661IMO.bam	unfiltered alignments	GRCh38
+E057_Foreskin_Kerat_2	ATAC	ENCFF348JMW	https://www.encodeproject.org/files/ENCFF348JMW/@@download/ENCFF348JMW.bam	bam	20965171644	2	ENCSR158XTU	ENCODE4	atac-seq-alignment-step-v-2-1	2021-03-16T22:25:36.464976+00:00	true	data/E057_Foreskin_Kerat_2/ATAC/ENCFF348JMW.bam	unfiltered alignments	GRCh38
+E057_Foreskin_Kerat_2	HiC	NOT_FOUND			0						false			
+E058_Foreskin_Kerat_3	DNase	ENCFF218LFH	https://www.encodeproject.org/files/ENCFF218LFH/@@download/ENCFF218LFH.bam	bam	4658540768	1	ENCSR724CND	ENCODE4	dnase-alignment-step-v-1-0	2020-11-16T21:35:13.216467+00:00	true	data/E058_Foreskin_Kerat_3/DNase/ENCFF218LFH.bam	unfiltered alignments	GRCh38
+E058_Foreskin_Kerat_3	H3K27ac	ENCFF661IMO	https://www.encodeproject.org/files/ENCFF661IMO/@@download/ENCFF661IMO.bam	bam	3643401903	2	ENCSR637ISS	ENCODE4	chip-seq-alignment-step-v-2-0	2020-10-01T21:44:51.611675+00:00	true	data/E058_Foreskin_Kerat_3/H3K27ac/ENCFF661IMO.bam	unfiltered alignments	GRCh38
+E058_Foreskin_Kerat_3	ATAC	ENCFF348JMW	https://www.encodeproject.org/files/ENCFF348JMW/@@download/ENCFF348JMW.bam	bam	20965171644	2	ENCSR158XTU	ENCODE4	atac-seq-alignment-step-v-2-1	2021-03-16T22:25:36.464976+00:00	true	data/E058_Foreskin_Kerat_3/ATAC/ENCFF348JMW.bam	unfiltered alignments	GRCh38
+E058_Foreskin_Kerat_3	HiC	NOT_FOUND			0						false			
+E059_Foreskin_Melano_1	DNase	ENCFF768NBD	https://www.encodeproject.org/files/ENCFF768NBD/@@download/ENCFF768NBD.bam	bam	23039074924	1	ENCSR434OBM	ENCODE4	dnase-alignment-step-v-1-0	2020-11-16T21:45:19.239150+00:00	true	data/E059_Foreskin_Melano_1/DNase/ENCFF768NBD.bam	unfiltered alignments	GRCh38
+E059_Foreskin_Melano_1	H3K27ac	NOT_FOUND			0						false			
+E059_Foreskin_Melano_1	ATAC	NOT_FOUND			0						false			
+E059_Foreskin_Melano_1	HiC	NOT_FOUND			0						false			
+E061_Foreskin_Melano_3	DNase	ENCFF768NBD	https://www.encodeproject.org/files/ENCFF768NBD/@@download/ENCFF768NBD.bam	bam	23039074924	1	ENCSR434OBM	ENCODE4	dnase-alignment-step-v-1-0	2020-11-16T21:45:19.239150+00:00	true	data/E061_Foreskin_Melano_3/DNase/ENCFF768NBD.bam	unfiltered alignments	GRCh38
+E061_Foreskin_Melano_3	H3K27ac	NOT_FOUND			0						false			
+E061_Foreskin_Melano_3	ATAC	NOT_FOUND			0						false			
+E061_Foreskin_Melano_3	HiC	NOT_FOUND			0						false			
+E062_PBMC	DNase	NO_MAPPING			0						false			
+E062_PBMC	H3K27ac	NO_MAPPING			0						false			
+E062_PBMC	ATAC	NO_MAPPING			0						false			
+E062_PBMC	HiC	NO_MAPPING			0						false			
+E065_Aorta	DNase	ENCFF397WGK	https://www.encodeproject.org/files/ENCFF397WGK/@@download/ENCFF397WGK.bam	bam	18222442635	1	ENCSR595DQM	ENCODE4	dnase-alignment-step-v-1-0	2020-09-25T14:32:08.641652+00:00	true	data/E065_Aorta/DNase/ENCFF397WGK.bam	unfiltered alignments	GRCh38
+E065_Aorta	H3K27ac	ENCFF233YWT	https://www.encodeproject.org/files/ENCFF233YWT/@@download/ENCFF233YWT.bam	bam	1260468636	1	ENCSR322TJD	ENCODE4	chip-seq-alignment-step-v-2-0	2020-10-19T18:52:30.398016+00:00	true	data/E065_Aorta/H3K27ac/ENCFF233YWT.bam	unfiltered alignments	GRCh38
+E065_Aorta	ATAC	ENCFF203BTV	https://www.encodeproject.org/files/ENCFF203BTV/@@download/ENCFF203BTV.bam	bam	33816120205	1	ENCSR295TFY	ENCODE4	atac-seq-alignment-step-v-2-1	2021-02-25T17:19:25.995394+00:00	true	data/E065_Aorta/ATAC/ENCFF203BTV.bam	unfiltered alignments	GRCh38
+E065_Aorta	HiC	ENCFF592DEU	https://www.encodeproject.org/files/ENCFF592DEU/@@download/ENCFF592DEU.hic	hic	6518490975	1	ENCSR797MWY	ENCODE4	hic-diploidification-step-v-1-1	2023-01-31T00:12:56.190235+00:00	true	data/E065_Aorta/HiC/ENCFF592DEU.hic	haplotype-specific contact matrix	GRCh38
+E066_Adult_Liver	DNase	ENCFF623XDR	https://www.encodeproject.org/files/ENCFF623XDR/@@download/ENCFF623XDR.bam	bam	21314605359	2	ENCSR158YXM	ENCODE4	dnase-alignment-step-v-1-0	2020-11-06T21:41:38.400768+00:00	true	data/E066_Adult_Liver/DNase/ENCFF623XDR.bam	unfiltered alignments	GRCh38
+E066_Adult_Liver	H3K27ac	ENCFF580JIQ	https://www.encodeproject.org/files/ENCFF580JIQ/@@download/ENCFF580JIQ.bam	bam	3716216932	1	ENCSR458RRZ	ENCODE4	chip-seq-alignment-step-v-2-0	2020-10-19T18:02:27.637799+00:00	true	data/E066_Adult_Liver/H3K27ac/ENCFF580JIQ.bam	unfiltered alignments	GRCh38
+E066_Adult_Liver	ATAC	ENCFF974NEA	https://www.encodeproject.org/files/ENCFF974NEA/@@download/ENCFF974NEA.bam	bam	37441140977	1	ENCSR124NNL	ENCODE4	atac-seq-alignment-step-v-2-1	2021-02-24T03:56:04.761764+00:00	true	data/E066_Adult_Liver/ATAC/ENCFF974NEA.bam	unfiltered alignments	GRCh38
+E066_Adult_Liver	HiC	NOT_FOUND			0						false			
+E070_Brain_Germinal_Matrix	DNase	ENCFF594ZYT	https://www.encodeproject.org/files/ENCFF594ZYT/@@download/ENCFF594ZYT.bam	bam	10889032921	1	ENCSR049SVH	ENCODE4	dnase-alignment-step-v-1-0	2021-09-07T18:05:35.860179+00:00	true	data/E070_Brain_Germinal_Matrix/DNase/ENCFF594ZYT.bam	unfiltered alignments	GRCh38
+E070_Brain_Germinal_Matrix	H3K27ac	NOT_FOUND			0						false			
+E070_Brain_Germinal_Matrix	ATAC	NOT_FOUND			0						false			
+E070_Brain_Germinal_Matrix	HiC	NOT_FOUND			0						false			
+E071_Brain_Hippocampus	DNase	ENCFF594ZYT	https://www.encodeproject.org/files/ENCFF594ZYT/@@download/ENCFF594ZYT.bam	bam	10889032921	1	ENCSR049SVH	ENCODE4	dnase-alignment-step-v-1-0	2021-09-07T18:05:35.860179+00:00	true	data/E071_Brain_Hippocampus/DNase/ENCFF594ZYT.bam	unfiltered alignments	GRCh38
+E071_Brain_Hippocampus	H3K27ac	NOT_FOUND			0						false			
+E071_Brain_Hippocampus	ATAC	NOT_FOUND			0						false			
+E071_Brain_Hippocampus	HiC	NOT_FOUND			0						false			
+E079_Esophagus	DNase	ENCFF699UQU	https://www.encodeproject.org/files/ENCFF699UQU/@@download/ENCFF699UQU.bam	bam	15476706882	1	ENCSR783OCW	ENCODE4	dnase-alignment-step-v-1-0	2020-10-24T00:03:58.687622+00:00	true	data/E079_Esophagus/DNase/ENCFF699UQU.bam	unfiltered alignments	GRCh38
+E079_Esophagus	H3K27ac	ENCFF794FXP	https://www.encodeproject.org/files/ENCFF794FXP/@@download/ENCFF794FXP.bam	bam	3743969106	1	ENCSR204TAU	ENCODE4	chip-seq-alignment-step-v-2-0	2020-09-23T23:53:14.280068+00:00	true	data/E079_Esophagus/H3K27ac/ENCFF794FXP.bam	unfiltered alignments	GRCh38
+E079_Esophagus	ATAC	ENCFF816KZP	https://www.encodeproject.org/files/ENCFF816KZP/@@download/ENCFF816KZP.bam	bam	6826268175	1	ENCSR096BPX	ENCODE4	atac-seq-alignment-step-v-2-1	2021-02-25T18:24:19.596052+00:00	true	data/E079_Esophagus/ATAC/ENCFF816KZP.bam	unfiltered alignments	GRCh38
+E079_Esophagus	HiC	ENCFF224HKR	https://www.encodeproject.org/files/ENCFF224HKR/@@download/ENCFF224HKR.hic	hic	47427931619	1	ENCSR015CVF	ENCODE4	hic-merging-quantification-interaction-calling-step-v-1-1	2022-10-26T18:58:28.813495+00:00	true	data/E079_Esophagus/HiC/ENCFF224HKR.hic	mapping quality thresholded contact matrix	GRCh38
+E082_Fetal_Brain	DNase	ENCFF594ZYT	https://www.encodeproject.org/files/ENCFF594ZYT/@@download/ENCFF594ZYT.bam	bam	10889032921	1	ENCSR049SVH	ENCODE4	dnase-alignment-step-v-1-0	2021-09-07T18:05:35.860179+00:00	true	data/E082_Fetal_Brain/DNase/ENCFF594ZYT.bam	unfiltered alignments	GRCh38
+E082_Fetal_Brain	H3K27ac	NOT_FOUND			0						false			
+E082_Fetal_Brain	ATAC	NOT_FOUND			0						false			
+E082_Fetal_Brain	HiC	NOT_FOUND			0						false			
+E084_Fetal_Intestine_Lg	DNase	ENCFF091HXM	https://www.encodeproject.org/files/ENCFF091HXM/@@download/ENCFF091HXM.bam	bam	3076230581	1	ENCSR047FNH	ENCODE4	dnase-alignment-step-v-1-0	2020-11-16T22:56:17.091949+00:00	true	data/E084_Fetal_Intestine_Lg/DNase/ENCFF091HXM.bam	unfiltered alignments	GRCh38
+E084_Fetal_Intestine_Lg	H3K27ac	ENCFF387RKC	https://www.encodeproject.org/files/ENCFF387RKC/@@download/ENCFF387RKC.bam	bam	1656873733	1	ENCSR659RHV	ENCODE4	chip-seq-alignment-step-v-2-0	2020-10-10T17:26:41.121475+00:00	true	data/E084_Fetal_Intestine_Lg/H3K27ac/ENCFF387RKC.bam	unfiltered alignments	GRCh38
+E084_Fetal_Intestine_Lg	ATAC	NOT_FOUND			0						false			
+E084_Fetal_Intestine_Lg	HiC	NOT_FOUND			0						false			
+E085_Fetal_Intestine_Sm	DNase	ENCFF931AYT	https://www.encodeproject.org/files/ENCFF931AYT/@@download/ENCFF931AYT.bam	bam	27952550481	1	ENCSR945RWN	ENCODE4	dnase-alignment-step-v-1-0	2020-11-16T22:03:53.594569+00:00	true	data/E085_Fetal_Intestine_Sm/DNase/ENCFF931AYT.bam	unfiltered alignments	GRCh38
+E085_Fetal_Intestine_Sm	H3K27ac	ENCFF257TPQ	https://www.encodeproject.org/files/ENCFF257TPQ/@@download/ENCFF257TPQ.bam	bam	1504957644	1	ENCSR454VRA	ENCODE4	chip-seq-alignment-step-v-2-0	2020-10-10T18:21:28.654111+00:00	true	data/E085_Fetal_Intestine_Sm/H3K27ac/ENCFF257TPQ.bam	unfiltered alignments	GRCh38
+E085_Fetal_Intestine_Sm	ATAC	NOT_FOUND			0						false			
+E085_Fetal_Intestine_Sm	HiC	NOT_FOUND			0						false			
+E087_Pancreatic_Islets	DNase	ENCFF027VJJ	https://www.encodeproject.org/files/ENCFF027VJJ/@@download/ENCFF027VJJ.bam	bam	3034732695	1	ENCSR178JBL	ENCODE4	dnase-alignment-step-v-1-0	2020-11-11T00:29:43.437729+00:00	true	data/E087_Pancreatic_Islets/DNase/ENCFF027VJJ.bam	unfiltered alignments	GRCh38
+E087_Pancreatic_Islets	H3K27ac	ENCFF181NJO	https://www.encodeproject.org/files/ENCFF181NJO/@@download/ENCFF181NJO.bam	bam	2918630875	2	ENCSR029SIG	ENCODE4	chip-seq-alignment-step-v-2-0	2021-04-28T16:23:58.759384+00:00	true	data/E087_Pancreatic_Islets/H3K27ac/ENCFF181NJO.bam	unfiltered alignments	GRCh38
+E087_Pancreatic_Islets	ATAC	ENCFF848EBO	https://www.encodeproject.org/files/ENCFF848EBO/@@download/ENCFF848EBO.bam	bam	28065690808	1	ENCSR251POP	ENCODE4	atac-seq-alignment-step-v-2-1	2021-03-16T22:20:29.806244+00:00	true	data/E087_Pancreatic_Islets/ATAC/ENCFF848EBO.bam	unfiltered alignments	GRCh38
+E087_Pancreatic_Islets	HiC	ENCFF171GTA	https://www.encodeproject.org/files/ENCFF171GTA/@@download/ENCFF171GTA.hic	hic	6071294645	1	ENCSR387RQD	ENCODE4	hic-diploidification-step-v-1-1	2024-08-07T07:05:21.800274+00:00	true	data/E087_Pancreatic_Islets/HiC/ENCFF171GTA.hic	haplotype-specific contact matrix	GRCh38
+E094_Gastric	DNase	ENCFF815LKJ	https://www.encodeproject.org/files/ENCFF815LKJ/@@download/ENCFF815LKJ.bam	bam	3009027957	1	ENCSR782SSS	ENCODE4	dnase-alignment-step-v-1-0	2020-11-16T22:51:18.777062+00:00	true	data/E094_Gastric/DNase/ENCFF815LKJ.bam	unfiltered alignments	GRCh38
+E094_Gastric	H3K27ac	ENCFF529CEI	https://www.encodeproject.org/files/ENCFF529CEI/@@download/ENCFF529CEI.bam	bam	1049272612	1	ENCSR001SHB	ENCODE4	chip-seq-alignment-step-v-2-0	2020-12-11T21:36:47.737972+00:00	true	data/E094_Gastric/H3K27ac/ENCFF529CEI.bam	unfiltered alignments	GRCh38
+E094_Gastric	ATAC	ENCFF766OPX	https://www.encodeproject.org/files/ENCFF766OPX/@@download/ENCFF766OPX.bam	bam	14016963801	1	ENCSR337UIU	ENCODE4	atac-seq-alignment-step-v-2-1	2021-02-25T18:13:13.682337+00:00	true	data/E094_Gastric/ATAC/ENCFF766OPX.bam	unfiltered alignments	GRCh38
+E094_Gastric	HiC	ENCFF883XXW	https://www.encodeproject.org/files/ENCFF883XXW/@@download/ENCFF883XXW.hic	hic	48370915420	1	ENCSR569OBN	ENCODE4	hic-merging-quantification-interaction-calling-step-v-1-1	2022-12-06T05:04:32.219021+00:00	true	data/E094_Gastric/HiC/ENCFF883XXW.hic	mapping quality thresholded contact matrix	GRCh38
+E095_Left_Ventricle	DNase	ENCFF776NLW	https://www.encodeproject.org/files/ENCFF776NLW/@@download/ENCFF776NLW.bam	bam	13891415936	2	ENCSR946DXB	ENCODE4	dnase-alignment-step-v-1-0	2020-11-06T22:43:05.340924+00:00	true	data/E095_Left_Ventricle/DNase/ENCFF776NLW.bam	unfiltered alignments	GRCh38
+E095_Left_Ventricle	H3K27ac	ENCFF480VMO	https://www.encodeproject.org/files/ENCFF480VMO/@@download/ENCFF480VMO.bam	bam	2246179808	1	ENCSR748OJA	ENCODE4	chip-seq-alignment-step-v-2-0	2022-07-20T00:57:22.634062+00:00	true	data/E095_Left_Ventricle/H3K27ac/ENCFF480VMO.bam	unfiltered alignments	GRCh38
+E095_Left_Ventricle	ATAC	ENCFF322RWQ	https://www.encodeproject.org/files/ENCFF322RWQ/@@download/ENCFF322RWQ.bam	bam	31736417727	1	ENCSR769DGC	ENCODE4	atac-seq-alignment-step-v-2-1	2021-03-16T21:57:34.126459+00:00	true	data/E095_Left_Ventricle/ATAC/ENCFF322RWQ.bam	unfiltered alignments	GRCh38
+E095_Left_Ventricle	HiC	ENCFF524BGW	https://www.encodeproject.org/files/ENCFF524BGW/@@download/ENCFF524BGW.hic	hic	6262536582	1	ENCSR498AFT	ENCODE4	hic-diploidification-step-v-1-1	2024-08-13T18:25:02.331014+00:00	true	data/E095_Left_Ventricle/HiC/ENCFF524BGW.hic	haplotype-specific contact matrix	GRCh38
+E096_Lung	DNase	ENCFF416BED	https://www.encodeproject.org/files/ENCFF416BED/@@download/ENCFF416BED.bam	bam	16104941475	1	ENCSR945JJB	ENCODE4	dnase-alignment-step-v-1-0	2020-09-27T06:44:38.155838+00:00	true	data/E096_Lung/DNase/ENCFF416BED.bam	unfiltered alignments	GRCh38
+E096_Lung	H3K27ac	ENCFF295PKJ	https://www.encodeproject.org/files/ENCFF295PKJ/@@download/ENCFF295PKJ.bam	bam	2166838810	1	ENCSR540ADS	ENCODE4	chip-seq-alignment-step-v-2-0	2020-08-14T21:10:30.745750+00:00	true	data/E096_Lung/H3K27ac/ENCFF295PKJ.bam	unfiltered alignments	GRCh38
+E096_Lung	ATAC	ENCFF039DFM	https://www.encodeproject.org/files/ENCFF039DFM/@@download/ENCFF039DFM.bam	bam	3718527684	1	ENCSR647AOY	ENCODE4	atac-seq-alignment-step-v-2-1	2021-02-24T10:35:12.015738+00:00	true	data/E096_Lung/ATAC/ENCFF039DFM.bam	unfiltered alignments	GRCh38
+E096_Lung	HiC	NOT_FOUND			0						false			
+E097_Ovary	DNase	ENCFF593QEZ	https://www.encodeproject.org/files/ENCFF593QEZ/@@download/ENCFF593QEZ.bam	bam	3585369221	1	ENCSR712PYJ	ENCODE4	dnase-alignment-step-v-1-0	2020-11-10T23:59:57.814275+00:00	true	data/E097_Ovary/DNase/ENCFF593QEZ.bam	unfiltered alignments	GRCh38
+E097_Ovary	H3K27ac	ENCFF287FAW	https://www.encodeproject.org/files/ENCFF287FAW/@@download/ENCFF287FAW.bam	bam	1585378067	1	ENCSR268JQE	ENCODE4	chip-seq-alignment-step-v-2-0	2023-02-01T16:18:09.527141+00:00	true	data/E097_Ovary/H3K27ac/ENCFF287FAW.bam	unfiltered alignments	GRCh38
+E097_Ovary	ATAC	ENCFF346CSL	https://www.encodeproject.org/files/ENCFF346CSL/@@download/ENCFF346CSL.bam	bam	66479050291	1	ENCSR392UJM	ENCODE4	atac-seq-alignment-step-v-2-1	2021-03-16T20:07:14.626549+00:00	true	data/E097_Ovary/ATAC/ENCFF346CSL.bam	unfiltered alignments	GRCh38
+E097_Ovary	HiC	ENCFF365EBD	https://www.encodeproject.org/files/ENCFF365EBD/@@download/ENCFF365EBD.hic	hic	7242205338	1	ENCSR782YIX	ENCODE4	hic-diploidification-step-v-1-1	2024-08-29T06:25:39.149636+00:00	true	data/E097_Ovary/HiC/ENCFF365EBD.hic	haplotype-specific contact matrix	GRCh38
+E098_Pancreas	DNase	ENCFF027VJJ	https://www.encodeproject.org/files/ENCFF027VJJ/@@download/ENCFF027VJJ.bam	bam	3034732695	1	ENCSR178JBL	ENCODE4	dnase-alignment-step-v-1-0	2020-11-11T00:29:43.437729+00:00	true	data/E098_Pancreas/DNase/ENCFF027VJJ.bam	unfiltered alignments	GRCh38
+E098_Pancreas	H3K27ac	ENCFF181NJO	https://www.encodeproject.org/files/ENCFF181NJO/@@download/ENCFF181NJO.bam	bam	2918630875	2	ENCSR029SIG	ENCODE4	chip-seq-alignment-step-v-2-0	2021-04-28T16:23:58.759384+00:00	true	data/E098_Pancreas/H3K27ac/ENCFF181NJO.bam	unfiltered alignments	GRCh38
+E098_Pancreas	ATAC	ENCFF848EBO	https://www.encodeproject.org/files/ENCFF848EBO/@@download/ENCFF848EBO.bam	bam	28065690808	1	ENCSR251POP	ENCODE4	atac-seq-alignment-step-v-2-1	2021-03-16T22:20:29.806244+00:00	true	data/E098_Pancreas/ATAC/ENCFF848EBO.bam	unfiltered alignments	GRCh38
+E098_Pancreas	HiC	ENCFF171GTA	https://www.encodeproject.org/files/ENCFF171GTA/@@download/ENCFF171GTA.hic	hic	6071294645	1	ENCSR387RQD	ENCODE4	hic-diploidification-step-v-1-1	2024-08-07T07:05:21.800274+00:00	true	data/E098_Pancreas/HiC/ENCFF171GTA.hic	haplotype-specific contact matrix	GRCh38
+E100_Psoas_Muscle	DNase	ENCFF901DPU	https://www.encodeproject.org/files/ENCFF901DPU/@@download/ENCFF901DPU.bam	bam	8396275415	2	ENCSR000ELO	ENCODE4	dnase-alignment-step-v-1-0	2020-11-22T08:17:40.412423+00:00	true	data/E100_Psoas_Muscle/DNase/ENCFF901DPU.bam	unfiltered alignments	GRCh38
+E100_Psoas_Muscle	H3K27ac	ENCFF843JON	https://www.encodeproject.org/files/ENCFF843JON/@@download/ENCFF843JON.bam	bam	1791128668	1	ENCSR403PZH	ENCODE4	chip-seq-alignment-step-v-2-0	2022-06-06T17:10:37.224346+00:00	true	data/E100_Psoas_Muscle/H3K27ac/ENCFF843JON.bam	unfiltered alignments	GRCh38
+E100_Psoas_Muscle	ATAC	ENCFF423CMV	https://www.encodeproject.org/files/ENCFF423CMV/@@download/ENCFF423CMV.bam	bam	19531776238	1	ENCSR890DWH	ENCODE4	atac-seq-alignment-step-v-2-1	2021-02-25T16:56:44.487239+00:00	true	data/E100_Psoas_Muscle/ATAC/ENCFF423CMV.bam	unfiltered alignments	GRCh38
+E100_Psoas_Muscle	HiC	ENCFF651ZUG	https://www.encodeproject.org/files/ENCFF651ZUG/@@download/ENCFF651ZUG.hic	hic	7201467537	1	ENCSR538PNC	ENCODE4	hic-diploidification-step-v-1-1	2024-08-29T06:22:36.724922+00:00	true	data/E100_Psoas_Muscle/HiC/ENCFF651ZUG.hic	haplotype-specific contact matrix	GRCh38
+E104_Right_Atrium	DNase	ENCFF629PRO	https://www.encodeproject.org/files/ENCFF629PRO/@@download/ENCFF629PRO.bam	bam	11292034831	1	ENCSR622HTS	ENCODE4	dnase-alignment-step-v-1-0	2020-09-28T07:54:27.305887+00:00	true	data/E104_Right_Atrium/DNase/ENCFF629PRO.bam	unfiltered alignments	GRCh38
+E104_Right_Atrium	H3K27ac	ENCFF780PGC	https://www.encodeproject.org/files/ENCFF780PGC/@@download/ENCFF780PGC.bam	bam	2810155630	1	ENCSR074ECR	ENCODE4	chip-seq-alignment-step-v-2-0	2020-10-10T20:30:39.118159+00:00	true	data/E104_Right_Atrium/H3K27ac/ENCFF780PGC.bam	unfiltered alignments	GRCh38
+E104_Right_Atrium	ATAC	ENCFF830SIB	https://www.encodeproject.org/files/ENCFF830SIB/@@download/ENCFF830SIB.bam	bam	54443147225	1	ENCSR177JWR	ENCODE4	atac-seq-alignment-step-v-2-1	2021-03-16T21:39:10.352417+00:00	true	data/E104_Right_Atrium/ATAC/ENCFF830SIB.bam	unfiltered alignments	GRCh38
+E104_Right_Atrium	HiC	ENCFF585UWG	https://www.encodeproject.org/files/ENCFF585UWG/@@download/ENCFF585UWG.hic	hic	6137982012	1	ENCSR173VDQ	ENCODE4	hic-diploidification-step-v-1-1	2024-09-13T08:42:25.884095+00:00	true	data/E104_Right_Atrium/HiC/ENCFF585UWG.hic	haplotype-specific contact matrix	GRCh38
+E105_Right_Ventricle	DNase	ENCFF788XKC	https://www.encodeproject.org/files/ENCFF788XKC/@@download/ENCFF788XKC.bam	bam	18009838097	2	ENCSR746RDJ	ENCODE4	dnase-alignment-step-v-1-0	2020-11-06T18:08:02.648838+00:00	true	data/E105_Right_Ventricle/DNase/ENCFF788XKC.bam	unfiltered alignments	GRCh38
+E105_Right_Ventricle	H3K27ac	ENCFF041QXK	https://www.encodeproject.org/files/ENCFF041QXK/@@download/ENCFF041QXK.bam	bam	2645016558	1	ENCSR842TXG	ENCODE4	chip-seq-alignment-step-v-2-0	2022-07-20T00:56:19.114795+00:00	true	data/E105_Right_Ventricle/H3K27ac/ENCFF041QXK.bam	unfiltered alignments	GRCh38
+E105_Right_Ventricle	ATAC	ENCFF499YDF	https://www.encodeproject.org/files/ENCFF499YDF/@@download/ENCFF499YDF.bam	bam	47941582152	1	ENCSR403GBR	ENCODE4	atac-seq-alignment-step-v-2-1	2021-03-16T19:39:39.102132+00:00	true	data/E105_Right_Ventricle/ATAC/ENCFF499YDF.bam	unfiltered alignments	GRCh38
+E105_Right_Ventricle	HiC	ENCFF608CWF	https://www.encodeproject.org/files/ENCFF608CWF/@@download/ENCFF608CWF.hic	hic	6458666415	1	ENCSR462CIE	ENCODE4	hic-diploidification-step-v-1-1	2024-08-13T18:26:44.927762+00:00	true	data/E105_Right_Ventricle/HiC/ENCFF608CWF.hic	haplotype-specific contact matrix	GRCh38
+E106_Sigmoid_Colon	DNase	ENCFF092HJS	https://www.encodeproject.org/files/ENCFF092HJS/@@download/ENCFF092HJS.bam	bam	13175740754	1	ENCSR462XTM	ENCODE4	dnase-alignment-step-v-1-0	2020-10-23T23:47:18.363283+00:00	true	data/E106_Sigmoid_Colon/DNase/ENCFF092HJS.bam	unfiltered alignments	GRCh38
+E106_Sigmoid_Colon	H3K27ac	ENCFF773HIA	https://www.encodeproject.org/files/ENCFF773HIA/@@download/ENCFF773HIA.bam	bam	1918378713	1	ENCSR213SMK	ENCODE4	chip-seq-alignment-step-v-2-0	2020-12-11T21:10:02.221121+00:00	true	data/E106_Sigmoid_Colon/H3K27ac/ENCFF773HIA.bam	unfiltered alignments	GRCh38
+E106_Sigmoid_Colon	ATAC	ENCFF059CGX	https://www.encodeproject.org/files/ENCFF059CGX/@@download/ENCFF059CGX.bam	bam	13701393831	1	ENCSR086OGH	ENCODE4	atac-seq-alignment-step-v-2-1	2021-02-25T18:25:33.445684+00:00	true	data/E106_Sigmoid_Colon/ATAC/ENCFF059CGX.bam	unfiltered alignments	GRCh38
+E106_Sigmoid_Colon	HiC	ENCFF747EFS	https://www.encodeproject.org/files/ENCFF747EFS/@@download/ENCFF747EFS.hic	hic	7045720485	1	ENCSR123ZFD	ENCODE4	hic-diploidification-step-v-1-1	2024-09-13T08:44:15.510667+00:00	true	data/E106_Sigmoid_Colon/HiC/ENCFF747EFS.hic	haplotype-specific contact matrix	GRCh38
+E109_Small_Intestine	DNase	ENCFF931AYT	https://www.encodeproject.org/files/ENCFF931AYT/@@download/ENCFF931AYT.bam	bam	27952550481	1	ENCSR945RWN	ENCODE4	dnase-alignment-step-v-1-0	2020-11-16T22:03:53.594569+00:00	true	data/E109_Small_Intestine/DNase/ENCFF931AYT.bam	unfiltered alignments	GRCh38
+E109_Small_Intestine	H3K27ac	ENCFF257TPQ	https://www.encodeproject.org/files/ENCFF257TPQ/@@download/ENCFF257TPQ.bam	bam	1504957644	1	ENCSR454VRA	ENCODE4	chip-seq-alignment-step-v-2-0	2020-10-10T18:21:28.654111+00:00	true	data/E109_Small_Intestine/H3K27ac/ENCFF257TPQ.bam	unfiltered alignments	GRCh38
+E109_Small_Intestine	ATAC	NOT_FOUND			0						false			
+E109_Small_Intestine	HiC	NOT_FOUND			0						false			
+E112_Thymus	DNase	ENCFF706IXZ	https://www.encodeproject.org/files/ENCFF706IXZ/@@download/ENCFF706IXZ.bam	bam	2474606569	1	ENCSR544KDB	ENCODE4	dnase-alignment-step-v-1-0	2020-09-21T23:21:25.435137+00:00	true	data/E112_Thymus/DNase/ENCFF706IXZ.bam	unfiltered alignments	GRCh38
+E112_Thymus	H3K27ac	ENCFF270ODA	https://www.encodeproject.org/files/ENCFF270ODA/@@download/ENCFF270ODA.bam	bam	1354331566	1	ENCSR303IKJ	ENCODE4	chip-seq-alignment-step-v-2-0	2020-08-14T22:10:44.750737+00:00	true	data/E112_Thymus/H3K27ac/ENCFF270ODA.bam	unfiltered alignments	GRCh38
+E112_Thymus	ATAC	NOT_FOUND			0						false			
+E112_Thymus	HiC	NOT_FOUND			0						false			
+E113_Spleen	DNase	ENCFF627PAP	https://www.encodeproject.org/files/ENCFF627PAP/@@download/ENCFF627PAP.bam	bam	20317672583	1	ENCSR128GBN	ENCODE4	dnase-alignment-step-v-1-0	2020-10-06T22:40:05.917408+00:00	true	data/E113_Spleen/DNase/ENCFF627PAP.bam	unfiltered alignments	GRCh38
+E113_Spleen	H3K27ac	ENCFF975CQD	https://www.encodeproject.org/files/ENCFF975CQD/@@download/ENCFF975CQD.bam	bam	2444331217	1	ENCSR436JNB	ENCODE4	chip-seq-alignment-step-v-2-0	2021-06-23T10:52:25.582995+00:00	true	data/E113_Spleen/H3K27ac/ENCFF975CQD.bam	unfiltered alignments	GRCh38
+E113_Spleen	ATAC	ENCFF030NRZ	https://www.encodeproject.org/files/ENCFF030NRZ/@@download/ENCFF030NRZ.bam	bam	47690421316	1	ENCSR182VGJ	ENCODE4	atac-seq-alignment-step-v-2-1	2021-03-16T19:43:39.295603+00:00	true	data/E113_Spleen/ATAC/ENCFF030NRZ.bam	unfiltered alignments	GRCh38
+E113_Spleen	HiC	ENCFF280EYD	https://www.encodeproject.org/files/ENCFF280EYD/@@download/ENCFF280EYD.hic	hic	34845138118	1	ENCSR692QWS	ENCODE4	hic-merging-quantification-interaction-calling-step-v-1-1	2023-01-26T21:59:40.599702+00:00	true	data/E113_Spleen/HiC/ENCFF280EYD.hic	mapping quality thresholded contact matrix	GRCh38
+E114_A549	DNase	ENCFF995HBI	https://www.encodeproject.org/files/ENCFF995HBI/@@download/ENCFF995HBI.bam	bam	8256206864	1	ENCSR000EIE	ENCODE4	dnase-alignment-step-v-1-0	2020-11-20T17:32:20.220762+00:00	true	data/E114_A549/DNase/ENCFF995HBI.bam	unfiltered alignments	GRCh38
+E114_A549	H3K27ac	ENCFF670MAA	https://www.encodeproject.org/files/ENCFF670MAA/@@download/ENCFF670MAA.bam	bam	1373266061	3	ENCSR027BPE	ENCODE4	chip-seq-alignment-step-v-2-0	2020-10-02T06:14:39.446933+00:00	true	data/E114_A549/H3K27ac/ENCFF670MAA.bam	unfiltered alignments	GRCh38
+E114_A549	ATAC	ENCFF440SLA	https://www.encodeproject.org/files/ENCFF440SLA/@@download/ENCFF440SLA.bam	bam	24409556792	3	ENCSR032RGS	ENCODE4	atac-seq-alignment-step-v-2-1	2021-03-16T18:57:16.639943+00:00	true	data/E114_A549/ATAC/ENCFF440SLA.bam	unfiltered alignments	GRCh38
+E114_A549	HiC	4DNFID68JQY9	https://data.4dnucleome.org/files-processed/4DNFID68JQY9/@@download/4DNFID68JQY9.hic	hic	0						false	data/E114_A549/HiC/4DNFID68JQY9.hic	4DN processed	
+E116_GM12878	DNase	ENCFF940NSD	https://www.encodeproject.org/files/ENCFF940NSD/@@download/ENCFF940NSD.bam	bam	7454165894	2	ENCSR000EMT	ENCODE4	dnase-alignment-step-v-1-0	2020-11-18T17:57:51.409620+00:00	true	data/E116_GM12878/DNase/ENCFF940NSD.bam	unfiltered alignments	GRCh38
+E116_GM12878	H3K27ac	ENCFF865OOP	https://www.encodeproject.org/files/ENCFF865OOP/@@download/ENCFF865OOP.bam	bam	555926038	2	ENCSR000AKC	ENCODE4	chip-seq-alignment-step-v-2-0	2020-09-30T06:27:23.641717+00:00	true	data/E116_GM12878/H3K27ac/ENCFF865OOP.bam	unfiltered alignments	GRCh38
+E116_GM12878	ATAC	ENCFF238BZZ	https://www.encodeproject.org/files/ENCFF238BZZ/@@download/ENCFF238BZZ.bam	bam	16976989969	3	ENCSR637XSC	ENCODE4	atac-seq-alignment-step-v-2-1	2021-03-16T19:03:18.926291+00:00	true	data/E116_GM12878/ATAC/ENCFF238BZZ.bam	unfiltered alignments	GRCh38
+E116_GM12878	HiC	ENCFF421PYE	https://www.encodeproject.org/files/ENCFF421PYE/@@download/ENCFF421PYE.hic	hic	221133691230	1,2,3,4,5,6,7,8,9,10,11,12	ENCSR946AKI	ENCODE4		2025-08-26T18:37:46.404660+00:00	true	data/E116_GM12878/HiC/ENCFF421PYE.hic	mapping quality thresholded contact matrix	GRCh38
+E117_HeLa	DNase	ENCFF187PXI	https://www.encodeproject.org/files/ENCFF187PXI/@@download/ENCFF187PXI.bam	bam	3024968786	1	ENCSR000EJT	ENCODE4	dnase-alignment-step-v-1-0	2020-11-20T19:34:41.850730+00:00	true	data/E117_HeLa/DNase/ENCFF187PXI.bam	unfiltered alignments	GRCh38
+E117_HeLa	H3K27ac	ENCFF712QHJ	https://www.encodeproject.org/files/ENCFF712QHJ/@@download/ENCFF712QHJ.bam	bam	1184717417	2	ENCSR000AOC	ENCODE4	chip-seq-alignment-step-v-2-0	2020-09-29T18:17:29.947112+00:00	true	data/E117_HeLa/H3K27ac/ENCFF712QHJ.bam	unfiltered alignments	GRCh38
+E117_HeLa	ATAC	NOT_FOUND			0						false			
+E117_HeLa	HiC	NOT_FOUND			0						false			
+E118_HepG2	DNase	ENCFF878RGP	https://www.encodeproject.org/files/ENCFF878RGP/@@download/ENCFF878RGP.bam	bam	2820951988	1	ENCSR000EJV	ENCODE4	dnase-alignment-step-v-1-0	2020-11-20T17:15:31.501331+00:00	true	data/E118_HepG2/DNase/ENCFF878RGP.bam	unfiltered alignments	GRCh38
+E118_HepG2	H3K27ac	ENCFF490KFG	https://www.encodeproject.org/files/ENCFF490KFG/@@download/ENCFF490KFG.bam	bam	3018689111	3	ENCSR000AMO	ENCODE4	chip-seq-alignment-step-v-2-0	2022-06-14T16:52:14.389542+00:00	true	data/E118_HepG2/H3K27ac/ENCFF490KFG.bam	unfiltered alignments	GRCh38
+E118_HepG2	ATAC	ENCFF290SKT	https://www.encodeproject.org/files/ENCFF290SKT/@@download/ENCFF290SKT.bam	bam	17509233684	3	ENCSR291GJU	ENCODE4	atac-seq-alignment-step-v-2-1	2021-03-16T19:15:39.651377+00:00	true	data/E118_HepG2/ATAC/ENCFF290SKT.bam	unfiltered alignments	GRCh38
+E118_HepG2	HiC	ENCFF805ALH	https://www.encodeproject.org/files/ENCFF805ALH/@@download/ENCFF805ALH.hic	hic	20390341880	3	ENCSR675PUL	ENCODE4		2023-11-30T10:19:25.355777+00:00	true	data/E118_HepG2/HiC/ENCFF805ALH.hic	mapping quality thresholded contact matrix	GRCh38
+E119_HMEC	DNase	ENCFF037PGN	https://www.encodeproject.org/files/ENCFF037PGN/@@download/ENCFF037PGN.bam	bam	7374449029	1	ENCSR817ALC	ENCODE4	dnase-alignment-step-v-1-0	2021-10-18T18:36:10.540522+00:00	true	data/E119_HMEC/DNase/ENCFF037PGN.bam	unfiltered alignments	GRCh38
+E119_HMEC	H3K27ac	ENCFF041ROD	https://www.encodeproject.org/files/ENCFF041ROD/@@download/ENCFF041ROD.bam	bam	587869952	2	ENCSR000ALW	ENCODE4	chip-seq-alignment-step-v-2-0	2020-09-30T05:44:40.244498+00:00	true	data/E119_HMEC/H3K27ac/ENCFF041ROD.bam	unfiltered alignments	GRCh38
+E119_HMEC	ATAC	NOT_FOUND			0						false			
+E119_HMEC	HiC	ENCFF039SIJ	https://www.encodeproject.org/files/ENCFF039SIJ/@@download/ENCFF039SIJ.hic	hic	5796299950	1	ENCSR707XVJ	ENCODE4	hic-diploidification-step-v-1-1	2022-11-01T04:55:06.131853+00:00	true	data/E119_HMEC/HiC/ENCFF039SIJ.hic	haplotype-specific contact matrix	GRCh38
+E120_HSMM	DNase	ENCFF372SZT	https://www.encodeproject.org/files/ENCFF372SZT/@@download/ENCFF372SZT.bam	bam	2945700325	2	ENCSR000EOO	ENCODE4	dnase-alignment-step-v-1-0	2020-11-18T18:18:55.777359+00:00	true	data/E120_HSMM/DNase/ENCFF372SZT.bam	unfiltered alignments	GRCh38
+E120_HSMM	H3K27ac	ENCFF702NBI	https://www.encodeproject.org/files/ENCFF702NBI/@@download/ENCFF702NBI.bam	bam	844724698	2	ENCSR000ANF	ENCODE4	chip-seq-alignment-step-v-2-0	2020-09-30T05:16:38.664606+00:00	true	data/E120_HSMM/H3K27ac/ENCFF702NBI.bam	unfiltered alignments	GRCh38
+E120_HSMM	ATAC	NOT_FOUND			0						false			
+E120_HSMM	HiC	NOT_FOUND			0						false			
+E122_HUVEC	DNase	ENCFF309JXB	https://www.encodeproject.org/files/ENCFF309JXB/@@download/ENCFF309JXB.bam	bam	1708935246	1	ENCSR000EKF	ENCODE4	dnase-alignment-step-v-1-0	2020-11-20T17:11:38.527091+00:00	true	data/E122_HUVEC/DNase/ENCFF309JXB.bam	unfiltered alignments	GRCh38
+E122_HUVEC	H3K27ac	ENCFF034UBN	https://www.encodeproject.org/files/ENCFF034UBN/@@download/ENCFF034UBN.bam	bam	839604287	2	ENCSR000ALB	ENCODE4	chip-seq-alignment-step-v-2-0	2020-09-30T06:02:54.618529+00:00	true	data/E122_HUVEC/H3K27ac/ENCFF034UBN.bam	unfiltered alignments	GRCh38
+E122_HUVEC	ATAC	NOT_FOUND			0						false			
+E122_HUVEC	HiC	ENCFF091YKP	https://www.encodeproject.org/files/ENCFF091YKP/@@download/ENCFF091YKP.hic	hic	6663437113	1	ENCSR788FBI	ENCODE4	hic-diploidification-step-v-1-1	2022-11-04T04:12:22.269852+00:00	true	data/E122_HUVEC/HiC/ENCFF091YKP.hic	haplotype-specific contact matrix	GRCh38
+E123_K562	DNase	ENCFF987IUK	https://www.encodeproject.org/files/ENCFF987IUK/@@download/ENCFF987IUK.bam	bam	22618360899	1	ENCSR000EKS	ENCODE4	dnase-alignment-step-v-1-0	2020-11-22T08:12:24.262549+00:00	true	data/E123_K562/DNase/ENCFF987IUK.bam	unfiltered alignments	GRCh38
+E123_K562	H3K27ac	ENCFF353PVU	https://www.encodeproject.org/files/ENCFF353PVU/@@download/ENCFF353PVU.bam	bam	3104359947	3	ENCSR000AKP	ENCODE4	chip-seq-alignment-step-v-2-0	2022-06-14T16:57:27.259415+00:00	true	data/E123_K562/H3K27ac/ENCFF353PVU.bam	unfiltered alignments	GRCh38
+E123_K562	ATAC	ENCFF441TRR	https://www.encodeproject.org/files/ENCFF441TRR/@@download/ENCFF441TRR.bam	bam	2670275079	2	ENCSR859USB	ENCODE4	atac-seq-alignment-step-v-2-1	2022-03-02T09:24:01.044225+00:00	true	data/E123_K562/ATAC/ENCFF441TRR.bam	unfiltered alignments	GRCh38
+E123_K562	HiC	ENCFF822UUX	https://www.encodeproject.org/files/ENCFF822UUX/@@download/ENCFF822UUX.hic	hic	32155810430	9	ENCSR408AJG	ENCODE4		2024-08-19T05:20:15.390659+00:00	true	data/E123_K562/HiC/ENCFF822UUX.hic	mapping quality thresholded contact matrix	GRCh38
+E127_NHEK	DNase	ENCFF478FRB	https://www.encodeproject.org/files/ENCFF478FRB/@@download/ENCFF478FRB.bam	bam	2404225843	1	ENCSR000ELH	ENCODE4	dnase-alignment-step-v-1-0	2020-11-20T17:00:40.128156+00:00	true	data/E127_NHEK/DNase/ENCFF478FRB.bam	unfiltered alignments	GRCh38
+E127_NHEK	H3K27ac	ENCFF299ZJS	https://www.encodeproject.org/files/ENCFF299ZJS/@@download/ENCFF299ZJS.bam	bam	493081782	2	ENCSR000ALK	ENCODE4	chip-seq-alignment-step-v-2-0	2020-09-30T05:57:57.467914+00:00	true	data/E127_NHEK/H3K27ac/ENCFF299ZJS.bam	unfiltered alignments	GRCh38
+E127_NHEK	ATAC	ENCFF348JMW	https://www.encodeproject.org/files/ENCFF348JMW/@@download/ENCFF348JMW.bam	bam	20965171644	2	ENCSR158XTU	ENCODE4	atac-seq-alignment-step-v-2-1	2021-03-16T22:25:36.464976+00:00	true	data/E127_NHEK/ATAC/ENCFF348JMW.bam	unfiltered alignments	GRCh38
+E127_NHEK	HiC	4DNFIL9M97T2	https://data.4dnucleome.org/files-processed/4DNFIL9M97T2/@@download/4DNFIL9M97T2.hic	hic	0						false	data/E127_NHEK/HiC/4DNFIL9M97T2.hic	4DN processed	
+E128_NHLF	DNase	ENCFF807OQU	https://www.encodeproject.org/files/ENCFF807OQU/@@download/ENCFF807OQU.bam	bam	2276747074	2	ENCSR000EPR	ENCODE4	dnase-alignment-step-v-1-0	2021-02-08T18:41:40.248574+00:00	true	data/E128_NHLF/DNase/ENCFF807OQU.bam	unfiltered alignments	GRCh38
+E128_NHLF	H3K27ac	ENCFF960VIQ	https://www.encodeproject.org/files/ENCFF960VIQ/@@download/ENCFF960VIQ.bam	bam	467952002	2	ENCSR000AMR	ENCODE4	chip-seq-alignment-step-v-2-0	2020-08-14T06:54:12.566217+00:00	true	data/E128_NHLF/H3K27ac/ENCFF960VIQ.bam	unfiltered alignments	GRCh38
+E128_NHLF	ATAC	NOT_FOUND			0						false			
+E128_NHLF	HiC	NOT_FOUND			0						false			
