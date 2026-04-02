@@ -56,10 +56,28 @@ python scripts/download_encode_data.py \
 python scripts/download_encode_data.py --dry-run --save-manifest data/encode_manifest
 # Download from saved manifest (no API queries)
 python scripts/download_encode_data.py --from-manifest data/encode_manifest.json
+# Parallel download (N files concurrently via Python threads)
+python scripts/download_encode_data.py --from-manifest data/encode_manifest.json --parallel 4
 # Build Roadmap per-replicate manifest (38 epigenomes × DNase/H3K27ac/HiC)
 python scripts/build_roadmap_manifest.py
 # Download from Roadmap manifest
 python scripts/download_encode_data.py --from-manifest data/roadmap_download_manifest.json
+
+# --- aria2c fast multi-connection download (recommended for large manifests) ---
+# Generate aria2c input and run (4 connections/file, 3 files in parallel)
+python scripts/download_encode_data.py --from-manifest data/roadmap_download_manifest.json --aria2c
+# Rebase manifest paths to a different output directory
+python scripts/download_encode_data.py --from-manifest data/roadmap_download_manifest.json \
+    --manifest-root data/roadmap_encode_downloads --aria2c
+# Custom aria2c settings (connections, parallelism, timeouts)
+python scripts/download_encode_data.py --from-manifest data/roadmap_download_manifest.json \
+    --manifest-root data/roadmap_encode_downloads --aria2c \
+    --aria2c-connections 8 --aria2c-parallel 6 \
+    --aria2c-connect-timeout 60 --aria2c-timeout 600
+# Login-node background download (nohup wrapper for hosts with outbound HTTPS)
+bash scripts/roadmap_encode_download_login_nohup.sh
+# Slurm-based download (compute nodes)
+sbatch slurm/download_roadmap_encode_aria2c.slurm
 
 # --- ABC Pipeline (from BAM/HiC → enhancer-gene predictions) ---
 # Run full ABC pipeline for a cell type (with Hi-C)
@@ -134,7 +152,7 @@ python run_k562_preprocessing.py with-signals \
     --signal-bigwigs dnase.bigWig h3k27ac.bigWig h3k4me1.bigWig h3k4me3.bigWig ctcf.bigWig \
     --include-self-promoter
 
-# --- Train model ---
+# --- Train expression model ---
 python -u train_EPInformer_abc.py \
     --model_type EPInformer-abc --n_enh_feats 3 \
     --h5_path ./training_data/K562_run/K562_samples.h5 \
@@ -145,6 +163,20 @@ python -u train_EPInformer_abc.py \
     --model_type EPInformer-abc --n_enh_feats 3 \
     --h5_path ./training_data/K562_run/K562_samples.h5 \
     --rm_self_promoter --epochs 2 --output_dir ./EPInformer_models_noselfprm/
+
+# --- Pre-train sequence encoder (256bp peak activity prediction) ---
+python train_seqEncoder.py --cell K562 \
+    --data-csv data/K562_peak_5bins_around_summit_activity_sequence.csv \
+    --output-dir ./results/seqencoder --epochs 50
+# Summit-only evaluation + reverse-complement averaging
+python train_seqEncoder.py --cell K562 --test-summit-only --rc-average \
+    --output-dir ./results/seqencoder
+# Activity-weighted upsampling (upsample high-activity bins during training)
+python train_seqEncoder.py --cell K562 --upsample --upsample-temp 1.0 \
+    --output-dir ./results/seqencoder
+
+# --- Slurm batch training (12-fold CV) ---
+bash slurm/sbatch_dated_logs.sh slurm/train_epinformer_batchdata_12fold_array.slurm
 ```
 
 No formal test suite exists. Validation is done through the Jupyter notebooks and benchmark datasets (CRISPR, eQTL).
@@ -191,9 +223,11 @@ Raw Data (FASTA, BigWig signals, CSV expression, ABC links)
 
 **`scripts/rerun_encoder_step.py`** — Re-runs only Step 4 (encoder data generation) of the ABC pipeline for a given cell type, reading config/samples from the same YAML/TSV used by `run_pipeline.py`. Usage: `python scripts/rerun_encoder_step.py --cell K562`.
 
-**`scripts/download_encode_data.py`** — Queries ENCODE REST API to find and download unfiltered-alignment BAM files (DNase, H3K27ac, ATAC) and Hi-C `.hic` files. Reads cell types from `data/cell_line_list.txt` (11 cell lines) by default; `--roadmap` mode supports all 57 Roadmap epigenomes via `data/roadmap_expression/.cache/EG.name.txt`. Key features: biosample ontology name mapping (e.g., NHEK→`keratinocyte`, HUVEC→`endothelial cell of umbilical vein`), 4DN Hi-C fallback, `--all-replicates` mode (one BAM per bio rep with `*best*` marker), ENCODE phase detection (ENCODE2/3/4 via `award.rfa`), `--report` HTML generation, per-file metadata JSON. Uses `frame=embedded` ENCODE search to get award info in a single query. BAM files must be **unfiltered alignments** (not filtered "alignments") because the ABC pipeline uses `MACS2 --keep-dup all`. Supports `--save-manifest PATH` to export TSV+JSON manifests and `--from-manifest PATH.json` to download from a saved manifest without re-querying the API. Pre-built manifests: `data/encode_manifest.{tsv,json}` (11 cell lines), `data/roadmap_encode_manifest.{tsv,json}` (57 epigenomes).
+**`scripts/download_encode_data.py`** — Queries ENCODE REST API to find and download unfiltered-alignment BAM files (DNase, H3K27ac, ATAC) and Hi-C `.hic` files. Reads cell types from `data/cell_line_list.txt` (11 cell lines) by default; `--roadmap` mode supports all 57 Roadmap epigenomes via `data/roadmap_expression/.cache/EG.name.txt`. Key features: biosample ontology name mapping (e.g., NHEK→`keratinocyte`, HUVEC→`endothelial cell of umbilical vein`), systematic 4DN Hi-C catalog search (queries 4DN API and scores candidates by biosample token matching, with hardcoded fallback for K562/GM12878), `--all-replicates` mode (one BAM per bio rep with `*best*` marker), ENCODE phase detection (ENCODE2/3/4 via `award.rfa`), `--report` HTML generation, per-file metadata JSON. Uses `frame=embedded` ENCODE search to get award info in a single query. BAM files must be **unfiltered alignments** (not filtered "alignments") because the ABC pipeline uses `MACS2 --keep-dup all`. Supports `--save-manifest PATH` to export TSV+JSON manifests and `--from-manifest PATH.json` to download from a saved manifest without re-querying the API. Download modes: `--parallel N` (Python thread pool), `--aria2c` (generates aria2c input file and runs aria2c for fast multi-connection downloads with `--aria2c-connections`, `--aria2c-parallel`, `--aria2c-connect-timeout`, `--aria2c-timeout`). `--manifest-root PATH` rebases manifest `dest_path` values to a different output directory (useful when downloading to a separate storage location). Pre-built manifests: `data/encode_manifest.{tsv,json}` (11 cell lines), `data/roadmap_download_manifest.{tsv,json}` (38 Roadmap epigenomes with per-replicate entries).
 
-**`scripts/build_roadmap_manifest.py`** — Builds a per-replicate download manifest for 38 verified Roadmap epigenomes (exact/close ENCODE matches) across DNase, H3K27ac, and Hi-C. Selects the best experiment per assay (newest pipeline, most replicates), includes all biological replicates, marks the best (largest file). Outputs `data/roadmap_download_manifest.{tsv,json,html}`. The mapping was verified against Roadmap metadata (`Roadmap.metadata.qc.jul2013.xlsx`) — E024 was corrected (was wrongly mapped to CD4+ Treg instead of ESC), E016/HUES64 confirmed no DNase. See `docs/encode_data_guide.md` for the full search→match→review→download pipeline.
+**`scripts/build_roadmap_manifest.py`** — Builds a per-replicate download manifest for 38 verified Roadmap epigenomes (exact/close ENCODE matches) across DNase, H3K27ac, and Hi-C. Selects the best experiment per assay (newest pipeline, most replicates), includes all biological replicates, marks the best (largest file). Includes systematic 4DN Hi-C matching for epigenomes without ENCODE Hi-C data. Outputs `data/roadmap_download_manifest.{tsv,json,html}`. The mapping was verified against Roadmap metadata (`Roadmap.metadata.qc.jul2013.xlsx`) — E024 was corrected (was wrongly mapped to CD4+ Treg instead of ESC), E016/HUES64 confirmed no DNase. See `docs/encode_data_guide.md` for the full search→match→review→download pipeline.
+
+**`scripts/roadmap_encode_download_login_nohup.sh`** — Background download wrapper for login/transfer nodes that have outbound HTTPS (when compute nodes cannot reach ENCODE). Runs `download_encode_data.py --aria2c` under `nohup`. Configurable via env vars: `MANIFEST`, `MANIFEST_ROOT`, `ARIA2C_CONN`, `ARIA2C_PARALLEL`, `ARIA2C_CONNECT_TIMEOUT`, `ARIA2C_TIMEOUT`. Logs to `log_cpu/roadmap_encode_dl_login.nohup.out`.
 
 **`preprocessing/data_prep/build_gene_annotation.py`** — Builds hg38 gene annotation BED from Roadmap's Ensembl v65 gene_info by lifting over hg19 coordinates. Supports `--gene-set pc` (protein-coding, ~20K) or `--gene-set pc_linc` (+ lincRNA, ~25K). Requires `liftOver` binary on PATH.
 
@@ -203,6 +237,13 @@ Raw Data (FASTA, BigWig signals, CSV expression, ABC links)
 - `promoter_enhancer_dataset`: For new factored HDF5 (`gene_enh_idx` referencing shared `enhancer_seq` pool). Supports `--rm_self_promoter` to filter out self-promoter elements (distance < 1kb) at training time.
 - `promoter_enhancer_dataset_legacy`: For legacy HDF5 with pre-computed `promoter_ohe` and `pe_ohe` arrays. Loads promoter from HDF5 with zero-padding (fast path).
 - Auto-detects Xpresso feature columns in expression CSV; if absent, sets `useFeat=False` (model skips `rna_feats` branch). Works with both Xpresso-merged and pure Roadmap CSVs.
+
+**`train_seqEncoder.py`** — Pre-trains the 256bp sequence encoder (`enhancer_predictor_256bp`) on peak activity prediction using 12-fold leave-chromosome-out CV. Trains on `PeakActivityDataset` which loads CSV with columns `Chromosome`, `Sequence`, `Activity`, `Name`, `Offset_to_summit` (renamed to `Pos`). Key features:
+- `--test-summit-only`: Evaluate only summit bins (Pos=0) separately, in addition to all-bins evaluation
+- `--rc-average`: Reverse-complement averaging at test time (forward + RC predictions averaged)
+- `--upsample` / `--upsample-temp T`: Activity-weighted sampling during training using `WeightedRandomSampler` with `softmax(log2_activity / T)` weights — higher activity bins sampled more often
+- `--folds`: Run specific CV folds (e.g., `--folds 1 2 3`)
+- Outputs per-fold predictions CSV, per-cell summary CSV (`summary.csv`), and model checkpoints
 
 ### Gene ID Matching
 
@@ -219,8 +260,17 @@ Enhancers are sorted by **absolute distance** to TSS (nearest first) and capped 
 - Related dataset directory: `../data_EPInformer/` (hg38.fa, HDF5 files, ABC links, pre-trained models)
 - In-repo `data/`: gene expression CSVs, ABC enhancer-gene links, cross-validation splits, CRISPR/eQTL benchmarks
 - `data/roadmap_expression/`: Roadmap-derived expression for 57 epigenomes (generated by `preprocessing/data_prep/build_roadmap_expression.py`)
+- `data/roadmap_encode_downloads/`: Downloaded ENCODE BAM/HiC files for Roadmap epigenomes (from `roadmap_download_manifest.json`)
 - `abc_output/`: ABC pipeline outputs per cell type (predictions, enhancer lists, encoder data)
-- Pre-trained models in `trained_models/` (163 enhancer encoder checkpoints, expression model checkpoints as `.pt` files)
+- Pre-trained models were previously tracked in `trained_models/` but have been removed from git. Pre-trained checkpoints (enhancer encoder and expression models) are available in `../data_EPInformer/` or can be retrained.
+
+### Slurm Jobs
+
+- `slurm/train_epinformer_batchdata_12fold_array.slurm`: 12-fold leave-chromosome-out CV array job for batch training
+- `slurm/sbatch_dated_logs.sh`: Wrapper that submits a Slurm script with dated log directories
+- `slurm/download_roadmap_encode_aria2c.slurm`: aria2c-based ENCODE data download (14-day walltime, configurable via env vars). Supports resume via `aria2c -c`.
+- `slurm/encode_network_smoke_test.slurm`: Quick connectivity test to verify compute nodes can reach ENCODE/4DN servers
+- `slurm/run_pipeline_cpu.slurm`: CPU-only pipeline execution (preprocessing stages)
 
 ### Notebooks
 

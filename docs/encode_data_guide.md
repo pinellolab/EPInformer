@@ -131,15 +131,15 @@ python scripts/build_roadmap_manifest.py --dry-run
 
 | File | Description |
 |------|-------------|
-| [`data/roadmap_download_manifest.html`](../data/roadmap_download_manifest.html) | Visual summary: 38 epigenomes × 3 assays, all replicates with clickable ENCODE links, `best` badges, per-assay summary cards. |
+| [`data/roadmap_download_manifest.html`](../data/roadmap_download_manifest.html) | Visual summary: 38 epigenomes × 3 assays, all replicates with clickable ENCODE/4DN links, `best` badges, per-assay summary cards. |
 | [`data/roadmap_download_manifest.tsv`](../data/roadmap_download_manifest.tsv) | Tab-separated manifest (147 rows). Columns: eid, roadmap_name, encode_biosample, match_quality, assay, accession, url, file_size, bio_rep, experiment, encode_phase, pipeline_version, date_created, recommended, dest_path, source. |
 | [`data/roadmap_download_manifest.json`](../data/roadmap_download_manifest.json) | JSON manifest (same data, for programmatic use). |
 
 **Summary:**
 
-- 121 files found (~1.1 TB), 26 not found (mostly Hi-C)
-- 38 DNase, 30 H3K27ac, 22 Hi-C (+ 2 from 4DN)
-- 88 files marked as recommended (best per assay per epigenome)
+- 125 files found (~1.1 TB), 22 not found (mostly Hi-C)
+- 48 DNase, 53 H3K27ac, 24 Hi-C (+ 6 from 4DN)
+- 92 files marked as recommended (best per assay per epigenome)
 
 ---
 
@@ -227,12 +227,12 @@ All generated data files and reports:
 | `data/roadmap_encode_mapping.html` | Report | Verified Roadmap → ENCODE biosample mapping (57 epigenomes) |
 | `data/roadmap_encode_crossref.html` | Report | Crossref with data availability status |
 | **Manifests** | | |
-| `data/roadmap_download_manifest.html` | Report | Visual summary of download plan (38 epigenomes × 3 assays) |
-| `data/roadmap_download_manifest.{tsv,json}` | Data | Download manifest with all replicates (147 rows, ~1.1 TB) |
+| `data/roadmap_download_manifest.html` | Report | Visual summary of download plan (38 epigenomes × 3 assays, including 4DN Hi-C matches) |
+| `data/roadmap_download_manifest.{tsv,json}` | Data | Download manifest with all replicates (147 rows, ~1.1 TB, public 4DN URLs included where matched) |
 | `data/encode_manifest.{tsv,json}` | Data | 11 cell lines manifest (44 rows) |
 | **Scripts** | | |
 | `scripts/download_encode_data.py` | Tool | ENCODE API search + download with manifest support |
-| `scripts/build_roadmap_manifest.py` | Tool | Build per-replicate manifest for 38 Roadmap epigenomes |
+| `scripts/build_roadmap_manifest.py` | Tool | Build per-replicate manifest for 38 Roadmap epigenomes with ENCODE plus systematic 4DN Hi-C matching |
 
 ---
 

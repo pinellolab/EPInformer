@@ -54,6 +54,7 @@ from typing import Any
 
 ENCODE_SEARCH = "https://www.encodeproject.org/search/"
 ENCODE_FILE = "https://www.encodeproject.org/files"
+FOURDN_FILE = "https://data.4dnucleome.org/files-processed"
 
 # Cell line list file: "EID,NAME" per line (e.g., "E003,H1_Cell_Line")
 CELL_LINE_LIST = "data/cell_line_list.txt"
@@ -147,7 +148,12 @@ FOURDN_HIC: dict[str, tuple[str, str]] = {
     "GM12878": ("4DNFI1UEG1HD", "GM12878 Hi-C from 4DN"),
 }
 
-FOURDN_DOWNLOAD = "https://data.4dnucleome.org/files-processed/{acc}/@@download/{acc}.hic"
+FOURDN_DOWNLOAD = FOURDN_FILE + "/{acc}/@@download/{acc}.hic"
+FOURDN_SEARCH = "https://data.4dnucleome.org/search/"
+GENERIC_MATCH_TOKENS = {
+    "adult", "alpha", "and", "beta", "cell", "cells", "derived", "donor",
+    "human", "line", "negative", "of", "positive", "primary", "the", "with",
+}
 
 DEFAULT_OUTPUT_DIR = "downloads"
 
@@ -235,8 +241,8 @@ def read_roadmap_list(path: str) -> list[tuple[str, str]]:
 # ENCODE API helpers
 # ---------------------------------------------------------------------------
 
-def _encode_get(url: str, retries: int = 3) -> dict:
-    """GET JSON from ENCODE, with retry on 429 / transient errors."""
+def _json_get(url: str, retries: int = 3) -> dict:
+    """GET JSON from a remote API, with retry on transient errors."""
     req = urllib.request.Request(url, headers={"Accept": "application/json"})
     for attempt in range(retries):
         try:
@@ -253,6 +259,181 @@ def _encode_get(url: str, retries: int = 3) -> dict:
                 continue
             raise
     return {}
+
+
+def _encode_get(url: str, retries: int = 3) -> dict:
+    """GET JSON from ENCODE, with retry on 429 / transient errors."""
+    return _json_get(url, retries=retries)
+
+
+def _url_with_base(base: str, maybe_relative: str) -> str:
+    """Return an absolute URL for portal-relative href values."""
+    if not maybe_relative:
+        return ""
+    return urllib.parse.urljoin(base + "/", maybe_relative)
+
+
+def _probe_public_url(url: str, timeout: int = 20) -> tuple[bool, str]:
+    """Lightweight reachability check for public download URLs."""
+    if not url:
+        return False, "missing URL"
+
+    methods = ("HEAD", "GET")
+    for method in methods:
+        headers = {}
+        if method == "GET":
+            headers["Range"] = "bytes=0-0"
+        req = urllib.request.Request(url, headers=headers, method=method)
+        try:
+            with urllib.request.urlopen(req, timeout=timeout) as resp:
+                status = getattr(resp, "status", resp.getcode())
+                if 200 <= status < 400:
+                    return True, f"HTTP {status}"
+                return False, f"HTTP {status}"
+        except urllib.error.HTTPError as exc:
+            if method == "HEAD" and exc.code in (405, 501):
+                continue
+            return False, f"HTTP {exc.code}"
+        except urllib.error.URLError as exc:
+            return False, f"URL error: {exc.reason}"
+        except Exception as exc:
+            return False, str(exc)
+
+    return False, "no successful probe"
+
+
+def _select_accessible_url(candidates: list[tuple[str, str]]) -> tuple[str, list[str]]:
+    """Return the first reachable URL and a list of failed probe messages."""
+    failures: list[str] = []
+    seen: set[str] = set()
+    for label, url in candidates:
+        if not url or url in seen:
+            continue
+        seen.add(url)
+        ok, detail = _probe_public_url(url)
+        if ok:
+            return url, failures
+        failures.append(f"{label} -> {detail}")
+    return "", failures
+
+
+def _norm(text: str) -> str:
+    text = text.lower().replace("_", " ")
+    text = re.sub(r"[^a-z0-9]+", " ", text)
+    return " ".join(text.split())
+
+
+def _tokens(text: str) -> list[str]:
+    toks = []
+    for tok in _norm(text).split():
+        if tok in GENERIC_MATCH_TOKENS:
+            continue
+        toks.append(tok)
+    return toks
+
+
+def _token_match(a: str, b: str) -> bool:
+    return a == b or (min(len(a), len(b)) >= 5 and (a.startswith(b) or b.startswith(a)))
+
+
+def _alias_matches(alias: str, candidate_tokens: list[str]) -> bool:
+    alias_tokens = _tokens(alias)
+    if not alias_tokens:
+        return False
+    return all(any(_token_match(tok, cand) for cand in candidate_tokens) for tok in alias_tokens)
+
+
+def query_fourdn_hic_catalog() -> list[dict]:
+    """Fetch the released GRCh38 4DN hic catalog once and filter locally."""
+    params = {
+        "type": "FileProcessed",
+        "status": "released",
+        "file_format": "hic",
+        "frame": "embedded",
+        "format": "json",
+        "limit": "all",
+    }
+    url = f"{FOURDN_SEARCH}?{urllib.parse.urlencode(params)}"
+    data = _json_get(url, retries=3)
+    catalog = []
+    for item in data.get("@graph", []):
+        if item.get("genome_assembly") != "GRCh38":
+            continue
+        if item.get("file_type") != "contact matrix":
+            continue
+        exp_type = _norm(item.get("track_and_facet_info", {}).get("experiment_type", ""))
+        if "hi c" not in exp_type:
+            continue
+        catalog.append(item)
+    return catalog
+
+
+def _score_fourdn_candidate(short_name: str, ontology_names: list[str], item: dict) -> float:
+    """Score a 4DN hic file for a given sample."""
+    track = item.get("track_and_facet_info", {})
+    biosource = track.get("biosource_name", "")
+    condition = track.get("condition", "")
+    dataset = track.get("dataset", "")
+    exp_type = track.get("experiment_type", "")
+
+    field_tokens = {
+        "biosource": _tokens(biosource),
+        "condition": _tokens(condition),
+        "dataset": _tokens(dataset),
+        "experiment_type": _tokens(exp_type),
+    }
+    all_tokens = []
+    for vals in field_tokens.values():
+        all_tokens.extend(vals)
+
+    aliases = [short_name, short_name.replace("_", " "), *ontology_names]
+    score = 0.0
+    matched = False
+
+    if short_name in FOURDN_HIC and item.get("accession") == FOURDN_HIC[short_name][0]:
+        score += 10000.0
+        matched = True
+
+    for alias in aliases:
+        if not alias:
+            continue
+        if not _alias_matches(alias, all_tokens):
+            continue
+
+        matched = True
+        alias_tokens = _tokens(alias)
+        alias_score = 200.0 + 50.0 * len(alias_tokens)
+        if _alias_matches(alias, field_tokens["biosource"]):
+            alias_score += 200.0
+        if _alias_matches(alias, field_tokens["condition"]):
+            alias_score += 140.0
+        if _alias_matches(alias, field_tokens["dataset"]):
+            alias_score += 100.0
+        score = max(score, alias_score)
+
+    if not matched:
+        return 0.0
+
+    if "in situ hi c" in _norm(exp_type):
+        score += 25.0
+    score += min(item.get("file_size", 0) / (1024 ** 3), 50.0)
+    return score
+
+
+def select_fourdn_hic(short_name: str, ontology_names: list[str], catalog: list[dict]) -> dict | None:
+    """Pick the best 4DN hic file for a sample."""
+    ranked = []
+    for item in catalog:
+        score = _score_fourdn_candidate(short_name, ontology_names, item)
+        if score <= 0:
+            continue
+        ranked.append((score, item.get("date_created", ""), item.get("file_size", 0), item))
+
+    if not ranked:
+        return None
+
+    ranked.sort(key=lambda x: (x[0], x[1], x[2]), reverse=True)
+    return ranked[0][3]
 
 
 def query_encode_files(cell_type: str, assay: str) -> list[dict]:
@@ -438,11 +619,46 @@ def file_to_download_item(
 def fetch_metadata(accession: str) -> dict[str, Any]:
     """Fetch full file metadata from ENCODE or 4DN."""
     if accession.startswith("4DNF"):
+        url = f"{FOURDN_FILE}/{accession}/?format=json"
+        try:
+            data = _json_get(url)
+        except Exception as exc:
+            print(f"  [warn] metadata fetch failed for {accession}: {exc}",
+                  file=sys.stderr)
+            return {
+                "accession": accession,
+                "source": "4DN",
+                "download_url": FOURDN_DOWNLOAD.format(acc=accession),
+                "preferred_download_url": FOURDN_DOWNLOAD.format(acc=accession),
+                "file_format": "hic",
+                "error": str(exc),
+            }
+
+        track_info = data.get("track_and_facet_info", {})
+        portal_download = _url_with_base(FOURDN_FILE, data.get("href", ""))
+        if not portal_download:
+            portal_download = FOURDN_DOWNLOAD.format(acc=accession)
+        open_data_url = data.get("open_data_url", "")
+
         return {
             "accession": accession,
             "source": "4DN",
-            "download_url": FOURDN_DOWNLOAD.format(acc=accession),
-            "file_format": "hic",
+            "experiment_accession": "",
+            "file_format": data.get("file_format", "hic"),
+            "output_type": data.get("file_type", "contact matrix"),
+            "assembly": data.get("genome_assembly", ""),
+            "file_size": data.get("file_size", 0),
+            "biological_replicates": [],
+            "date_created": data.get("date_created", ""),
+            "status": data.get("status", ""),
+            "assay_title": track_info.get("experiment_type", ""),
+            "biosample_ontology": {},
+            "download_url": portal_download,
+            "preferred_download_url": open_data_url or portal_download,
+            "open_data_url": open_data_url,
+            "md5sum": data.get("md5sum", ""),
+            "content_md5sum": data.get("content_md5sum", ""),
+            "track_and_facet_info": track_info,
         }
 
     url = f"{ENCODE_FILE}/{accession}/?format=json&frame=object"
@@ -486,6 +702,79 @@ def save_metadata(meta: dict, file_dest: str) -> None:
     with open(meta_path, "w") as fh:
         json.dump(meta, fh, indent=2, default=str)
     print(f"  [meta] {meta_path}")
+
+
+def _populate_4dn_item(item: DownloadItem, *, validate_url: bool = True) -> None:
+    """Refresh a 4DN item from live portal metadata."""
+    meta = fetch_metadata(item.accession)
+    if meta.get("error"):
+        return
+
+    item.file_size = meta.get("file_size", item.file_size)
+    item.date_created = meta.get("date_created", item.date_created)
+    item.assembly = meta.get("assembly", item.assembly)
+    item.output_type = meta.get("output_type", item.output_type or "4DN processed")
+    item.pipeline_version = item.pipeline_version or meta.get("assay_title", "")
+    item.encode_phase = "4DN"
+
+    portal_download = meta.get("download_url", "")
+    preferred_download = meta.get("preferred_download_url", "") or portal_download
+    open_data_url = meta.get("open_data_url", "")
+
+    candidates: list[tuple[str, str]] = []
+    if preferred_download == open_data_url and open_data_url:
+        candidates.append(("open_data_url", open_data_url))
+        candidates.append(("portal_download", portal_download))
+    else:
+        candidates.append(("preferred_download_url", preferred_download))
+        candidates.append(("open_data_url", open_data_url))
+        candidates.append(("portal_download", portal_download))
+
+    selected_url = preferred_download
+    if validate_url:
+        reachable_url, failures = _select_accessible_url(candidates)
+        if reachable_url:
+            selected_url = reachable_url
+        if failures:
+            print(
+                f"  [warn] 4DN URL probe for {item.accession}: "
+                + "; ".join(failures),
+                file=sys.stderr,
+            )
+    item.url = selected_url or item.url
+
+
+def _populate_4dn_item_from_catalog(
+    item: DownloadItem,
+    candidate: dict,
+    *,
+    validate_url: bool = True,
+) -> None:
+    """Populate a 4DN item from a pre-fetched 4DN catalog candidate."""
+    track = candidate.get("track_and_facet_info", {})
+    item.file_size = candidate.get("file_size", item.file_size)
+    item.date_created = candidate.get("date_created", item.date_created)
+    item.assembly = candidate.get("genome_assembly", item.assembly)
+    item.output_type = candidate.get("file_type", item.output_type or "4DN processed")
+    item.pipeline_version = track.get("experiment_type", item.pipeline_version)
+    item.encode_phase = "4DN"
+
+    portal_download = _url_with_base(FOURDN_FILE, candidate.get("href", "")) or FOURDN_DOWNLOAD.format(acc=item.accession)
+    open_data_url = candidate.get("open_data_url", "")
+    selected_url = open_data_url or portal_download
+    if validate_url:
+        selected_url_checked, failures = _select_accessible_url([
+            ("open_data_url", open_data_url),
+            ("portal_download", portal_download),
+        ])
+        if selected_url_checked:
+            selected_url = selected_url_checked
+        if failures:
+            print(
+                f"  [warn] 4DN URL probe for {item.accession}: " + "; ".join(failures),
+                file=sys.stderr,
+            )
+    item.url = selected_url or item.url
 
 
 # ---------------------------------------------------------------------------
@@ -562,6 +851,8 @@ def load_manifest(path: str) -> list[DownloadItem]:
         # Re-check exists on disk
         if item.dest_path:
             item.exists = os.path.exists(item.dest_path)
+        if item.accession.startswith("4DNF"):
+            _populate_4dn_item(item, validate_url=True)
         items.append(item)
     print(f"Loaded {len(items)} items from {path}")
     return items
@@ -1046,28 +1337,51 @@ def generate_html_report(items: list[DownloadItem], path: str) -> None:
     """Generate an HTML summary report of all download items."""
     from datetime import datetime
 
+    def report_columns() -> list[str]:
+        cols: list[str] = []
+        for it in items:
+            if it.assay == "HiC":
+                if "HiC" not in cols:
+                    cols.append("HiC")
+                if "4DN" not in cols:
+                    cols.append("4DN")
+            elif it.assay not in cols:
+                cols.append(it.assay)
+        return cols
+
+    def item_for_column(cell_items: dict[str, DownloadItem], column: str) -> DownloadItem | None:
+        if column == "4DN":
+            it = cell_items.get("HiC")
+            return it if it and it.accession.startswith("4DNF") else None
+        if column == "HiC":
+            it = cell_items.get("HiC")
+            if it is None:
+                return None
+            if it.accession in {"NO_MAPPING", "NOT_FOUND"}:
+                return it
+            return None if it.accession.startswith("4DNF") else it
+        return cell_items.get(column)
+
     # Group items by cell type
     by_cell: dict[str, list[DownloadItem]] = {}
     for item in items:
         by_cell.setdefault(item.cell_type, []).append(item)
 
     # Compute stats
-    total_size = sum(it.file_size for it in items if it.accession != "NOT_FOUND")
-    n_found = sum(1 for it in items if it.accession != "NOT_FOUND")
+    total_size = sum(it.file_size for it in items if it.accession not in {"NOT_FOUND", "NO_MAPPING"})
+    n_found = sum(1 for it in items if it.accession not in {"NOT_FOUND", "NO_MAPPING"})
     n_missing = sum(1 for it in items if it.accession == "NOT_FOUND")
+    n_unmapped = sum(1 for it in items if it.accession == "NO_MAPPING")
 
-    # Collect all unique assays in order
-    assays_seen: list[str] = []
-    for it in items:
-        if it.assay not in assays_seen:
-            assays_seen.append(it.assay)
+    # Collect all unique report columns in order
+    assays_seen = report_columns()
 
     rows_html = []
     for cell_type in by_cell:
         cell_items = {it.assay: it for it in by_cell[cell_type]}
         row = f'<tr><td class="cell-type">{cell_type}</td>'
         for assay in assays_seen:
-            it = cell_items.get(assay)
+            it = item_for_column(cell_items, assay)
             if it is None:
                 row += '<td class="na">-</td>'
             elif it.accession == "NO_MAPPING":
@@ -1085,9 +1399,12 @@ def generate_html_report(items: list[DownloadItem], path: str) -> None:
                 # ENCODE phase badge
                 phase = it.encode_phase or ""
                 if phase:
-                    phase_num = phase.replace("ENCODE", "")
-                    phase_cls = f"phase-{phase_num}" if phase_num in ("2", "3", "4") else ""
-                    phase_badge = f' <span class="phase {phase_cls}">{phase}</span>'
+                    if phase == "4DN":
+                        phase_badge = ' <span class="phase phase-4dn">4DN</span>'
+                    else:
+                        phase_num = phase.replace("ENCODE", "")
+                        phase_cls = f"phase-{phase_num}" if phase_num in ("2", "3", "4") else ""
+                        phase_badge = f' <span class="phase {phase_cls}">{phase}</span>'
                 else:
                     phase_badge = ""
 
@@ -1151,14 +1468,16 @@ def generate_html_report(items: list[DownloadItem], path: str) -> None:
   .phase-4 {{ background: #2563eb; color: #fff; }}
   .phase-3 {{ background: #f59e0b; color: #fff; }}
   .phase-2 {{ background: #9ca3af; color: #fff; }}
+  .phase-4dn {{ background: #a855f7; color: #fff; }}
   footer {{ margin-top: 2em; color: #999; font-size: 0.8em; }}
 </style>
 </head>
 <body>
 <h1>ENCODE Download Report</h1>
 <div class="summary">
-  <span>{n_found}</span> files found &nbsp;|&nbsp;
+  <span>{n_found}</span> real files found &nbsp;|&nbsp;
   <span>{n_missing}</span> not found &nbsp;|&nbsp;
+  <span>{n_unmapped}</span> no mapping &nbsp;|&nbsp;
   <span>{_fmt_size(total_size)}</span> total &nbsp;|&nbsp;
   {len(by_cell)} cell types &nbsp;|&nbsp;
   Generated: {datetime.now().strftime("%Y-%m-%d %H:%M")}
@@ -1230,6 +1549,7 @@ def _resolve_cell_types(args) -> list[tuple[str, list[str]]]:
 def _query_for_sample(
     display_name: str, ontology_names: list[str], assay: str,
     args: argparse.Namespace,
+    fourdn_catalog: list[dict] | None = None,
 ) -> list[DownloadItem]:
     """Query ENCODE for one (sample, assay) pair and return DownloadItems."""
     items: list[DownloadItem] = []
@@ -1252,18 +1572,32 @@ def _query_for_sample(
         BIOSAMPLE_NAMES[display_name] = orig
 
     if not candidates and assay == "HiC":
-        # Check 4DN fallback by short name
         short = display_name.split("_", 1)[1] if "_" in display_name else display_name
+        if fourdn_catalog is not None:
+            candidate = select_fourdn_hic(short, ontology_names, fourdn_catalog)
+            if candidate is not None:
+                acc = candidate.get("accession", "")
+                dest = os.path.join(args.output_dir, display_name, "HiC", f"{acc}.hic")
+                item = DownloadItem(
+                    cell_type=display_name, assay="HiC", accession=acc,
+                    url=FOURDN_DOWNLOAD.format(acc=acc), ext="hic", dest_path=dest,
+                    exists=os.path.exists(dest),
+                    output_type="4DN processed",
+                )
+                _populate_4dn_item_from_catalog(item, candidate, validate_url=True)
+                items.append(item)
+                return items
         if short in FOURDN_HIC:
             acc, desc = FOURDN_HIC[short]
-            dl_url = FOURDN_DOWNLOAD.format(acc=acc)
             dest = os.path.join(args.output_dir, display_name, "HiC", f"{acc}.hic")
-            items.append(DownloadItem(
+            item = DownloadItem(
                 cell_type=display_name, assay="HiC", accession=acc,
-                url=dl_url, ext="hic", dest_path=dest,
+                url=FOURDN_DOWNLOAD.format(acc=acc), ext="hic", dest_path=dest,
                 exists=os.path.exists(dest),
                 output_type="4DN processed",
-            ))
+            )
+            _populate_4dn_item(item, validate_url=True)
+            items.append(item)
             return items
 
     if not candidates:
@@ -1315,8 +1649,10 @@ def main() -> None:
         # Query ENCODE API
         samples = _resolve_cell_types(args)
         assays = [a.strip() for a in args.assays.split(",")]
+        fourdn_catalog = query_fourdn_hic_catalog()
 
         print(f"Querying ENCODE for {len(samples)} samples × {len(assays)} assays ...\n")
+        print(f"Loaded {len(fourdn_catalog)} released GRCh38 4DN hic files.\n")
 
         items: list[DownloadItem] = []
 
@@ -1324,7 +1660,7 @@ def main() -> None:
             for assay in assays:
                 print(f"  Searching: {display_name} / {assay} ...", end=" ", flush=True)
 
-                new_items = _query_for_sample(display_name, ontology_names, assay, args)
+                new_items = _query_for_sample(display_name, ontology_names, assay, args, fourdn_catalog)
                 items.extend(new_items)
 
                 # Print summary
