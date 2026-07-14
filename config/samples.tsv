@@ -1,0 +1,7 @@
+cell_type	accessibility_bam	assay	h3k27ac_bam	hic_file	expression_column	preset	encoder_peaks_file	accessibility_bams	h3k27ac_bams
+K562	./data/K562/DNase/ENCFF257HEE.bam	dnase	./data/K562/H3K27ac/ENCFF232RQF.bam	./data/K562/HiC/ENCFF621AIY.hic	Actual_K562	K562	./reference/K562_H3K27ac.ENCFF544LXB.narrowPeak		
+GM12878	./data/GM12878/DNase/ENCFF729UYK.bam	dnase	./data/GM12878/H3K27ac/ENCFF269GKF.bam	./data/GM12878/HiC/ENCFF318GOM.hic	Actual_GM12878	GM12878	./reference/GM12878_H3K27ac.ENCFF023LTU.narrowPeak	./data/GM12878/DNase/ENCFF729UYK.bam ./data/GM12878/DNase/ENCFF020WZB.bam	./data/GM12878/H3K27ac/ENCFF269GKF.bam ./data/GM12878/H3K27ac/ENCFF201OHW.bam
+H1	./data/H1/DNase/ENCFF761ZRE.bam	dnase	./data/H1/H3K27ac/ENCFF860ABR.bam			H1	./reference/H1_H3K27ac.ENCFF689CJG.narrowPeak		./data/H1/H3K27ac/ENCFF860ABR.bam ./data/H1/H3K27ac/ENCFF693IFG.bam
+HUVEC	./data/HUVEC/DNase/ENCFF091KTX.bam	dnase	./data/HUVEC/H3K27ac/ENCFF374DGO.bam			HUVEC	./reference/HUVEC_H3K27ac.ENCFF077LGZ.narrowPeak		./data/HUVEC/H3K27ac/ENCFF374DGO.bam ./data/HUVEC/H3K27ac/ENCFF609TUB.bam
+NHEK	./data/NHEK/DNase/ENCFF117RNM.bam	dnase	./data/NHEK/H3K27ac/ENCFF770JWP.bam			NHEK	./reference/NHEK_H3K27ac.ENCFF666UYC.narrowPeak		./data/NHEK/H3K27ac/ENCFF770JWP.bam ./data/NHEK/H3K27ac/ENCFF051NTC.bam
+HepG2	./data/HepG2/DNase/ENCFF691HJY.bam	dnase	./data/HepG2/H3K27ac/ENCFF862NDZ.bam			HepG2	./reference/HepG2_H3K27ac.ENCFF392KDI.narrowPeak

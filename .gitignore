@@ -1,0 +1,13 @@
+# caches / generated
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+.DS_Store
+README.html
+README_files/
+
+# runtime outputs (regenerated on the cluster)
+slurm/logs/
+batch_output/
+results/
+EPInformer_models/
