@@ -82,7 +82,7 @@ It bundles the full preprocessing (ABC-style enhancer–gene nomination → HDF5
 The H1/HepG2/HUVEC/NHEK expression numbers extend beyond the K562/GM12878 originally reported (CAGE labels exist only for K562/GM12878).
 
 <p align="center">
-  <img height="330" src="reproducible_pipeline/images/k562_gene_expression_scatter.png">
+  <img height="330" src="reproducible_pipeline/images/rna_expression_scatter.png">
 </p>
 
 <!-- ## Training
