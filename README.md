@@ -66,6 +66,28 @@ To predict cell-type-specific enhancer activity, we provide sequence-based predi
   <img height="500" src="images/KLF1_showcase.png">
 </p>
 
+### Reproducible training pipeline (from raw ENCODE, 6 cell lines)
+
+The [`reproducible_pipeline/`](reproducible_pipeline/) directory provides a clean, self-contained reproduction that trains **both** EPInformer models end-to-end **from raw ENCODE data** across six cell lines — **K562, GM12878, H1, HepG2, HUVEC, NHEK** — with 12-fold leave-chromosome-out cross-validation:
+
+1. the 256 bp **enhancer-activity encoder** (`enhancer_predictor_256bp`), and
+2. the **gene-expression model** (`EPInformer_v2`), reusing the frozen encoder as the sequence backbone.
+
+It bundles the full preprocessing (ABC-style enhancer–gene nomination → HDF5), the trainers and `evaluate.py`, SLURM templates, and demo notebooks — including a faithful, cell-for-cell reproduction of `predict_enhancer_activity.ipynb` plus live 12-fold RNA/CAGE inference. See [`reproducible_pipeline/README.md`](reproducible_pipeline/README.md) for setup and the full run guide.
+
+**Results** (12-fold leave-chromosome-out, pooled out-of-fold Pearson R):
+
+| Enhancer encoder | H1 | HepG2 | K562 | HUVEC | NHEK | GM12878 |
+|---|---|---|---|---|---|---|
+| | 0.820 | 0.743 | 0.740 | 0.742 | 0.677 | 0.617 |
+
+| Gene expression (`f3`) | K562 | GM12878 | HepG2 | HUVEC | NHEK | H1 |
+|---|---|---|---|---|---|---|
+| **RNA** | 0.856 | 0.860 | 0.845 | 0.839 | 0.828 | 0.781 |
+| **CAGE** | 0.867 | 0.890 | — | — | — | — |
+
+The H1/HepG2/HUVEC/NHEK expression numbers extend beyond the K562/GM12878 originally reported (CAGE labels exist only for K562/GM12878).
+
 <!-- ## Training
 You can re-train EPInformer models on K562 and GM12878 data using the command lines:
 
