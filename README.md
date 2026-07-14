@@ -53,13 +53,6 @@ An end-to-end example to predict gene expression from promoter-enhancer sequence
   <img height="600" src="images/gene_expression.png">
 </p>
 
-### Enhancer-gene links prediction
-We evaluated EPInformer for enhancer–gene link prediction using the K562 CRISPR and eQTLs benchmark datasets from the Engreitz Lab repository ([CRISPR](https://github.com/EngreitzLab/CRISPR_comparison/) and [eQTL enrichment](https://github.com/EngreitzLab/eQTLEnrichment)).
-<!-- We provide a jupyter notebook ([2_prioritize_enhancer_gene_links.ipynb](https://github.com/JasonLinjc/EPInformer/blob/main/2_prioritize_enhancer_gene_links.ipynb)) for pre-processing CRISPRi-FlowFISH data and scoring enhancer-gene links using EPInformer-derived attention scores and the Attention-ABC score. Additionally, this notebook provides a end-to-end example of in-silico perturbations on candidate elements within 100kb of *KLF1* and predicting their effects, with *KLF1* excluded from the training data to prevent overfitting. -->
-<p align="center">
-  <img height="750" src="images/EG_benchmark.png">
-</p>
-
 ### Enhancer activity prediction and TF motif discovery
 To predict cell-type-specific enhancer activity, we provide sequence-based predictors trained on H3K27ac and DNase signals in K562 and GM12878 cell lines separately. Enhancer activity was calculated using the [ABC score](https://github.com/broadinstitute/ABC-Enhancer-Gene-Prediction). Additionally, [Tangermeme]([https://github.com/ilyes495/tangermeme/tree/main](https://github.com/jmschrei/tangermeme)) was used to perform in-silico saturation mutagenesis (ISM) on the enhancer sequence to identify key motifs contributing to the predicted activity. The notebook ([predict_enhancer_activity.ipynb](https://github.com/pinellolab/EPInformer/blob/main/predict_enhancer_activity.ipynb)) is available for experimenting with enhancer activity prediction and transcription factor motif discovery.
 <p align="center">
@@ -87,6 +80,10 @@ It bundles the full preprocessing (ABC-style enhancer–gene nomination → HDF5
 | **CAGE** | 0.867 | 0.890 | — | — | — | — |
 
 The H1/HepG2/HUVEC/NHEK expression numbers extend beyond the K562/GM12878 originally reported (CAGE labels exist only for K562/GM12878).
+
+<p align="center">
+  <img height="330" src="reproducible_pipeline/images/k562_gene_expression_scatter.png">
+</p>
 
 <!-- ## Training
 You can re-train EPInformer models on K562 and GM12878 data using the command lines:
