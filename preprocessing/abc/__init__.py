@@ -82,7 +82,7 @@ def run_abc_pipeline(
     *,
     assay: str = "dnase",
     h3k27ac_bam: Optional[str] = None,
-    # Optional replicate BAM lists (mean-pooled per-rep RPM, BSCC recipe). When given, they
+    # Optional replicate BAM lists (mean-pooled per-rep RPM, reference recipe). When given, they
     # override the single accessibility_bam/h3k27ac_bam for BOTH the encoder activity target
     # AND the ABC neighborhoods activity, so pre-training and EPInformer training quantify
     # activity from the SAME BAMs. GM12878 uses 2 reps/assay; K562 ships single-rep (empty).

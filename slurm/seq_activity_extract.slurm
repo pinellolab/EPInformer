@@ -1,11 +1,11 @@
 #!/bin/bash
-# Faithful BSCC sequence+activity extraction (scripts/seq_activity_extract.py).
+# Sequence+activity extraction (scripts/seq_activity_extract.py).
 # Reproduces process_EPInformer_data_v2.ipynb cells 35+38: 5-bin regions, pysam read
 # counts, Activity = sqrt(DHS.RPM * H3K27ac.RPM). No negatives.
 #   CELL=GM12878 NARROWPEAK=... DNASE_BAM=... H3K27AC_BAM=... OUT=... \
 #     sbatch --export=ALL,CONDA_ENV=EPInformer_env,... slurm/seq_activity_extract.slurm
 #
-# GM12878 REPRODUCES BSCC 0.617 (2 filtered reps/assay, mean-pool). Quote the BAM lists so
+# GM12878 reaches 0.617 (2 filtered reps/assay, mean-pool). Quote the BAM lists so
 # the space-separated reps survive into the script (line ~40 expands them UNQUOTED on purpose):
 #   CELL=GM12878 POOL_METHOD=mean \
 #     NARROWPEAK=reference/GM12878_H3K27ac.ENCFF023LTU.narrowPeak \
@@ -36,7 +36,7 @@ H3K27AC_BAM="${H3K27AC_BAM:?set H3K27AC_BAM}"
 FASTA="${FASTA:-./data/reference/hg38/hg38.fa}"
 OUT="${OUT:?set OUT csv path}"
 EXTEND="${EXTEND:-0}"   # ABC-style read extension to N bp before counting (0 = raw overlap)
-POOL_METHOD="${POOL_METHOD:-mean}"  # mean = avg per-rep RPM (BSCC recipe, DEFAULT); sum = 1e6*Sc/Sm depth-weighted
+POOL_METHOD="${POOL_METHOD:-mean}"  # mean = avg per-rep RPM (DEFAULT); sum = 1e6*Sc/Sm depth-weighted
 
 MINICONDA_ROOT="${MINICONDA_ROOT:-${HOME}/miniconda3}"
 source "${MINICONDA_ROOT}/etc/profile.d/conda.sh"

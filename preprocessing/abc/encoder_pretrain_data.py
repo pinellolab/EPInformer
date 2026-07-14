@@ -9,7 +9,7 @@ MACS2 candidates so the windows match the H3K27ac activity being
 predicted.  For each summit, five 256bp windows are extracted at
 offsets [-2, -1, 0, 1, 2] (summit + two flanks each side) with a 192bp
 stride, i.e. adjacent windows overlap by 64bp.  This matches the original
-BSCC_GPU 5-bin recipe that reaches ~0.70 pooled-OOF Pearson.  Activity
+5-bin recipe that reaches ~0.70 pooled-OOF Pearson.  Activity
 (DNase RPM, or √(H3K27ac·DNase) when both BAMs are provided) is computed
 **per 256bp bin**, not over the full peak interval.  Optional negative
 samples are added from randomly chosen genomic positions far from any peak.
@@ -34,7 +34,7 @@ _BIN_SIZE = 256
 _HALF_BIN = _BIN_SIZE // 2  # 128
 # Bin geometry is env-overridable so different recipes (2/3/5-bin) can be generated
 # without editing this file.
-#   Defaults = BSCC_GPU 5-bin recipe: offsets [-2..2], 192bp stride (64bp overlap).
+#   Defaults = 5-bin recipe: offsets [-2..2], 192bp stride (64bp overlap).
 #   Published 2-bin recipe: ENCODER_OFFSETS="0,1" ENCODER_OVERLAP=100 (156bp stride).
 _OVERLAP = int(os.environ.get("ENCODER_OVERLAP", "64"))
 _STRIDE = _BIN_SIZE - _OVERLAP
@@ -62,7 +62,7 @@ def _count_reads_mean_reps(bam_paths, regions, n_threads, logger=None, label="")
     If *bam_paths* is a single string, this collapses to the original
     single-rep behavior.  If it is a list/tuple, each rep's RPM is computed
     independently and the per-region mean across reps is returned (matching
-    the legacy BSCC_GPU pipeline).
+    the legacy pipeline).
     """
     from .utils import count_reads_in_regions
 

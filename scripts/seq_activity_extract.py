@@ -1,15 +1,15 @@
 #!/usr/bin/env python
-"""Faithful reproduction of BSCC's encoder sequence+activity extraction.
+"""Encoder sequence+activity extraction.
 
 Replicates process_EPInformer_data_v2.ipynb cells 35 (5-bin construction) and
 38 (sequence + activity extraction) exactly:
 
   * summit  = narrowPeak.start + col10 (peak offset)
-  * 5 bins (256 bp) at summit + 192*{-2,-1,0,1,2}, built with BSCC's exact
+  * 5 bins (256 bp) at summit + 192*{-2,-1,0,1,2}, built with the exact
     slop arithmetic (center summit+-128; right1 [summit+64, summit+320]; ...)
   * per-rep RPM = 1e6 * pysam.count(chr,start,end) / mapped_reads (raw counts, NO read extension)
   * DHS.RPM / H3K27ac.RPM pooled over >=1 replicate BAM per assay via --pool-method:
-      mean = 1/N * Sum(per-rep RPM)   <- BSCC's EXACT recipe (2 reps/assay); DEFAULT
+      mean = 1/N * Sum(per-rep RPM)   <- the exact recipe (2 reps/assay); DEFAULT
       sum  = 1e6 * Sum(count)/Sum(mapped)  (depth-weighted; == mean for a single rep)
   * Activity = sqrt(DHS.RPM * H3K27ac.RPM)  (linear; log2 applied at train time)
   * sequence = fasta[chr, start:end] upper, N-padded at chrom edges
@@ -18,7 +18,7 @@ Replicates process_EPInformer_data_v2.ipynb cells 35 (5-bin construction) and
 Output columns match our data/enhancer_sequences schema so train_seqEncoder.py
 can consume it via --data-csv.
 
-Usage (GM12878 — REPRODUCES BSCC 0.617: 2 filtered reps/assay, mean-pool; Activity byte-identical):
+Usage (GM12878 — reaches 0.617: 2 filtered reps/assay, mean-pool; Activity byte-identical):
   python scripts/seq_activity_extract.py \
       --narrowpeak reference/GM12878_H3K27ac.ENCFF023LTU.narrowPeak \
       --dnase-bam data/GM12878/DNase/ENCFF729UYK.bam data/GM12878/DNase/ENCFF020WZB.bam \
@@ -34,12 +34,12 @@ import pysam
 
 _NP_COLS = ["chr", "start", "end", "name", "score", "strand",
             "signalValue", "pValue", "qValue", "peak"]
-# BSCC cell-35 bins: (Pos, Start_offset_from_summit, End_offset_from_summit)
+# the reference cell-35 bins: (Pos, Start_offset_from_summit, End_offset_from_summit)
 _BINS = [(0, -128, 128), (1, 64, 320), (2, 256, 512), (-1, -320, -64), (-2, -512, -256)]
 
 
 def _seq(fa, chrom, start, end, clen):
-    # BSCC FastaStringExtractor: truncate to [0,clen], pad with N (kipoiseq Interval)
+    # the reference FastaStringExtractor: truncate to [0,clen], pad with N (kipoiseq Interval)
     s, e = max(start, 0), min(end, clen)
     seq = fa.fetch(chrom, s, e).upper() if e > s else ""
     return "N" * max(-start, 0) + seq + "N" * max(end - clen, 0)
@@ -49,7 +49,7 @@ def _count(b, chrom, start, end, ext, clen):
     """Count reads overlapping [start, end). If ext>0, first extend each read to
     ext bp from its 5' end (ABC/MACS single-end extension) — +strand read ->
     [5'start, 5'start+ext], -strand read -> [3'end-ext, 3'end] — then test overlap.
-    ext<=0 = raw pysam.count overlap (BSCC's shipped compute_activity default)."""
+    ext<=0 = raw pysam.count overlap (the shipped compute_activity default)."""
     if ext <= 0:
         return b.count(chrom, start, end)
     lo, hi = max(0, start - ext), min(clen, end + ext)
@@ -81,7 +81,7 @@ def main():
                     help="ABC/MACS-style single-end read extension to N bp before counting "
                          "(0 = raw pysam.count overlap; try 200 to fill sparse flank bins)")
     ap.add_argument("--pool-method", choices=["sum", "mean"], default="mean",
-                    help="how to pool multiple replicate BAMs (default: mean = BSCC's exact "
+                    help="how to pool multiple replicate BAMs (default: mean = the exact "
                          "recipe). 'mean' = average of per-rep RPMs 1/N·Σ(1e6*count_i/mapped_i) "
                          "(H3K27ac_RPM = mean(H3K27ac_0_RPM, H3K27ac_1_RPM); reproduces GM12878 "
                          "0.617). 'sum' = 1e6*Σcount/Σmapped (depth-weighted). Identical for a "
@@ -111,7 +111,7 @@ def main():
         if args.pool_method == "sum":          # depth-weighted: 1e6*Σcount/Σmapped
             tc, tm = sum(c for c, _ in cm), sum(m for _, m in cm)
             return 1e6 * tc / tm
-        return sum(1e6 * c / m for c, m in cm) / len(cm)   # mean of per-rep RPMs (BSCC)
+        return sum(1e6 * c / m for c, m in cm) / len(cm)   # mean of per-rep RPMs
 
     rows = []
     for pi, r in enumerate(peaks.itertuples(index=False)):

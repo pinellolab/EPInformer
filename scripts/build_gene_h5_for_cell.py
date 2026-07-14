@@ -12,7 +12,7 @@ existing pair of ABC tables instead of re-running Stage-1 links:
                   ``normalized_h3K27ac`` (merged on the ``name`` column).
 
 Use it to extend expression prediction to cell lines whose raw BAMs are not on
-disk but whose ABC links were already computed (e.g. BSCC's
+disk but whose ABC links were already computed (e.g. externally-provided
 ``epinformer_data_20250503`` for H1/HepG2/HUVEC/NHEK, contact = ABC average Hi-C).
 No BAM re-counting happens: ``activity_base`` / ``hic_contact`` are read straight
 from the ABC tables, so the expression-model ``activity`` feature is

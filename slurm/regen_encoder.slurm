@@ -1,7 +1,7 @@
 #!/bin/bash
 # Regenerate ONLY the encoder-pretrain data (ABC Step 4) from the ENCODE H3K27ac
 # narrowPeak (encoder_peaks_file in samples.tsv), 5 windows / 192bp stride (64bp
-# overlap) — matches the original BSCC_GPU ~0.70 pooled-OOF recipe.
+# overlap) — matches the original ~0.70 pooled-OOF recipe.
 # Avoids a full Stage-1 redo.
 #   CELL=K562 sbatch --export=ALL,CONDA_ENV=EPInformer_env,CELL=K562 slurm/regen_encoder.slurm
 #

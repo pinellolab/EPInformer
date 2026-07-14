@@ -53,7 +53,7 @@ echo "host=$(hostname) fold=${FOLD} CELL=${CELL} DATA_CSV=${DATA_CSV}"
 echo "torch: $(${py} -c 'import torch;print(torch.__version__,"CUDA",torch.cuda.is_available())')"
 [[ -f "$DATA_CSV" ]] || { echo "ERROR: missing ${DATA_CSV} (run Stage 1 first)"; exit 1; }
 
-# Original BSCC_GPU 0.71 recipe: l1kl loss, batch 256, reverse-strand all-bins test
+# Original original 0.71 recipe: l1kl loss, batch 256, reverse-strand all-bins test
 # (no --rc-average -> test_strand=reverse; no --test-summit-only -> pool over all 5 bins).
 exec "$py" train_seqEncoder.py \
   --cell "$CELL" \

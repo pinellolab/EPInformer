@@ -1,14 +1,14 @@
 #!/usr/bin/env python
-"""Identify what BSCC's H3K27ac_0/_1 and DNase_0/_1 columns actually are, by matching
+"""Identify what the reference H3K27ac_0/_1 and DNase_0/_1 columns actually are, by matching
 their per-bin RPM values against RPMs recomputed from candidate ENCODE BAMs.
 
-For a stride-sample of BSCC CSV bins, compute RPM = 1e6*count/mapped from each candidate
-BAM and correlate (+ median ratio) against each BSCC column. A near-1.0 corr AND ~1.0 ratio
+For a stride-sample of reference-CSV bins, compute RPM = 1e6*count/mapped from each candidate
+BAM and correlate (+ median ratio) against each reference column. A near-1.0 corr AND ~1.0 ratio
 pins the column to that exact BAM -> tells us bio-rep vs tech-rep and filtered vs unfiltered.
 """
 import numpy as np, pandas as pd, pysam, glob, os
 
-BSCC = "/path/to/enhancer_sequences/GM12878_peak_5bins_around_summit_activity_sequence.csv"
+REF_CSV = "/path/to/enhancer_sequences/GM12878_peak_5bins_around_summit_activity_sequence.csv"
 DN = "data/GM12878/DNase"; H3 = "data/GM12878/H3K27ac"
 # candidate BAMs present on disk (filtered + any unfiltered already downloaded)
 CANDS = {
@@ -22,7 +22,7 @@ CANDS = {
   "DNase_ENCFF940NSD_unfilt_rep2": f"{DN}/ENCFF940NSD.bam",
 }
 
-df = pd.read_csv(BSCC, usecols=["Chromosome","Start","End","H3K27ac_0_RPM","H3K27ac_1_RPM","DNase_0_RPM","DNase_1_RPM"])
+df = pd.read_csv(REF_CSV, usecols=["Chromosome","Start","End","H3K27ac_0_RPM","H3K27ac_1_RPM","DNase_0_RPM","DNase_1_RPM"])
 samp = df.iloc[::100].reset_index(drop=True)      # ~2684 bins spread across the file
 print(f"sampled {len(samp)} bins from {len(df)}")
 
@@ -55,4 +55,4 @@ for name, bam in CANDS.items():
         r = np.corrcoef(vals[m], cvals[m])[0, 1] if m.sum() > 2 else float('nan')
         nz = vals[cvals > 0]
         ratio = np.median(nz[nz > 0] / cvals[cvals > 0][nz > 0]) if (cvals > 0).any() else float('nan')
-        print(f"    vs {cname:16s} corr={r:.4f}  median(bam/bscc)={ratio:.3f}")
+        print(f"    vs {cname:16s} corr={r:.4f}  median(bam/ref)={ratio:.3f}")

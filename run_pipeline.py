@@ -32,7 +32,7 @@ except ImportError:
 _PATH_KEYS_REFERENCE = {"fasta", "gene_bed", "chrom_sizes", "expression_csv", "blacklist"}
 _PATH_KEYS_SAMPLE = {"accessibility_bam", "h3k27ac_bam", "hic_file", "qnorm_ref", "peaks_file", "encoder_peaks_file"}
 # Optional multi-replicate BAM lists (comma/space-separated) used ONLY for the encoder
-# activity, which mean-pools per-rep RPM across reps (BSCC recipe). Falls back to the
+# activity, which mean-pools per-rep RPM across reps (reference recipe). Falls back to the
 # single accessibility_bam/h3k27ac_bam when empty. GM12878 0.617 needs 2 reps/assay.
 _PATH_LIST_KEYS_SAMPLE = {"accessibility_bams", "h3k27ac_bams"}
 _REQUIRED_SAMPLE_COLS = {"cell_type", "accessibility_bam", "assay"}

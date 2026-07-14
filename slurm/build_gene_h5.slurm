@@ -1,7 +1,7 @@
 #!/bin/bash
 # Build the gene-level HDF5 ({cell}_samples.h5) for a cell line from PRECOMPUTED
 # ABC nomination outputs (no raw BAMs required). Extends expression prediction to
-# H1/HepG2/HUVEC/NHEK using BSCC's epinformer_data_20250503 ABC links (avg Hi-C).
+# H1/HepG2/HUVEC/NHEK using precomputed ABC links (avg Hi-C).
 #
 # Usage (from repo root on HPC):
 #   mkdir -p log_cpu
@@ -13,7 +13,7 @@
 # Writes:  batch_output/{CELL}/encoding/{CELL}_samples.h5
 #          batch_output/{CELL}/links/GeneList.txt        (staged for --use_prm_signal)
 #
-# Env overrides: BSCC_ROOT, EXPR_CSV, FASTA, CONDA_ENV
+# Env overrides: ABC_ROOT, EXPR_CSV, FASTA, CONDA_ENV
 #
 #SBATCH --job-name=epi_build_h5
 #SBATCH --output=log_cpu/%x_%j.out
@@ -31,10 +31,10 @@ cd "$REPO_ROOT"
 mkdir -p log_cpu
 
 CELL="${CELL:?set CELL=H1|HepG2|HUVEC|NHEK}"
-BSCC_ROOT="${BSCC_ROOT:-/path/to/bscc_abc_links}"
+ABC_ROOT="${ABC_ROOT:-/path/to/abc_links}"
 
 # Per-cell ABC directories. Neighborhoods (EnhancerList/GeneList) and the matching
-# avg-Hi-C predictions dir. Folder names are BSCC's (note H1's predictions dir is
+# avg-Hi-C predictions dir. Folder names are the reference (note H1's predictions dir is
 # truncated to ENCFF761ZR, and NHEK's dir is mis-named ENCFF862NDZ but the DATA
 # inside uses the correct NHEK BAM DHS.ENCFF117RNM — verified by column headers).
 case "$CELL" in
@@ -45,9 +45,9 @@ case "$CELL" in
   *) echo "ERROR: unknown CELL=$CELL"; exit 1;;
 esac
 
-EL="$BSCC_ROOT/$CELL/$NB/EnhancerList.txt"
-GL="$BSCC_ROOT/$CELL/$NB/GeneList.txt"
-PF="$BSCC_ROOT/$CELL/$PR/EnhancerPredictionsAllPutative.txt.gz"
+EL="$ABC_ROOT/$CELL/$NB/EnhancerList.txt"
+GL="$ABC_ROOT/$CELL/$NB/GeneList.txt"
+PF="$ABC_ROOT/$CELL/$PR/EnhancerPredictionsAllPutative.txt.gz"
 EXPR_CSV="${EXPR_CSV:-./data/GM12878_K562_18377_gene_expr_fromXpresso_with_sequence_strand.csv}"
 FASTA="${FASTA:-./data/reference/hg38/hg38.fa}"
 

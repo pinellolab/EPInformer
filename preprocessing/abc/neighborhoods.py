@@ -42,7 +42,7 @@ def _count_reads_pooled(bam_paths, regions: pd.DataFrame, n_threads: int = 1) ->
     A single path collapses to the original single-rep behavior.  A list/tuple
     computes each rep's RPM/RPKM/readCount independently and returns the
     per-region mean across reps (matching the encoder's ``_count_reads_mean_reps``
-    and the legacy BSCC recipe), so the ABC activity uses the SAME BAMs as the
+    and the legacy reference recipe), so the ABC activity uses the SAME BAMs as the
     sequence-encoder activity target.
     """
     if isinstance(bam_paths, str):

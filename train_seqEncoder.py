@@ -369,7 +369,7 @@ def main():
                         default="auto",
                         help="Test-time strand. auto = forward if --rc-average else reverse "
                              "(back-compat). Force 'forward' for the published single-forward-strand "
-                             "eval, or 'reverse' for the BSCC single-reverse-strand eval.")
+                             "eval, or 'reverse' for the single-reverse-strand eval.")
     parser.add_argument("--upsample", action="store_true",
                         help="Upsample high-activity samples via weighted sampling")
     parser.add_argument("--upsample-temp", type=float, default=1.0,
