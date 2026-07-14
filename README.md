@@ -89,6 +89,17 @@ bash scripts/download_abc_reference.sh data/reference/hg38          # ABC refere
 # then: place hg38.fa at data/reference/hg38/hg38.fa, and unzip Zenodo expression_data.zip into data/
 ```
 
+**Pretrained checkpoints (optional):** to skip encoder training, download the pretrained enhancer
+encoders (6 cell lines × 12 leave-chromosome-out folds) from Hugging Face —
+[`JiecongLin/EPInformer-reproducible`](https://huggingface.co/JiecongLin/EPInformer-reproducible):
+
+```python
+from huggingface_hub import hf_hub_download
+ckpt = hf_hub_download("JiecongLin/EPInformer-reproducible", "enhancer_encoders/K562/fold_8.pt")
+```
+
+See the [project wiki](https://github.com/pinellolab/EPInformer/wiki) for the full guide.
+
 ---
 
 # Part 1 — Enhancer-activity encoder (do this first)
