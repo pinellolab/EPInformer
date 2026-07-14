@@ -1,7 +1,7 @@
 #!/bin/bash
 # Pre-train the 256bp enhancer-activity sequence encoder, 12-fold leave-chromosome-out.
 # One fold per array task.  Input CSV comes from Stage 1 (run_pipeline --stages links) OR,
-# for GM12878, from the 2-rep mean-pool extractor (slurm/bscc_extract.slurm POOL_METHOD=mean;
+# for GM12878, from the 2-rep mean-pool extractor (slurm/seq_activity_extract.slurm POOL_METHOD=mean;
 # the single-rep path only reaches ~0.572, the 2-rep recipe reaches 0.617). The headline
 # POOLED-OOF numbers (GM12878 0.617, K562 0.740) come from the fwd+RC re-eval afterwards
 # (slurm/eval_seqencoder_fwdrc.slurm --skip-train --rc-average); this job's default test is

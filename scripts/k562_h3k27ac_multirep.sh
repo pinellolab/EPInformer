@@ -28,7 +28,7 @@ export NARROWPEAK=reference/K562_H3K27ac.ENCFF544LXB.narrowPeak
 export DNASE_BAM="data/K562/DNase/ENCFF257HEE.bam"
 export H3K27AC_BAM="data/K562/H3K27ac/ENCFF232RQF.bam data/K562/H3K27ac/ENCFF600THN.bam data/K562/H3K27ac/ENCFF879BWC.bam"
 export OUT=batch_output/K562/links/K562_h3k27ac3rep_5bins_around_summit_activity_sequence.csv
-EX=$(sbatch --parsable --export=ALL slurm/bscc_extract.slurm)
+EX=$(sbatch --parsable --export=ALL slurm/seq_activity_extract.slurm)
 echo "[submit] extract=$EX (3 H3K27ac reps mean-pool + 1 DNase)"
 export DATA_CSV="$OUT" OUTPUT_DIR=./results/seqencoder/K562_multirep_h3k27ac
 TR=$(sbatch --parsable --dependency=afterok:$EX --export=ALL slurm/train_seqencoder_12fold.slurm)

@@ -1,6 +1,6 @@
-# EPInformer — reproduction (enhancer activity + gene expression from DNA sequence)
+# EPInformer — pipeline (enhancer activity + gene expression from DNA sequence)
 
-A clean, self-contained reproduction of **EPInformer**, built around the model in
+A clean, self-contained pipeline to run **EPInformer**, built around the model in
 [`EPInformer/models.py`](EPInformer/models.py) (`EPInformer_v2` + the 256 bp
 `enhancer_predictor_256bp`). It trains **two models, in order**, end-to-end from raw ENCODE data
 across **6 cell lines** (K562, GM12878, H1, HepG2, HUVEC, NHEK):
@@ -14,7 +14,7 @@ encoder.
 
 ## Results (12-fold leave-chromosome-out, pooled out-of-fold Pearson R)
 
-**Part 1 — enhancer encoder** (log2 activity), matches the BSCC reference within ±0.003:
+**Part 1 — enhancer encoder** (log2 activity):
 
 | | H1 | HepG2 | K562 | HUVEC | NHEK | GM12878 |
 |---|---|---|---|---|---|---|
@@ -62,10 +62,10 @@ DNase (accessibility) + H3K27ac (activity; 2 filtered bio-reps where available) 
 | NHEK (E127) | ENCFF117RNM | ENCFF770JWP, ENCFF051NTC | ENCFF666UYC | ENCFF776JNR |
 
 - **K562** ships **single-rep** — its H3K27ac reps differ hugely in depth, so pooling dilutes.
-- **GM12878** uses **both filtered reps per assay** — this is what reproduces 0.617.
+- **GM12878** uses **both filtered reps per assay** — this is what reaches 0.617.
 - **HepG2** has 3 filtered H3K27ac reps (mean-pooled); its narrowPeak (`*`) is inferred, not cited.
 - Wired in [`config/samples.tsv`](config/samples.tsv), `config/encoder_narrowpeaks.json`,
-  `config/bscc_extra_cells_bams.json`.
+  `config/extra_cells_bams.json`.
 
 ### Other inputs
 
@@ -110,8 +110,8 @@ See the [project wiki](https://github.com/pinellolab/EPInformer/wiki) for the fu
 # DNase/H3K27ac BAMs + Hi-C (K562/GM12878)
 python scripts/download_encode_data.py --cell-types K562,GM12878
 
-# GM12878 needs 2 filtered reps per assay (reproduces 0.617):
-python scripts/download_encode_data.py --from-manifest config/gm12878_bscc_encoder_bams.json
+# GM12878 needs 2 filtered reps per assay (reaches 0.617):
+python scripts/download_encode_data.py --from-manifest config/gm12878_encoder_bams.json
 for f in data/GM12878/{DNase,H3K27ac}/ENCFF*.bam; do samtools index "$f"; done
 
 # H3K27ac narrowPeaks = the encoder's summit source:
@@ -184,15 +184,15 @@ python evaluate.py expression --pred_dir EPInformer_models/K562
 
 ## Other cell lines (H1 / HepG2 / HUVEC / NHEK) — RNA only
 
-No CAGE labels exist for these. Their encoders train on BSCC's pre-built activity CSVs, and the
-gene HDF5 is built from BSCC's precomputed ABC links (`scripts/build_gene_h5_for_cell.py` — no
+No CAGE labels exist for these. Their encoders train on pre-built activity CSVs, and the
+gene HDF5 is built from precomputed ABC links (`scripts/build_gene_h5_for_cell.py` — no
 raw BAMs needed; contact = ABC average Hi-C). Per cell (e.g. HepG2):
 
 ```bash
-CELL=HepG2 sbatch slurm/train_seqencoder_12fold.slurm      # encoder -> results/seqencoder/HepG2_bsccData
+CELL=HepG2 sbatch slurm/train_seqencoder_12fold.slurm      # encoder -> results/seqencoder/HepG2
 CELL=HepG2 sbatch slurm/build_gene_h5.slurm                # gene H5 -> batch_output/HepG2/encoding/HepG2_samples.h5
 CELL=HepG2 EXPR_TYPE=RNA USE_PRM_SIGNAL=1 \
-  PRETRAINED_DIR=results/seqencoder/HepG2_bsccData/checkpoints \
+  PRETRAINED_DIR=results/seqencoder/HepG2/checkpoints \
   OUTPUT_DIR=EPInformer_models/HepG2_repro_RNA sbatch slurm/train_epinformer_12fold.slurm
 python evaluate.py expression --pred_dir EPInformer_models/HepG2_repro_RNA
 ```
@@ -213,15 +213,15 @@ scripts/                   download_encode_data, download_abc_reference,
                            build_gene_h5_for_cell, split_avg_hic (+ test_avg_hic), ...
 config/                    config.yaml, samples.tsv, *_bams.json, encoder_narrowpeaks.json
 slurm/                     12-fold array jobs (encoder / expression / build-H5) — gpu33 first
-REPRODUCTION_NOTES.md      detailed findings, recipe provenance, per-cell BAM/Hi-C notes
+PIPELINE.md      detailed findings, recipe provenance, per-cell BAM/Hi-C notes
 ```
 
 ## Notes
 
 - **CV:** 12-fold **leave-chromosome-out**; report the **pooled** out-of-fold Pearson (concatenate
   all 12 folds → one R), not the per-fold mean.
-- **Encoder recipe** (reproduces BSCC): 5 bins at summit ±192·{−2..2} (256 bp windows),
+- **Encoder recipe**: 5 bins at summit ±192·{−2..2} (256 bp windows),
   Activity = `sqrt(H3K27ac_RPM · DNase_RPM)`, target `log2(0.1 + Activity)`, **L1KL** loss, batch 256.
 - **Expression:** `EPInformer_v2` (SmoothL1 + AdamW, lr 1e-4, batch 50, 60 enhancers, frozen encoder).
 - On our HPC the conda env is `EPInformer_env` (torch 2.10); override with `CONDA_ENV=` in slurm.
-- Full provenance, ablations, and gotchas: **[`REPRODUCTION_NOTES.md`](REPRODUCTION_NOTES.md)**.
+- Full provenance, ablations, and gotchas: **[`PIPELINE.md`](PIPELINE.md)**.

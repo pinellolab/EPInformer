@@ -1,11 +1,11 @@
-# EPInformer reproduction (models.py)
+# EPInformer pipeline (models.py)
 
-A self-contained pipeline to reproduce the **EPInformer** gene-expression model
-end to end, using the model defined in [`EPInformer/models.py`](EPInformer/models.py)
+A self-contained pipeline to run the **EPInformer** gene-expression model end to end,
+using the model defined in [`EPInformer/models.py`](EPInformer/models.py)
 (`EPInformer_v2`). Covers everything from raw ENCODE data to a trained, evaluated
-model. The full expression model is reproduced for **K562** and **GM12878**; the
-enhancer-activity **encoder** is additionally reproduced for **H1, HepG2, HUVEC, and
-NHEK** — 6 BSCC cell lines total (see [Other cell lines](#other-cell-lines-encoder)).
+model. The full expression model runs for **K562** and **GM12878**; the
+enhancer-activity **encoder** additionally covers **H1, HepG2, HUVEC, and
+NHEK** — 6 cell lines total (see [Other cell lines](#other-cell-lines-encoder)).
 
 1. **Enhancer–gene nomination** (ABC) from ENCODE BAM/Hi-C → nominated links
 2. **Enhancer-activity pretrain data** (256 bp bins) → pretrain the sequence encoder
@@ -15,44 +15,43 @@ NHEK** — 6 BSCC cell lines total (see [Other cell lines](#other-cell-lines-enc
 
 > **Model note.** This uses `EPInformer_v2` from **`EPInformer/models.py`**, which
 > differs slightly (the `conv_out` block) from the `models_abc.py` version used by
-> the upstream released checkpoints. So we **train from scratch** here — the
+> the upstream released checkpoints. So the model is **trained from scratch** here — the
 > published checkpoints will not load. The 256 bp sequence encoder is identical, so
 > a pretrained encoder is fully compatible.
 
-**Headline targets** (K562, `EPInformer_v2` PE-Activity, 12-fold leave-chromosome-out):
+**Headline numbers** (K562, `EPInformer_v2` PE-Activity, 12-fold leave-chromosome-out):
 
-| Task | Metric | Target | Reproduced (pooled OOF) |
+| Task | Metric | Target | Result (pooled OOF) |
 |---|---|---|---|
 | Gene expression (CAGE) | Pearson R | ~0.88 | **0.871** |
 | Gene expression (RNA-seq) | Pearson R | ~0.86 | **0.854** |
 | Enhancer-activity encoder (K562) | Pearson R | ~0.71 | **0.738** fwd+RC / 0.731 single |
 
-GM12878 reproduces too (encoder **0.617**, expression RNA/CAGE **0.834 / 0.877** with the
-consistent 2+2-replicate activity), and the encoder matches BSCC across all six cell lines —
-full numbers in [Reproduction results](#reproduction-results--findings) below.
+GM12878 also runs (encoder **0.617**, expression RNA/CAGE **0.834 / 0.877** with the
+consistent 2+2-replicate activity), and the encoder reaches these numbers across all six cell
+lines — full numbers in [Results](#results--recipe-notes) below.
 
 ---
 
-## Reproduction results & findings
+## Results & recipe notes
 
 All metrics are **pooled out-of-fold Pearson R** on the **`log2(0.1 + Activity)`** scale
-(concatenate all 12 held-out folds → one Pearson). Reference = the BSCC training repo
-(`.../BSCC_GPU/EPInformer`), whose K562 encoder = **0.7397** (log2; its shipped K562
-prediction file stored *raw* activity, so a naive Pearson gives a misleading 0.7007).
+(concatenate all 12 held-out folds → one Pearson). Note: the encoder target is *log2* activity —
+if a stored prediction file holds *raw* activity, a naive Pearson is misleading (0.70 vs the true
+0.74).
 
 **Encoder recipe (what reaches target).** 5 bins at `summit + 192·{−2..2}` (256 bp),
 loss **L1KLmixed**, batch 256, LR 5e-4, `Activity = sqrt(H3K27ac_RPM · DNase_RPM)`,
 target `log2(0.1 + Activity)`. K562 pooled OOF by recipe: 3-bins/MSE 0.659 · **5-bins/L1KL
 0.738** (fwd+RC) · 2-bins/bs64/MSE 0.672. Loss matters: MSE mis-calibrates the per-fold
-scale and drags pooled down. Using BSCC's **exact** K562 narrowPeak `ENCFF544LXB` (54,625
-peaks) instead of ours gives pooled OOF **0.734 (rev) / 0.740 (fwd+RC)** — a clean match to
-BSCC's **0.7397**. Peak choice barely moves K562 (0.738 → 0.740): its H3K27ac is deep enough
-that the summit set doesn't matter. **K562 ships single-rep by design**: unlike GM12878, pooling
-its H3K27ac replicates *hurts* — mean-pooling all 3 reps (0.745 → **0.729**) dilutes the deep
-rep3 (`ENCFF232RQF`, 70.7M reads) with the shallow reps 1/2 (10.7M/4.27M), since mean weights
-each rep equally. BSCC also used single-rep for K562 (its `K562v2` CSV has no per-rep columns).
-So `samples.tsv` leaves K562's `accessibility_bams`/`h3k27ac_bams` empty; the 2-rep-pool path is
-GM12878-only (its reps are similar depth, so pooling *adds* signal → 0.617).
+scale and drags pooled down. Using the K562 narrowPeak `ENCFF544LXB` (54,625 peaks) as the
+summit source gives pooled OOF **0.734 (rev) / 0.740 (fwd+RC)**. Peak choice barely moves K562
+(0.738 → 0.740): its H3K27ac is deep enough that the summit set doesn't matter. **K562 ships
+single-rep by design**: unlike GM12878, pooling its H3K27ac replicates *hurts* — mean-pooling all
+3 reps (0.745 → **0.729**) dilutes the deep rep3 (`ENCFF232RQF`, 70.7M reads) with the shallow
+reps 1/2 (10.7M/4.27M), since mean weights each rep equally (the `K562v2` CSV has no per-rep
+columns either). So `samples.tsv` leaves K562's `accessibility_bams`/`h3k27ac_bams` empty; the
+2-rep-pool path is GM12878-only (its reps are similar depth, so pooling *adds* signal → 0.617).
 
 **Expression (`EPInformer_v2`, frozen encoder).** Shipped headline: K562 RNA **0.856** /
 CAGE **0.869**; GM12878 RNA **0.834** / CAGE **0.877** (on the consistent 2+2-replicate
@@ -73,33 +72,33 @@ neutral on the current K562 encoder; fine-tuning the encoder end-to-end doesn't 
 transfers to expression (5-bins-encoder K562 RNA 0.854 ≈ 3-bins-encoder 0.857): the model
 fine-tunes the conv head and recovers regardless.
 
-**GM12878 (REPRODUCED: 0.6146 fwd+RC ≈ BSCC 0.617).** The gap was **one missing DNase
-replicate** — not read depth, not filtering, not pooling arithmetic. We identified BSCC's
-exact inputs by matching its CSV's per-replicate RPM columns against candidate ENCODE BAMs
-(`scripts/identify_bscc_reps.py`): every column matches a **filtered** bio-rep at **corr =
-1.0000, ratio 1.000** — `H3K27ac_0`=`ENCFF269GKF`(rep1), `H3K27ac_1`=`ENCFF201OHW`(rep2),
-`DNase_0`=`ENCFF729UYK`(rep2), `DNase_1`=`ENCFF020WZB`(rep1). BSCC's `Activity =
-sqrt(mean(2 H3K27ac reps) · mean(2 DNase reps))`. Our earlier runs pooled the two H3K27ac
-reps but used only **one** DNase rep — that single omission was the entire gap:
+**GM12878 encoder (0.6146 fwd+RC / 0.617).** The gap between an early ~0.57 and the target was
+**one missing DNase replicate** — not read depth, not filtering, not pooling arithmetic. The exact
+inputs were pinned by matching the reference activity CSV's per-replicate RPM columns against
+candidate ENCODE BAMs (`scripts/identify_encoder_reps.py`): every column matches a **filtered**
+bio-rep at **corr = 1.0000, ratio 1.000** — `H3K27ac_0`=`ENCFF269GKF`(rep1),
+`H3K27ac_1`=`ENCFF201OHW`(rep2), `DNase_0`=`ENCFF729UYK`(rep2), `DNase_1`=`ENCFF020WZB`(rep1).
+The activity is `sqrt(mean(2 H3K27ac reps) · mean(2 DNase reps))`. Earlier runs pooled the two
+H3K27ac reps but used only **one** DNase rep — that single omission was the entire gap:
 
 | recipe | zero-activity | pooled OOF (rev / fwd+RC) |
 |---|---|---|
 | single H3K27ac + 1 DNase | 2.52% | 0.530 / 0.541 |
 | 2 H3K27ac (sum-pool) + 1 DNase | 1.40% | 0.561 / 0.572 |
 | 2 H3K27ac (mean-pool) + 1 DNase | 1.40% | 0.562 / 0.572 |
-| **2 H3K27ac + 2 DNase, all filtered (BSCC's 4 BAMs)** | **0.74%** | **0.607 / 0.6146** |
-| BSCC (direct-train on its CSV) | 0.74% | 0.613 / **0.621** |
-| BSCC published | 0.74% | — / **0.617** |
+| **2 H3K27ac + 2 DNase, all filtered (4 BAMs)** | **0.74%** | **0.607 / 0.6146** |
+| direct-train on the reference CSV | 0.74% | 0.613 / **0.621** |
+| published target | 0.74% | — / **0.617** |
 
-With the 2nd DNase rep, our extracted Activity is **byte-identical** to BSCC's CSV (aligned on
-bin key: corr 1.00000, max|diff| 0), zeros 0.74% = 0.74%, medians identical (H3K27ac 1.197,
-DNase 0.478). Two hypotheses we **falsified** along the way: (a) *mean-vs-sum pooling* — no
-effect (0.572 either way; a bin is zero iff both reps are zero regardless); (b) *unfiltered
-BAMs / ABC read-extension* — read-extension actively hurt (inflates RPM, 0.534), and the
-corr=1.0 rep-identification proved BSCC used the **filtered** reps we already had. Faithful
-extractor `scripts/bscc_seq_activity_extract.py` (cells 35+38) pools reps via
+With the 2nd DNase rep, the extracted Activity is **byte-identical** to the reference CSV (aligned
+on bin key: corr 1.00000, max|diff| 0), zeros 0.74%, medians identical (H3K27ac 1.197, DNase
+0.478). Two hypotheses **falsified** along the way: (a) *mean-vs-sum pooling* — no effect (0.572
+either way; a bin is zero iff both reps are zero regardless); (b) *unfiltered BAMs / ABC
+read-extension* — read-extension actively hurt (inflates RPM, 0.534), and the corr=1.0
+rep-identification confirmed the **filtered** reps. The extractor
+`scripts/seq_activity_extract.py` (cells 35+38) pools reps via
 `--h3k27ac-bam a.bam b.bam --dnase-bam c.bam d.bam --pool-method mean`. **To run this recipe,
-see Steps 1–3** (download the 4 filtered reps via `config/gm12878_bscc_encoder_bams.json`;
+see Steps 1–3** (download the 4 filtered reps via `config/gm12878_encoder_bams.json`;
 `config/samples.tsv` already lists them in `accessibility_bams`/`h3k27ac_bams`).
 
 **Target conventions** (all match upstream): encoder `log2(0.1+Activity)` · CAGE
@@ -107,20 +106,19 @@ see Steps 1–3** (download the 4 filtered reps via `config/gm12878_bscc_encoder
 
 ### Other cell lines (encoder)
 
-The enhancer-activity encoder reproduces BSCC across **all six** cell lines (single-reverse
+The enhancer-activity encoder reaches these numbers across **all six** cell lines (single-reverse
 pooled OOF; fwd+RC adds ~+0.007):
 
-| Cell | Ours | BSCC | Cell | Ours | BSCC |
-|---|---|---|---|---|---|
-| K562 | 0.740 | 0.740 | HepG2 | 0.743 | 0.746 |
-| GM12878 | 0.617 | 0.617 | HUVEC | 0.742 | 0.739 |
-| H1 | 0.820 | 0.820 | NHEK | 0.677 | 0.675 |
+| Cell | R | Cell | R |
+|---|---|---|---|
+| K562 | 0.740 | HepG2 | 0.743 |
+| GM12878 | 0.617 | HUVEC | 0.742 |
+| H1 | 0.820 | NHEK | 0.677 |
 
-These four extra cells train on BSCC's own pre-built activity CSVs
-(`.../BSCC_GPU/EPInformer/data/enhancer_sequences/{cell}_peak_5bins_...csv`, passed via
+These four extra cells train on pre-built activity CSVs (passed via
 `train_seqEncoder.py --data-csv`), which validates the training recipe cell-by-cell. For
-**from-raw** reproduction the exact ENCODE accessions are wired into the repo — DNase (1 rep) +
-H3K27ac (2 reps, except HepG2) + H3K27ac narrowPeak — grounded in BSCC's own repo files:
+**from-raw** runs the exact ENCODE accessions are wired into the repo — DNase (1 rep) +
+H3K27ac (2 reps, except HepG2) + H3K27ac narrowPeak:
 
 | Cell (roadmap) | DNase | H3K27ac reps | narrowPeak |
 |---|---|---|---|
@@ -130,17 +128,17 @@ H3K27ac (2 reps, except HepG2) + H3K27ac narrowPeak — grounded in BSCC's own r
 | HepG2 (E118) | ENCFF691HJY | *(3 downloaded; rep count unresolved)* | ENCFF392KDI *(inferred)* |
 
 Rows are in `config/samples.tsv`; BAM/narrowPeak download manifests in
-`config/bscc_extra_cells_bams.json` and `config/encoder_narrowpeaks.json`. **HepG2 is
-provisional**: BSCC downloaded 3 filtered H3K27ac reps but its CSV has a single H3K27ac column
+`config/extra_cells_bams.json` and `config/encoder_narrowpeaks.json`. **HepG2 is
+provisional**: 3 filtered H3K27ac reps were downloaded but the CSV has a single H3K27ac column
 and the build notebook globs one BAM — RPM-match against the CSV
-(`scripts/identify_bscc_reps.py`) to settle the rep count and which rep before trusting, and
+(`scripts/identify_encoder_reps.py`) to settle the rep count and which rep before trusting, and
 its narrowPeak is inferred (not cited).
 
-**Expression (RNA).** The full `EPInformer_v2` expression model is also reproduced for these four
+**Expression (RNA).** The full `EPInformer_v2` expression model also runs for these four
 cells — **RNA only** (the dataset carries CAGE labels for K562/GM12878 only; `Actual_{cell}` gives
-RNA for all six). Gene HDF5s are built from BSCC's precomputed ABC links
+RNA for all six). Gene HDF5s are built from precomputed ABC links
 (`scripts/build_gene_h5_for_cell.py`; no raw BAMs needed; contact = ABC **average Hi-C**), then
-trained 12-fold with the frozen `{cell}_bsccData` encoder + promoter signal (pooled OOF Pearson):
+trained 12-fold with the frozen per-cell encoder + promoter signal (pooled OOF Pearson):
 
 | Cell | f1 (dist) | f2 (+activity) | f3 (+Hi-C) | **f3 + prm** |
 |---|---|---|---|---|
@@ -152,10 +150,10 @@ trained 12-fold with the frozen `{cell}_bsccData` encoder + promoter signal (poo
 Same signature as K562/GM12878: **activity dominates** (f1→f2 +0.12…+0.21), **Hi-C is inert**
 (f2→f3 ≈ 0), **promoter signal** adds ~+0.01. Build + train per cell:
 `CELL=HepG2 sbatch slurm/build_gene_h5.slurm` → `CELL=HepG2 EXPR_TYPE=RNA USE_PRM_SIGNAL=1
-PRETRAINED_DIR=results/seqencoder/HepG2_bsccData/checkpoints sbatch slurm/train_epinformer_12fold.slurm`.
+PRETRAINED_DIR=results/seqencoder/HepG2/checkpoints sbatch slurm/train_epinformer_12fold.slurm`.
 (These are NEW numbers — upstream EPInformer reports expression for K562/GM12878 only.)
 
-**Average Hi-C — exact provenance.** The contact feature above uses BSCC's precomputed avg-Hi-C. To
+**Average Hi-C — exact provenance.** The contact feature above uses a precomputed avg-Hi-C. To
 rebuild contact from scratch with the canonical hg38 ABC average Hi-C (ENCODE `ENCFF134PUN`, 5 kb,
 58 GB, annotation `ENCSR382HAW`): download it, split once —
 `python scripts/split_avg_hic.py --in ENCFF134PUN.bed.gz --out data/reference/abc_avg_hic/by_chrom` —
@@ -251,13 +249,13 @@ python scripts/download_encode_data.py --cell-types K562,GM12878
 
 Files land in `data/{cell}/{DNase,H3K27ac,HiC}/`. See `config/samples.tsv`.
 
-**GM12878 encoder needs 2 filtered replicates per assay** (this is what reproduces 0.617 —
+**GM12878 encoder needs 2 filtered replicates per assay** (this is what reaches 0.617 —
 see the results section; the activity is `sqrt(mean(2 H3K27ac rep RPMs) · mean(2 DNase rep
 RPMs))`). The auto-query fetches only one "best" BAM per assay, so pull the exact 4 **filtered
 bio-rep** BAMs from a pinned manifest, then index them:
 
 ```bash
-python scripts/download_encode_data.py --from-manifest config/gm12878_bscc_encoder_bams.json
+python scripts/download_encode_data.py --from-manifest config/gm12878_encoder_bams.json
 for f in data/GM12878/{DNase,H3K27ac}/ENCFF*.bam; do samtools index "$f"; done
 ```
 
@@ -266,8 +264,8 @@ for f in data/GM12878/{DNase,H3K27ac}/ENCFF*.bam; do samtools index "$f"; done
 | H3K27ac | ENCFF269GKF | ENCFF201OHW |
 | DNase | ENCFF020WZB | ENCFF729UYK |
 
-These are **filtered** `alignments` BAMs (the encoder reps, RPM-matched to BSCC at corr 1.0);
-distinct from the single unfiltered BAM the ABC/MACS2 peak-caller uses. K562 reproduces (0.740)
+These are **filtered** `alignments` BAMs (the encoder reps, RPM-matched at corr 1.0);
+distinct from the single unfiltered BAM the ABC/MACS2 peak-caller uses. K562 reaches 0.740
 with its single reps, so no extra download is needed there.
 
 ---
@@ -291,21 +289,21 @@ HPC: `SAMPLES=K562,GM12878 STAGES=links sbatch slurm/run_pipeline_cpu.slurm`
 
 The encoder activity **mean-pools replicate BAMs per assay** when `config/samples.tsv` lists
 them in the `accessibility_bams` / `h3k27ac_bams` columns (space-separated). GM12878 ships with
-its 2 reps/assay there, so `--stages links` produces the byte-identical-to-BSCC activity that
-reaches 0.617; K562 leaves those columns empty and uses its single reps (0.740). This is the
+its 2 reps/assay there, so `--stages links` produces the activity that reaches 0.617; K562
+leaves those columns empty and uses its single reps (0.740). This is the
 `sqrt(mean(H3K27ac rep RPMs) · mean(DNase rep RPMs))` recipe.
 
 **Verified standalone alternative (no ABC run needed for the encoder CSV):** produce the exact
-same GM12878 CSV directly from the 4 BAMs with `scripts/bscc_seq_activity_extract.py`:
+same GM12878 CSV directly from the 4 BAMs with `scripts/seq_activity_extract.py`:
 
 ```bash
-python scripts/bscc_seq_activity_extract.py \
+python scripts/seq_activity_extract.py \
     --narrowpeak reference/GM12878_H3K27ac.ENCFF023LTU.narrowPeak \
     --dnase-bam data/GM12878/DNase/ENCFF729UYK.bam data/GM12878/DNase/ENCFF020WZB.bam \
     --h3k27ac-bam data/GM12878/H3K27ac/ENCFF269GKF.bam data/GM12878/H3K27ac/ENCFF201OHW.bam \
     --pool-method mean --fasta data/reference/hg38/hg38.fa --cell GM12878 \
     --out batch_output/GM12878/links/GM12878_peak_5bins_around_summit_activity_sequence.csv
-# HPC: see the GM12878 example header in slurm/bscc_extract.slurm (POOL_METHOD=mean).
+# HPC: see the GM12878 example header in slurm/seq_activity_extract.slurm (POOL_METHOD=mean).
 ```
 
 ---
@@ -321,7 +319,7 @@ python train_seqEncoder.py --cell K562 \
     --output-dir ./results/seqencoder/K562 --epochs 50
 ```
 
-**Recipe matters** (see reproduction section): `--loss l1kl` (L1KLmixed, not the `mse`
+**Recipe matters** (see results section): `--loss l1kl` (L1KLmixed, not the `mse`
 default) + 5-bin data + batch 256 is what reaches ~0.74; MSE mis-calibrates the per-fold
 scale. Test is single-reverse-strand by default; add `--rc-average` for the fwd+RC eval
 (~+0.007), or re-score existing checkpoints with `slurm/eval_seqencoder_fwdrc.slurm`.
@@ -418,10 +416,10 @@ python evaluate.py expression --pred_dir ./EPInformer_models/K562
 ```
 
 **For GM12878**, replace `K562` throughout, **plus** first fetch the 4 filtered encoder reps
-(Step 1: `--from-manifest config/gm12878_bscc_encoder_bams.json` + `samtools index`). The
+(Step 1: `--from-manifest config/gm12878_encoder_bams.json` + `samtools index`). The
 `accessibility_bams`/`h3k27ac_bams` columns for GM12878 are already in `config/samples.tsv`, so
-`--stages links` mean-pools the 2 reps/assay and the encoder reaches **0.6146 fwd+RC ≈ BSCC
-0.617** (single-rep gets only ~0.572). The headline pooled-OOF numbers come from the fwd+RC
+`--stages links` mean-pools the 2 reps/assay and the encoder reaches **0.6146 fwd+RC / 0.617**
+(single-rep gets only ~0.572). The headline pooled-OOF numbers come from the fwd+RC
 re-eval (`slurm/eval_seqencoder_fwdrc.slurm --skip-train --rc-average`).
 
 ---
@@ -454,18 +452,17 @@ use a released pretrained encoder or train `EPInformer_v2` from scratch (drop
   (`ENCODER_OFFSETS`, `ENCODER_OVERLAP`; default 5-bins/stride-192); `train_seqEncoder.py`
   adds `--loss {mse,l1kl}`, `--test-strand {auto,forward,reverse}`, and an eval-only mode
   (`--skip-train --checkpoint-dir <dir>`) used by `slurm/eval_seqencoder_fwdrc.slurm`.
-- **Faithful BSCC extraction**: `scripts/bscc_seq_activity_extract.py`
-  (+`slurm/bscc_extract.slurm`) reproduces BSCC's exact sequence+activity extraction
+- **Sequence+activity extraction**: `scripts/seq_activity_extract.py`
+  (+`slurm/seq_activity_extract.slurm`) does the exact sequence+activity extraction
   (5-bin regions, `pysam.count`, `Activity=sqrt(DHS·H3K27ac)`, no read-extension, no negatives).
   It **pools multiple replicate BAMs per assay** — `--dnase-bam A.bam B.bam --h3k27ac-bam C.bam
-  D.bam --pool-method mean` (default `mean` = BSCC's per-rep-RPM average). GM12878's 0.617
-  reproduction requires the 4 filtered reps (H3K27ac `ENCFF269GKF`+`ENCFF201OHW`, DNase
-  `ENCFF729UYK`+`ENCFF020WZB`); the config-driven path does the same pooling via the
-  `accessibility_bams`/`h3k27ac_bams` columns in `config/samples.tsv`. BSCC's pre-built per-cell
-  encoder CSVs live at `.../BSCC_GPU/EPInformer/data/enhancer_sequences/`.
-- **How the exact BAMs were found**: `scripts/identify_bscc_reps.py` RPM-matches BSCC's
-  per-replicate CSV columns against candidate ENCODE BAMs (corr 1.0000 pins each rep) — this
-  is how we proved BSCC used the 4 *filtered* bio-reps (not unfiltered) and that the gap was a
-  missing 2nd DNase rep.
+  D.bam --pool-method mean` (default `mean` = per-rep-RPM average). GM12878's 0.617 requires the
+  4 filtered reps (H3K27ac `ENCFF269GKF`+`ENCFF201OHW`, DNase `ENCFF729UYK`+`ENCFF020WZB`); the
+  config-driven path does the same pooling via the `accessibility_bams`/`h3k27ac_bams` columns
+  in `config/samples.tsv`.
+- **How the exact BAMs were found**: `scripts/identify_encoder_reps.py` RPM-matches the reference
+  CSV's per-replicate columns against candidate ENCODE BAMs (corr 1.0000 pins each rep) — this
+  identified the 4 *filtered* bio-reps (not unfiltered) and that the gap was a missing 2nd
+  DNase rep.
 - **Promoter-activity feature**: `train_EPInformer.py --use_prm_signal --gene_list <ABC GeneList.txt>`
   adds `log(1+sqrt(DHS·H3K27ac at TSS1kb))` to the promoter slot (slurm knob `USE_PRM_SIGNAL=1`).

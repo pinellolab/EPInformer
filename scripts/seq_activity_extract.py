@@ -19,7 +19,7 @@ Output columns match our data/enhancer_sequences schema so train_seqEncoder.py
 can consume it via --data-csv.
 
 Usage (GM12878 — REPRODUCES BSCC 0.617: 2 filtered reps/assay, mean-pool; Activity byte-identical):
-  python scripts/bscc_seq_activity_extract.py \
+  python scripts/seq_activity_extract.py \
       --narrowpeak reference/GM12878_H3K27ac.ENCFF023LTU.narrowPeak \
       --dnase-bam data/GM12878/DNase/ENCFF729UYK.bam data/GM12878/DNase/ENCFF020WZB.bam \
       --h3k27ac-bam data/GM12878/H3K27ac/ENCFF269GKF.bam data/GM12878/H3K27ac/ENCFF201OHW.bam \
