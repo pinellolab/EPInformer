@@ -22,7 +22,7 @@
 #SBATCH --time=48:00:00
 
 set -euo pipefail
-REPO_ROOT="${REPO_ROOT:-/path/to/EPInformer/reproducible_pipeline}"
+REPO_ROOT="${REPO_ROOT:-/path/to/EPInformer/pipeline}"
 cd "$REPO_ROOT"
 mkdir -p log_cpu
 

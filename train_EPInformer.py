@@ -878,7 +878,7 @@ if __name__ == '__main__':
     if args.use_prm_signal and args.gene_list is None:
         raise SystemExit('--gene_list is required when --use_prm_signal is set')
     # Fail fast on flags inherited from the multi-variant trainer that this trimmed
-    # EPInformer-v2 reproduction does NOT implement (they belong to models_abc) — so a
+    # EPInformer-v2 does NOT implement (they belong to models_abc) — so a
     # run can't be silently mislabeled or a no-op loss silently ignored.
     _unsupported = []
     if args.legnet_ckpt_dir is not None: _unsupported.append('--legnet_ckpt_dir')
@@ -893,7 +893,7 @@ if __name__ == '__main__':
     if getattr(args, 'aux_activity_lambda', 0) and args.aux_activity_lambda > 0: _unsupported.append('--aux_activity_lambda')
     if _unsupported:
         parser.error('these flags are not supported by this EPInformer-v2 (models.py) '
-                     'reproduction: ' + ', '.join(_unsupported))
+                     'unsupported by EPInformer-v2: ' + ', '.join(_unsupported))
 
     # Load promoter activity from GeneList.txt (for --use_prm_signal)
     promoter_activity_df = None

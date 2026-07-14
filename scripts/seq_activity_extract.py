@@ -83,7 +83,7 @@ def main():
     ap.add_argument("--pool-method", choices=["sum", "mean"], default="mean",
                     help="how to pool multiple replicate BAMs (default: mean = the exact "
                          "recipe). 'mean' = average of per-rep RPMs 1/N·Σ(1e6*count_i/mapped_i) "
-                         "(H3K27ac_RPM = mean(H3K27ac_0_RPM, H3K27ac_1_RPM); reproduces GM12878 "
+                         "(H3K27ac_RPM = mean(H3K27ac_0_RPM, H3K27ac_1_RPM); reaches GM12878 "
                          "0.617). 'sum' = 1e6*Σcount/Σmapped (depth-weighted). Identical for a "
                          "single rep (e.g. K562).")
     args = ap.parse_args()

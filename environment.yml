@@ -1,4 +1,4 @@
-# Conda environment for the EPInformer reproduction.
+# Conda environment for the EPInformer pipeline.
 #   conda env create -f environment.yml
 #   conda activate epinformer_repro
 #

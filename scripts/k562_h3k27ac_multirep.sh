@@ -1,9 +1,9 @@
 #!/bin/bash
 # K562 H3K27ac multi-rep variant: pool all 3 H3K27ac bio-reps (ENCSR000AKP) + single DNase
-# (K562 DNase ENCSR000EKS has only 1 rep). Compare vs single-rep reproduction (0.740).
+# (K562 DNase ENCSR000EKS has only 1 rep). Compare vs single-rep run (0.740).
 # NOTE: rep3 (ENCFF232RQF) is far deeper than reps 1/2, so mean-pool may dilute it.
 set -euo pipefail
-REPO_ROOT="${REPO_ROOT:-/path/to/EPInformer/reproducible_pipeline}"
+REPO_ROOT="${REPO_ROOT:-/path/to/EPInformer/pipeline}"
 cd "$REPO_ROOT"
 source ${HOME}/miniconda3/etc/profile.d/conda.sh
 set +u; conda activate EPInformer_env; set -u

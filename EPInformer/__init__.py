@@ -1,8 +1,8 @@
-"""EPInformer model package (reproduction build).
+"""EPInformer model package (pipeline build).
 
 Exposes the ``EPInformer_v2`` gene-expression model and the enhancer sequence
 encoder classes from ``models.py`` (copied verbatim from the main EPInformer
-repo). This is the *only* model file in this reproduction folder.
+repo). This is the *only* model file in this pipeline folder.
 """
 
 from .models import (

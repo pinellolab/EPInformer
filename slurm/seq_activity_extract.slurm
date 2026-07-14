@@ -1,6 +1,6 @@
 #!/bin/bash
 # Sequence+activity extraction (scripts/seq_activity_extract.py).
-# Reproduces process_EPInformer_data_v2.ipynb cells 35+38: 5-bin regions, pysam read
+# Matches process_EPInformer_data_v2.ipynb cells 35+38: 5-bin regions, pysam read
 # counts, Activity = sqrt(DHS.RPM * H3K27ac.RPM). No negatives.
 #   CELL=GM12878 NARROWPEAK=... DNASE_BAM=... H3K27AC_BAM=... OUT=... \
 #     sbatch --export=ALL,CONDA_ENV=EPInformer_env,... slurm/seq_activity_extract.slurm
@@ -25,7 +25,7 @@
 #SBATCH --time=1:00:00
 
 set -euo pipefail
-REPO_ROOT="${REPO_ROOT:-/path/to/EPInformer/reproducible_pipeline}"
+REPO_ROOT="${REPO_ROOT:-/path/to/EPInformer/pipeline}"
 cd "$REPO_ROOT"
 mkdir -p log_cpu
 

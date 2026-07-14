@@ -1,5 +1,5 @@
 #!/bin/bash
-# Submit the full K562 (or GM12878) reproduction as a dependency-chained SLURM pipeline:
+# Submit the full K562 (or GM12878) pipeline as a dependency-chained SLURM pipeline:
 #   Stage 1 ABC links (cpu1) -> [Stage 2 encoding (cpu1)  +  encoder pretrain (gpu33 array)]
 #   -> train EPInformer_v2 (gpu33 array, aftercorr per-fold on pretrain + afterok encode)
 #

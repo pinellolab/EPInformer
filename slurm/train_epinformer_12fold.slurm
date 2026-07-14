@@ -34,7 +34,7 @@
 # --mem=96G: the dataset preloads all pe_ohe (~18k genes x 61 x 2000 x 4 f32 ~= 36 GB) into RAM.
 
 set -euo pipefail
-REPO_ROOT="${REPO_ROOT:-/path/to/EPInformer/reproducible_pipeline}"
+REPO_ROOT="${REPO_ROOT:-/path/to/EPInformer/pipeline}"
 cd "$REPO_ROOT"
 mkdir -p log_gpu
 

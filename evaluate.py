@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Evaluate EPInformer reproduction results (12-fold leave-chromosome-out).
+"""Evaluate EPInformer pipeline results (12-fold leave-chromosome-out).
 
 Two modes:
 

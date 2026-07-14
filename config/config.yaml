@@ -15,7 +15,7 @@ reference:
 # replicate BAMs feed BOTH the encoder pre-training activity target AND the ABC neighborhoods
 # activity feature, so pre-training and EPInformer training quantify activity from identical
 # BAMs. GM12878 uses DNase ENCFF729UYK+ENCFF020WZB and H3K27ac ENCFF269GKF+ENCFF201OHW
-# (reproduces 0.617). K562 SHIPS single-rep by design (accessibility_bams/h3k27ac_bams left
+# (reaches 0.617). K562 SHIPS single-rep by design (accessibility_bams/h3k27ac_bams left
 # empty): its 3 H3K27ac reps differ hugely in depth (rep3 ENCFF232RQF 70.7M vs 10.7M/4.27M),
 # so equal-weight mean-pool DILUTED the deep rep and dropped the encoder 0.745 -> 0.729.
 # GM12878 pools 2 reps/assay because its reps are similar depth and pooling reaches 0.617.
