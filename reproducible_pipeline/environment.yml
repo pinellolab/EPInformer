@@ -1,0 +1,42 @@
+# Conda environment for the EPInformer reproduction.
+#   conda env create -f environment.yml
+#   conda activate epinformer_repro
+#
+# Covers the whole pipeline: ENCODE download -> ABC nomination -> HDF5 encoding
+# -> encoder pretraining -> EPInformer training -> evaluation/visualization.
+#
+# GPU note: the pip `torch` wheel below is CPU/CUDA-agnostic. On the HPC GPU
+# nodes install the CUDA build that matches the driver, e.g.
+#   pip install torch --index-url https://download.pytorch.org/whl/cu121
+name: epinformer_repro
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - python=3.10
+  # --- data-processing / ABC pipeline (bioconda) ---
+  - macs2            # peak calling (candidate enhancers)
+  - samtools         # BAM indexing / merging
+  - bedtools
+  - aria2            # fast multi-connection ENCODE downloads (optional)
+  - ucsc-liftover    # only for preprocessing/data_prep/build_gene_annotation.py
+  # --- scientific stack ---
+  - numpy
+  - pandas
+  - scipy
+  - scikit-learn
+  - h5py
+  - pyyaml
+  - matplotlib
+  - seaborn
+  - jupyter
+  - tqdm
+  - openpyxl         # read CRISPR benchmark .xlsx
+  - pip
+  - pip:
+      - torch                # PyTorch (see GPU note above for CUDA builds)
+      - pyfaidx              # FASTA random access
+      - kipoiseq            # one-hot DNA encoding
+      - pyranges            # interval ops in the ABC pipeline
+      - hic-straw           # Hi-C .hic contact extraction (hicstraw)
+      - pyBigWig            # optional BigWig signal tracks

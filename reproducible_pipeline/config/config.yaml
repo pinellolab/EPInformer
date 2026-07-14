@@ -1,0 +1,57 @@
+# EPInformer batch pipeline configuration
+samples_table: samples.tsv
+
+# ---- Shared reference files ----
+reference:
+  fasta: ./data/reference/hg38/hg38.fa
+  gene_bed: ./data/reference/hg38/XpressoGeneBounds.hg38.bed
+  chrom_sizes: ./data/reference/hg38/GRCh38_EBV.chrom.sizes.tsv
+  expression_csv: ./data/GM12878_K562_18377_gene_expr_fromXpresso.csv
+  blacklist: null
+
+# ---- Element-gene link parameters (Stage 1: BAM -> predictions) ----
+# Activity = sqrt(mean(H3K27ac rep RPMs) * mean(DNase rep RPMs)); replicates are listed
+# per-assay in samples.tsv (accessibility_bams / h3k27ac_bams, mean-pooled). The SAME
+# replicate BAMs feed BOTH the encoder pre-training activity target AND the ABC neighborhoods
+# activity feature, so pre-training and EPInformer training quantify activity from identical
+# BAMs. GM12878 uses DNase ENCFF729UYK+ENCFF020WZB and H3K27ac ENCFF269GKF+ENCFF201OHW
+# (reproduces 0.617). K562 SHIPS single-rep by design (accessibility_bams/h3k27ac_bams left
+# empty): its 3 H3K27ac reps differ hugely in depth (rep3 ENCFF232RQF 70.7M vs 10.7M/4.27M),
+# so equal-weight mean-pool DILUTED the deep rep and dropped the encoder 0.745 -> 0.729.
+# GM12878 pools 2 reps/assay because its reps are similar depth and pooling reaches 0.617.
+# (Candidate MACS2 peak-calling still uses the single accessibility_bam; only read-counting
+# for activity is pooled — the candidate region SET only defines where activity is measured.)
+abc_params:
+  n_top_peaks: 150000
+  peak_extend: 250
+  max_distance: 2500000
+  gamma: 0.87
+  tss_slop: 500
+  hic_resolution: 5000
+  neg_fraction: 0.05
+  max_encoder_peaks: 100000
+  include_self_promoter: false
+  include_promoter_region: false
+  n_threads: 12  # keep in sync with slurm/run_pipeline_cpu.slurm #SBATCH --cpus-per-task
+  # Hi-C processing (Broad ABC defaults)
+  hic_gamma: 1.024238616787792
+  hic_scale: 5.9594510043736655
+  hic_gamma_reference: 0.87
+  hic_pseudocount_distance: 5000
+  scale_hic_using_powerlaw: true
+  tss_hic_contribution: 100.0
+
+# ---- Encoding parameters (Stage 2: predictions -> HDF5) ----
+preprocessing_params:
+  min_distance: 0
+  max_distance: 100000
+  n_enhancer: 60
+  max_seq_len: 2000
+  include_self_promoter: true
+  tss_column: TSS_xpresso
+  no_bigwig: true  # sequence-only; no BigWig signal tracks in HDF5
+
+# ---- Output directory layout ----
+output:
+  base_dir: ./batch_output
+  # Per-sample dirs: {base_dir}/{cell_type}/links/ and {base_dir}/{cell_type}/encoding/

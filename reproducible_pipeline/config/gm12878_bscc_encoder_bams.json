@@ -1,0 +1,6 @@
+[
+  {"cell_type": "GM12878", "assay": "H3K27ac", "accession": "ENCFF269GKF", "ext": "bam", "output_type": "alignments", "bio_reps": [1], "url": "https://www.encodeproject.org/files/ENCFF269GKF/@@download/ENCFF269GKF.bam", "dest_path": "data/GM12878/H3K27ac/ENCFF269GKF.bam"},
+  {"cell_type": "GM12878", "assay": "H3K27ac", "accession": "ENCFF201OHW", "ext": "bam", "output_type": "alignments", "bio_reps": [2], "url": "https://www.encodeproject.org/files/ENCFF201OHW/@@download/ENCFF201OHW.bam", "dest_path": "data/GM12878/H3K27ac/ENCFF201OHW.bam"},
+  {"cell_type": "GM12878", "assay": "DNase", "accession": "ENCFF729UYK", "ext": "bam", "output_type": "alignments", "bio_reps": [2], "url": "https://www.encodeproject.org/files/ENCFF729UYK/@@download/ENCFF729UYK.bam", "dest_path": "data/GM12878/DNase/ENCFF729UYK.bam"},
+  {"cell_type": "GM12878", "assay": "DNase", "accession": "ENCFF020WZB", "ext": "bam", "output_type": "alignments", "bio_reps": [1], "url": "https://www.encodeproject.org/files/ENCFF020WZB/@@download/ENCFF020WZB.bam", "dest_path": "data/GM12878/DNase/ENCFF020WZB.bam"}
+]
