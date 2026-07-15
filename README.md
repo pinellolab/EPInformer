@@ -212,7 +212,7 @@ encoder is frozen by default; `--no_freeze_encoder` (slurm `NO_FREEZE=1`) fine-t
 
 ```bash
 python evaluate.py expression --pred_dir EPInformer_models/K562
-# visual report: open visualize_results.ipynb  (density scatter + per-fold R + cross-cell table)
+# writes a pooled evaluation summary and scatter plot
 ```
 
 ---

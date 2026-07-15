@@ -185,7 +185,6 @@ config/*_bams.json, encoder_narrowpeaks.json  pinned ENCODE download manifests
 train_seqEncoder.py         Step 3: pretrain the 256bp enhancer-activity encoder
 train_EPInformer.py         Step 5: train EPInformer_v2 (from EPInformer/models.py)
 evaluate.py                 Step 6: 12-fold out-of-fold Pearson (expression + encoder)
-visualize_results.ipynb     notebook: scatter plots + per-fold R
 slurm/                      HPC array-job templates (gpu33)
 environment.yml             conda environment
 ```
@@ -388,10 +387,7 @@ python evaluate.py expression --pred_dir ./EPInformer_models/K562
 python evaluate.py encoder    --pred_dir ./results/seqencoder/K562
 ```
 
-Then open [`visualize_results.ipynb`](visualize_results.ipynb) — set `CELL`,
-`EXPR_PRED_DIR`, `ENCODER_PRED_DIR` at the top and run all: predicted-vs-observed
-density scatter, per-fold Pearson-R bar chart, encoder activity scatter, and a
-cell-line/variant comparison table.
+Each evaluation command writes a pooled summary and scatter plot to the prediction directory.
 
 ---
 
