@@ -138,7 +138,7 @@ See the [project wiki](https://github.com/pinellolab/EPInformer/wiki) for the fu
 
 ---
 
-# Part 1 — Enhancer-activity encoder (do this first)
+# Part 1 — Enhancer-activity encoder
 
 ### 1a. Data preprocessing — download ENCODE → ABC → 256 bp activity CSV
 
@@ -177,7 +177,7 @@ python evaluate.py encoder --pred_dir results/seqencoder/K562
 
 ---
 
-# Part 2 — Gene-expression model (do this second)
+# Part 2 — Gene-expression model
 
 Reuses the Part 1 encoder (frozen) + the ABC enhancer–gene links from step 1a.
 
