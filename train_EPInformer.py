@@ -615,7 +615,7 @@ class EarlyStopping:
         print('Saving ckpt at', self.path)
         self.val_loss_min = val_loss
 
-def train(net, training_dataset, fold_i, saved_model_path='./models/', learning_rate=1e-4, model_logger=None, fixed_encoder=False, valid_dataset=None, model_name='', batch_size=64, device='cuda', stratify=None, class_weight=None, EPOCHS=100, valid_size=1000, hparams=None, early_stop_patience=5):
+def train(net, training_dataset, fold_i, saved_model_path='./models/', learning_rate=1e-4, model_logger=None, fixed_encoder=False, valid_dataset=None, model_name='', batch_size=64, device='cuda', stratify=None, class_weight=None, EPOCHS=100, valid_size=1000, hparams=None, early_stop_patience=5, contrastive_lambda=0.0, aux_activity_lambda=0.0):
     if not os.path.exists(saved_model_path):
         os.makedirs(saved_model_path, exist_ok=True)
     if valid_dataset is not None:
@@ -673,15 +673,15 @@ def train(net, training_dataset, fold_i, saved_model_path='./models/', learning_
             loss_e += loss_expr.item()
             loss = loss_expr
             # Add contrastive loss if model supports it
-            if hasattr(net, '_contrastive_loss') and args.contrastive_lambda > 0:
+            if hasattr(net, '_contrastive_loss') and contrastive_lambda > 0:
                 ctr_loss = net._contrastive_loss
                 if not torch.isnan(ctr_loss):
-                    loss = loss + args.contrastive_lambda * ctr_loss
+                    loss = loss + contrastive_lambda * ctr_loss
             # Add auxiliary activity prediction loss if model supports it
-            if hasattr(net, '_aux_activity_loss') and args.aux_activity_lambda > 0:
+            if hasattr(net, '_aux_activity_loss') and aux_activity_lambda > 0:
                 aux_loss = net._aux_activity_loss
                 if not torch.isnan(aux_loss):
-                    loss = loss + args.aux_activity_lambda * aux_loss
+                    loss = loss + aux_activity_lambda * aux_loss
                     aux_loss_e += aux_loss.item()
             loss.backward()
             optimizer.step()
@@ -689,7 +689,7 @@ def train(net, training_dataset, fold_i, saved_model_path='./models/', learning_
 
         train_loss = running_loss / len(trainloader)
         print('[Epoch %d] loss: %.9f' % (epoch + 1, train_loss))
-        aux_str = ', aux_activity loss: {:.6f}'.format(aux_loss_e / len(trainloader)) if args.aux_activity_lambda > 0 else ''
+        aux_str = ', aux_activity loss: {:.6f}'.format(aux_loss_e / len(trainloader)) if aux_activity_lambda > 0 else ''
         print('Training Loss: expression loss:', loss_e / len(trainloader), aux_str)
         val_mse_all, val_r2_all, val_pr_all = validate(net, valid_ds, device=device)
         val_r2 = val_r2_all
@@ -1071,7 +1071,7 @@ if __name__ == '__main__':
                         'use_h5_expr': args.use_h5_expr,
                         'gene_list': args.gene_list,
                     }
-                    train(model, train_ds, valid_dataset=valid_ds, learning_rate=lr, EPOCHS=args.epochs, model_name=model.name, fold_i=fi, batch_size=batch_size, device=device, saved_model_path=saved_model_path, hparams=hparams, early_stop_patience=args.early_stop_patience)
+                    train(model, train_ds, valid_dataset=valid_ds, learning_rate=lr, EPOCHS=args.epochs, model_name=model.name, fold_i=fi, batch_size=batch_size, device=device, saved_model_path=saved_model_path, hparams=hparams, early_stop_patience=args.early_stop_patience, contrastive_lambda=args.contrastive_lambda, aux_activity_lambda=args.aux_activity_lambda)
                     # Test
                     test_df, metrics = test(model, test_ds, model_name=model.name, saved_model_path=saved_model_path, fold_i=fi, batch_size=batch_size, device=device, biotype_map=biotype_map)
                     test_df['cell'] = cell
