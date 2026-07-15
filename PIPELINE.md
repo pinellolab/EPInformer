@@ -239,7 +239,7 @@ Paths are set in [`config/config.yaml`](config/config.yaml). Defaults expect
 BAMs + `.hic` contact maps for both cell lines (auto-queried from ENCODE):
 
 ```bash
-python scripts/download_encode_data.py --cell-types K562,GM12878
+python scripts/download_encode_data.py --cell-types K562,GM12878 --output-dir data
 ```
 
 | Cell | DNase BAM | H3K27ac BAM | Hi-C |
@@ -399,7 +399,7 @@ cell-line/variant comparison table.
 ```bash
 conda activate epinformer_repro
 bash scripts/download_abc_reference.sh data/reference/hg38          # + supply hg38.fa, expr CSV, split CSV
-python scripts/download_encode_data.py --cell-types K562
+python scripts/download_encode_data.py --cell-types K562 --output-dir data
 python run_pipeline.py --config config/config.yaml --samples K562 --stages links
 python train_seqEncoder.py --cell K562 \
     --data-csv batch_output/K562/links/K562_peak_5bins_around_summit_activity_sequence.csv \

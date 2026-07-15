@@ -138,8 +138,8 @@ See the [project wiki](https://github.com/pinellolab/EPInformer/wiki) for the fu
 ### 1a. Data preprocessing — download ENCODE → ABC → 256 bp activity CSV
 
 ```bash
-# DNase/H3K27ac BAMs + Hi-C (K562/GM12878)
-python scripts/download_encode_data.py --cell-types K562,GM12878
+# DNase/H3K27ac BAMs + Hi-C (K562/GM12878). The pipeline config expects data/.
+python scripts/download_encode_data.py --cell-types K562,GM12878 --output-dir data
 
 # GM12878 needs 2 filtered reps per assay (reaches 0.617):
 python scripts/download_encode_data.py --from-manifest config/gm12878_encoder_bams.json
