@@ -127,9 +127,10 @@ bash scripts/download_abc_reference.sh data/reference/hg38          # ABC refere
 
 **Pretrained checkpoints (optional):**
 [`JiecongLin/EPInformer-pipeline`](https://huggingface.co/JiecongLin/EPInformer-pipeline)
-provides 12-fold enhancer encoders for six cell lines, plus validated `f3` gene-expression
-checkpoints for K562 and GM12878 (RNA and CAGE). Corresponding `f1` and `f2` ablation checkpoints
-are also available. Gene-expression checkpoints are organized under
+provides 12-fold enhancer encoders and validated gene-expression checkpoints for all six supported
+cell lines: RNA models for K562, GM12878, H1, HepG2, HUVEC, and NHEK, plus CAGE models for K562
+and GM12878. `f1`, `f2`, and `f3` feature configurations are available. Gene-expression checkpoints
+are organized under
 `expression_models/{cell}/{RNA,CAGE}/`: `f3` files are in the assay directory, while `f1` and `f2`
 are in its `f1/` and `f2/` subdirectories.
 
