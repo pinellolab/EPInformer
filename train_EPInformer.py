@@ -1,5 +1,6 @@
 import os
 import sys
+import random
 import argparse
 from datetime import datetime
 import pandas as pd
@@ -40,6 +41,16 @@ torch.from_numpy = _from_numpy_compat
 
 from dataclasses import dataclass
 from scipy.stats import pearsonr
+
+
+def set_global_seed(seed: int) -> None:
+    """Seed Python, NumPy, and Torch RNGs so model init and loader shuffling
+    are reproducible across runs (headline 12-fold SLURM workflow included)."""
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(seed)
 
 from sklearn.model_selection import train_test_split
 from EPInformer.models import EPInformer_v2, enhancer_predictor_256bp
@@ -134,6 +145,16 @@ class promoter_enhancer_dataset(Dataset):
         _all_rna_cols = ['UTR5LEN_log10zscore', 'CDSLEN_log10zscore', 'INTRONLEN_log10zscore',
                          'UTR3LEN_log10zscore', 'UTR5GC', 'CDSGC', 'UTR3GC', 'ORFEXONDENSITY']
         rna_cols = [c for c in _all_rna_cols if c in self.expr_df.columns]
+        # The model hardcodes an 8-wide Xpresso feature block, so a partial table would
+        # emit fewer columns than the first pToExpr linear layer expects and crash. Require
+        # all 8 or none, and fail loud on a partial table instead of silently mismatching.
+        if 0 < len(rna_cols) < len(_all_rna_cols):
+            missing = [c for c in _all_rna_cols if c not in rna_cols]
+            raise ValueError(
+                f"Expression table has only {len(rna_cols)}/{len(_all_rna_cols)} Xpresso "
+                f"feature columns (missing: {missing}). Partial Xpresso feature tables are "
+                f"unsupported — provide all 8 columns or none."
+            )
         self.has_rna_feats = len(rna_cols) > 0
         if not self.has_rna_feats:
             print("  No Xpresso feature columns found — rna_feats will be zeros")
@@ -872,7 +893,11 @@ if __name__ == '__main__':
                         help='use separate promoter and enhancer encoders (clone pre-trained encoder for promoter)')
     parser.add_argument('--device', type=str, default=None, choices=['cuda', 'mps', 'cpu'],
                         help='force device (default: auto-detect cuda > mps > cpu)')
+    parser.add_argument('--seed', type=int, default=66,
+                        help='global RNG seed for reproducibility (default: 66)')
     args = parser.parse_args()
+    set_global_seed(args.seed)
+    print(f'Global seed: {args.seed}')
     if args.early_stop_patience < 0:
         raise SystemExit('--early_stop_patience must be >= 0')
     if args.use_prm_signal and args.gene_list is None:

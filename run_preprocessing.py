@@ -37,7 +37,7 @@ _CELL_TYPES = ["K562", "GM12878", "H1", "HUVEC", "NHEK", "HepG2"]
 
 
 def _default_epinformer_data() -> Path:
-    return Path(__file__).resolve().parent / "data_EPInformer"
+    return Path(__file__).resolve().parent / "data"
 
 
 def _resolve(p: str | None, cwd: Path) -> str | None:
@@ -77,7 +77,7 @@ def main() -> None:
     )
     parser.add_argument(
         "--fasta",
-        default=str(ed / "hg38.fa"),
+        default=str(ed / "reference" / "hg38" / "hg38.fa"),
         help="Reference genome FASTA (hg38).",
     )
     parser.add_argument(

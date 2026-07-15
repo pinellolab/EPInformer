@@ -227,7 +227,7 @@ def _chain_preprocessing(args, outputs):
 
     fasta = args.fasta
     if fasta is None:
-        default_fasta = Path(__file__).resolve().parent / "data_EPInformer" / "hg38.fa"
+        default_fasta = Path(__file__).resolve().parent / "data" / "reference" / "hg38" / "hg38.fa"
         if default_fasta.exists():
             fasta = str(default_fasta)
 
@@ -239,7 +239,7 @@ def _chain_preprocessing(args, outputs):
     obtain_PE(
         [pred_path, enh_path],
         [],  # no BigWig signals in chain mode
-        max_distance=args.window,
+        max_distance=args.max_distance,
         add_flank=False,
         use_strand=False,
         n_enhancer=60,

@@ -24,6 +24,17 @@ from preprocessing import one_hot_encode
 
 warnings.filterwarnings("ignore")
 
+
+def set_global_seed(seed: int) -> None:
+    """Seed Python, NumPy, and Torch RNGs so model init and loader shuffling
+    are reproducible across runs (headline 12-fold SLURM workflow included)."""
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(seed)
+
+
 # ---------------------------------------------------------------------------
 # Dataset
 # ---------------------------------------------------------------------------
@@ -385,7 +396,12 @@ def main():
     parser.add_argument("--checkpoint-dir", type=str, default=None,
                         help="Directory holding fold_*_best_*_checkpoint.pt to load in "
                              "--skip-train mode (default: <output-dir>/checkpoints).")
+    parser.add_argument("--seed", type=int, default=66,
+                        help="Global RNG seed for reproducibility (default: 66).")
     args = parser.parse_args()
+
+    set_global_seed(args.seed)
+    print(f"Global seed: {args.seed}")
 
     # --- Device ---
     if torch.cuda.is_available():

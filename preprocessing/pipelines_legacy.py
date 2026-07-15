@@ -322,7 +322,7 @@ def obtain_PE(
         os.mkdir(out_folder)
     print(out_folder)
     ensid_pair_list = []
-    ensid_list = list(set(gene_enhancer_expr_sub_df["ENSID"]))
+    ensid_list = sorted(set(gene_enhancer_expr_sub_df["ENSID"]))
     n_sig = len(signal_files)
     h5_path = os.path.join(out_folder, "samples.h5")
     hf = create_pe_arrays_h5(
@@ -488,7 +488,7 @@ def obtain_K562_H3K27ac_PE(
     else:
         bw = None
         n_bw_tracks = 0
-    ensid_list = list(set(gene_enhancer_expr_sub_df["ENSID"]))
+    ensid_list = sorted(set(gene_enhancer_expr_sub_df["ENSID"]))
     n_enh = 60
     L = 1000
     h5_path = os.path.join(out_folder, "samples.h5")
@@ -644,7 +644,7 @@ def obtain_GM12878_PE(max_distance=150_000, add_flank=False, n_enhancer=60, max_
     print(out_folder)
     ensid_pair_list = []
     bw = "../2020_06_Pred_Gene_expression/EPInformerV2_20230209/GM12878_data/DNase/ENCFF960FMM.bigWig"
-    ensid_list = list(set(gene_enhancer_expr_sub_df["ENSID"]))
+    ensid_list = sorted(set(gene_enhancer_expr_sub_df["ENSID"]))
     h5_path = os.path.join(out_folder, "samples.h5")
     hf = create_pe_arrays_h5(
         h5_path,
@@ -796,7 +796,7 @@ def obtain_GM12878_H3K27ac_PE():
     print(out_folder)
     ensid_pair_list = []
     bw = "../2020_06_Pred_Gene_expression/EPInformerV2_20230209/GM12878_data/DNase/ENCFF960FMM.bigWig"
-    ensid_list = list(set(gene_enhancer_expr_sub_df["ENSID"]))
+    ensid_list = sorted(set(gene_enhancer_expr_sub_df["ENSID"]))
     n_enh = 60
     L = 1000
     h5_path = os.path.join(out_folder, "samples.h5")
@@ -1001,7 +1001,7 @@ def obtain_PE_withSignals(
     import kipoiseq
     from Bio.Seq import Seq
 
-    ensid_list = list(set(gene_enhancer_expr_sub_df["ENSID"]))
+    ensid_list = sorted(set(gene_enhancer_expr_sub_df["ENSID"]))
 
     # ── Pass 1: collect unique enhancers and encode sequences ──────────
     unique_enh_names = list(gene_enhancer_expr_sub_df["name"].dropna().unique())
@@ -1120,8 +1120,10 @@ def obtain_PE_withSignals(
         contact_arr = np.zeros(n_enhancer, dtype=np.float32)
 
         e_i = 0
+        self_prm_name = None
         if include_self_promoter and ensid in self_prm_lookup:
             sp = self_prm_lookup[ensid]
+            self_prm_name = sp["name"]
             enh_indices[0] = enh_name_to_idx[sp["name"]]
             act_arr[0] = sp["activity_base"]
             dhs_arr[0] = sp["normalized_dhs"]
@@ -1136,6 +1138,10 @@ def obtain_PE_withSignals(
             if e_i >= n_enhancer:
                 break
             ename = erow["name"]
+            # The self-promoter was already placed in slot 0; skip it here so a
+            # nonzero-midpoint-distance self-promoter is not inserted a second time.
+            if self_prm_name is not None and ename == self_prm_name:
+                continue
             if ename in enh_name_to_idx:
                 enh_indices[e_i] = enh_name_to_idx[ename]
                 act_arr[e_i] = erow["activity_base"]
@@ -1350,7 +1356,7 @@ def obtain_K562_PE_withSignals(
     import kipoiseq
     from Bio.Seq import Seq
 
-    ensid_list = list(set(gene_enhancer_expr_sub_df["ENSID"]))
+    ensid_list = sorted(set(gene_enhancer_expr_sub_df["ENSID"]))
 
     # ── Pass 1: collect unique enhancers and encode sequences ──────────
     unique_enh_names = list(gene_enhancer_expr_sub_df["name"].dropna().unique())
@@ -1479,8 +1485,10 @@ def obtain_K562_PE_withSignals(
 
         # Insert self-promoter at slot 0 if available
         e_i = 0
+        self_prm_name = None
         if include_self_promoter and ensid in self_prm_lookup:
             sp = self_prm_lookup[ensid]
+            self_prm_name = sp["name"]
             enh_indices[0] = enh_name_to_idx[sp["name"]]
             act_arr[0] = sp["activity_base"]
             dhs_arr[0] = sp["normalized_dhs"]
@@ -1495,6 +1503,10 @@ def obtain_K562_PE_withSignals(
             if e_i >= n_enhancer:
                 break
             ename = erow["name"]
+            # The self-promoter was already placed in slot 0; skip it here so a
+            # nonzero-midpoint-distance self-promoter is not inserted a second time.
+            if self_prm_name is not None and ename == self_prm_name:
+                continue
             if ename in enh_name_to_idx:
                 enh_indices[e_i] = enh_name_to_idx[ename]
                 act_arr[e_i] = erow["activity_base"]
@@ -1635,7 +1647,7 @@ def obtain_GM12878_PE_withSignals(
         os.mkdir(out_folder)
     print(out_folder)
     ensid_pair_list = []
-    ensid_list = list(set(gene_enhancer_expr_sub_df["ENSID"]))
+    ensid_list = sorted(set(gene_enhancer_expr_sub_df["ENSID"]))
     h5_path = os.path.join(out_folder, "samples.h5")
     hf = create_pe_arrays_h5(
         h5_path,

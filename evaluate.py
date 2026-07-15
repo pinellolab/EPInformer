@@ -53,7 +53,7 @@ def _fold_from_name(path):
     return int(m.group(1)) if m else -1
 
 
-def _validate_fold_files(files, mode):
+def _validate_fold_files(files, mode, allow_partial=False):
     """Guard against pooling multiple prediction sets for the same fold.
 
     Each held-out fold must be represented by exactly ONE prediction file.
@@ -79,12 +79,20 @@ def _validate_fold_files(files, mode):
     if set(folds) != set(range(1, 13)):
         missing = sorted(set(range(1, 13)) - set(folds))
         extra = sorted(set(folds) - set(range(1, 13)))
-        print(f"  [warn] fold coverage {folds} (expected 1..12"
-              + (f"; missing {missing}" if missing else "")
-              + (f"; unexpected {extra}" if extra else "") + ") — pooled R is over these folds only")
+        detail = (f"fold coverage {folds} (expected 1..12"
+                  + (f"; missing {missing}" if missing else "")
+                  + (f"; unexpected {extra}" if extra else "") + ")")
+        if allow_partial:
+            print(f"  [warn] {detail} — pooled R is over these folds only (--allow-partial)")
+        else:
+            sys.exit(
+                f"[{mode}] {detail}. A 12-fold cross-validation is incomplete, so the "
+                f"'OVERALL (out-of-fold pooled)' summary would be misleading. Wait for all "
+                f"folds, or pass --allow-partial to evaluate the folds present so far."
+            )
 
 
-def _load_expression(pred_dir):
+def _load_expression(pred_dir, allow_partial=False):
     """Return a DataFrame with columns pred, actual, fold from a training output dir.
 
     Prefers the per-fold ``fold_*_predictions.csv`` files — these are reliable
@@ -95,7 +103,7 @@ def _load_expression(pred_dir):
     """
     files = sorted(glob.glob(os.path.join(pred_dir, "fold_*_predictions.csv")))
     if files:
-        _validate_fold_files(files, "expression")
+        _validate_fold_files(files, "expression", allow_partial=allow_partial)
         frames = []
         for f in files:
             d = pd.read_csv(f)
@@ -114,7 +122,7 @@ def _load_expression(pred_dir):
     sys.exit(f"No fold_*_predictions.csv or *_results.csv found in {pred_dir}")
 
 
-def _load_encoder(pred_dir):
+def _load_encoder(pred_dir, allow_partial=False):
     """Return a DataFrame with columns pred, actual, fold from a seqEncoder output dir.
 
     train_seqEncoder.py writes predictions/ files named
@@ -128,7 +136,7 @@ def _load_encoder(pred_dir):
              if "summit_only" not in os.path.basename(f)]
     if not files:
         sys.exit(f"No *_predictions.csv found under {pred_dir} (or its predictions/ subdir)")
-    _validate_fold_files(files, "encoder")
+    _validate_fold_files(files, "encoder", allow_partial=allow_partial)
     frames = []
     for f in files:
         d = pd.read_csv(f)
@@ -166,6 +174,10 @@ def main():
     ap.add_argument("--out", default=None, help="directory for summary CSV + scatter (default: --pred_dir)")
     ap.add_argument("--label", default=None, help="title/label for the plot and summary")
     ap.add_argument("--no-plot", action="store_true")
+    ap.add_argument("--allow-partial", action="store_true",
+                    help="Permit pooling an incomplete 12-fold CV (some folds missing). "
+                         "Off by default so a single finished fold cannot masquerade as a "
+                         "full out-of-fold result.")
     args = ap.parse_args()
 
     out_dir = args.out or args.pred_dir
@@ -173,10 +185,10 @@ def main():
     label = args.label or f"{os.path.basename(os.path.normpath(args.pred_dir))} ({args.mode})"
 
     if args.mode == "expression":
-        df, src = _load_expression(args.pred_dir)
+        df, src = _load_expression(args.pred_dir, allow_partial=args.allow_partial)
         xlabel, ylabel = "Observed expression", "Predicted expression"
     else:
-        df, src = _load_encoder(args.pred_dir)
+        df, src = _load_encoder(args.pred_dir, allow_partial=args.allow_partial)
         xlabel, ylabel = "Observed log2 activity", "Predicted log2 activity"
 
     overall = _pearson_r2_mse(df["pred"].values, df["actual"].values)

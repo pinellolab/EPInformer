@@ -256,12 +256,16 @@ class EPInformer_v2(nn.Module):
                 # nn.Linear(38, 8), # 2kb nn.Linear(101, 8)
                 nn.ELU(),
             )
+        # Feature width fed to pToExpr alongside the promoter embedding. Additive so the
+        # promoter-signal channel is counted independently of the 8 Xpresso columns. This
+        # reproduces the previous fixed values (useFeat only -> 8, useFeat+prm -> 9) while
+        # also making the no-Xpresso + promoter-signal case (-> 1) match the dataset, which
+        # otherwise crashed at this linear layer.
         n_feat = 0
         if self.useFeat:
-            if self.usePromoterSignal:
-                n_feat = 9
-            else:
-                n_feat = 8
+            n_feat += 8
+        if self.usePromoterSignal:
+            n_feat += 1
         self.pToExpr = nn.Sequential(
                         nn.Linear(self.out_dim+n_feat, 128),
                         nn.ReLU(),
