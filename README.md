@@ -31,8 +31,6 @@ CAGE labels exist only for K562/GM12878, so the other four are **RNA-only**. The
 H1/HepG2/HUVEC/NHEK expression numbers are **new** (upstream EPInformer reports expression for
 K562/GM12878 only).
 
-<h3 align="center">RNA-seq gene expression prediction: EPInformer_v2 (12-fold leave-chromosome-out)</h3>
-
 <p align="center">
   <img height="330" src="images/rna_expression_scatter.png">
 </p>
