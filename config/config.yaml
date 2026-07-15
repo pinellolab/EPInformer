@@ -8,6 +8,9 @@ reference:
   chrom_sizes: ./data/reference/hg38/GRCh38_EBV.chrom.sizes.tsv
   expression_csv: ./data/GM12878_K562_18377_gene_expr_fromXpresso.csv
   blacklist: null
+  # Split ENCODE/rE2G average Hi-C (ENCFF134PUN, 5 kb). This is selected
+  # automatically for a sample with no usable cell-specific .hic file.
+  average_hic_dir: ./data/reference/abc_avg_hic/by_chrom
 
 # ---- Element-gene link parameters (Stage 1: BAM -> predictions) ----
 # Activity = sqrt(mean(H3K27ac rep RPMs) * mean(DNase rep RPMs)); replicates are listed

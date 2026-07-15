@@ -98,9 +98,11 @@ DNase (accessibility) + H3K27ac (activity; 2 filtered bio-reps where available) 
   - `GM12878_K562_18377_gene_expr_fromXpresso_with_sequence_strand.csv` — `Actual_{cell}` RNA
     for all 6 cells + `{cell}_CAGE_128*3_sum` for K562/GM12878.
   - `leave_chrom_out_crossvalidation_split_18377genes.csv` — the fold assignment.
-- **ABC average Hi-C** (hg38, optional — for from-raw contact on cells without cell-specific
-  `.hic`): ENCODE **`ENCFF134PUN`** (annotation `ENCSR382HAW`, 5 kb). Split into a per-chromosome
-  directory with `scripts/split_avg_hic.py`, then point `hic_file` at it.
+- **ABC average Hi-C** (hg38; used automatically when a cell-specific `.hic` is absent or
+  unavailable): ENCODE **`ENCFF134PUN`** (annotation `ENCSR382HAW`, 5 kb). Split it into
+  `data/reference/abc_avg_hic/by_chrom` with `scripts/split_avg_hic.py`. This is the default
+  `reference.average_hic_dir` in `config/config.yaml`; a valid cell-specific `.hic` always takes
+  precedence.
 
 ## Setup
 

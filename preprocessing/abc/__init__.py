@@ -89,6 +89,7 @@ def run_abc_pipeline(
     accessibility_bams: Optional[list] = None,
     h3k27ac_bams: Optional[list] = None,
     hic_file: Optional[str] = None,
+    average_hic_dir: Optional[str] = None,
     gene_bed: Optional[str] = None,
     chrom_sizes: Optional[str] = None,
     expression: Optional[str] = None,
@@ -139,6 +140,18 @@ def run_abc_pipeline(
             fasta = str(default_fasta)
 
     os.makedirs(output_dir, exist_ok=True)
+
+    # ---- Resolve Hi-C fallback ----
+    # The ENCODE/rE2G average contact map is a split directory, not a .hic
+    # file.  It is used only if a cell-specific map was not supplied or is not
+    # present locally, so a valid cell-specific map always takes precedence.
+    if (not hic_file or not os.path.exists(hic_file)) and average_hic_dir:
+        reason = "was not supplied" if not hic_file else f"is unavailable ({hic_file})"
+        print(f"Cell-specific Hi-C {reason}; using average Hi-C: {average_hic_dir}")
+        hic_file = average_hic_dir
+        hic_type = "avg"
+    else:
+        hic_type = "auto"
 
     # ---- Print banner ----
     print("=" * 80)
@@ -228,7 +241,7 @@ def run_abc_pipeline(
     logger.start_step("Computing ABC scores")
     predictions_path = predict_abc(
         enhancer_list_path, gene_list_path, output_dir, logger,
-        hic_file=hic_file, max_distance=max_distance, gamma=gamma,
+        hic_file=hic_file, hic_type=hic_type, max_distance=max_distance, gamma=gamma,
         tss_slop=tss_slop, hic_resolution=hic_resolution,
         cell_type=cell_type, n_threads=n_threads,
         hic_gamma=hic_gamma, hic_scale=hic_scale,
@@ -302,6 +315,8 @@ def _dry_run_validate(accessibility_bam, h3k27ac_bam, hic_file, gene_bed,
         elif os.path.isfile(path):
             size_mb = os.path.getsize(path) / 1e6
             status = f"OK ({size_mb:.1f} MB)"
+        elif os.path.isdir(path):
+            status = "OK (directory)"
         else:
             status = "MISSING"
             all_ok = False

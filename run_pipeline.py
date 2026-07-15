@@ -29,7 +29,10 @@ except ImportError:
 # Config & sample table loading
 # ---------------------------------------------------------------------------
 
-_PATH_KEYS_REFERENCE = {"fasta", "gene_bed", "chrom_sizes", "expression_csv", "blacklist"}
+_PATH_KEYS_REFERENCE = {
+    "fasta", "gene_bed", "chrom_sizes", "expression_csv", "blacklist",
+    "average_hic_dir",
+}
 _PATH_KEYS_SAMPLE = {"accessibility_bam", "h3k27ac_bam", "hic_file", "qnorm_ref", "peaks_file", "encoder_peaks_file"}
 # Optional multi-replicate BAM lists (comma/space-separated) used ONLY for the encoder
 # activity, which mean-pools per-rep RPM across reps (reference recipe). Falls back to the
@@ -147,6 +150,16 @@ def run_links_stage(sample: dict, cfg: dict, dry_run: bool = False) -> dict:
     base_dir = Path(cfg.get("output", {}).get("base_dir", "./batch_output"))
     output_dir = str(base_dir / sample["cell_type"] / "links")
 
+    # Use the split ENCODE/rE2G average Hi-C reference when this cell type has
+    # no usable cell-specific .hic file.  A real cell-specific file always wins.
+    cell_hic = sample.get("hic_file")
+    average_hic_dir = ref.get("average_hic_dir")
+    if not cell_hic or not Path(cell_hic).exists():
+        if average_hic_dir:
+            reason = "not specified" if not cell_hic else f"not found ({cell_hic})"
+            print(f"  [Hi-C] Cell-specific Hi-C {reason}; using average Hi-C: {average_hic_dir}")
+            cell_hic = average_hic_dir
+
     kwargs = dict(
         accessibility_bam=sample["accessibility_bam"],
         output_dir=output_dir,
@@ -155,7 +168,8 @@ def run_links_stage(sample: dict, cfg: dict, dry_run: bool = False) -> dict:
         # multi-rep BAM lists for the encoder activity (mean-pooled); None -> single-bam path
         accessibility_bams=sample.get("accessibility_bams"),
         h3k27ac_bams=sample.get("h3k27ac_bams"),
-        hic_file=sample.get("hic_file"),
+        hic_file=cell_hic,
+        average_hic_dir=average_hic_dir,
         gene_bed=ref.get("gene_bed"),
         chrom_sizes=ref.get("chrom_sizes"),
         expression=ref.get("expression_csv"),
