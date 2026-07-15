@@ -2,41 +2,42 @@
   <img width="700" src="images/EPInformer_logo2.svg">
 </p>
 
-Welcome to the EPInformer framework repository! EPInformer is a scalable deep-learning framework
-for gene-expression prediction that integrates promoter-enhancer sequences with epigenomic
-signals. It supports three key applications: (1) predicting gene-expression levels from
-promoter-enhancer sequences, epigenomic signals, and chromatin contacts; (2) identifying
-cell-type-specific enhancer-gene interactions and conducting in-silico perturbation; and (3)
-predicting enhancer activity and recapitulating transcription-factor binding motifs from sequence.
+# EPInformer
 
-The framework is described in the published Nature Communications article:
+EPInformer is a scalable deep-learning framework for gene-expression prediction that integrates
+promoter-enhancer sequences, epigenomic signals, and chromatin contacts. It supports three core
+applications:
+
+1. Predicting gene expression from promoter-enhancer sequence and multimodal epigenomic inputs.
+2. Prioritizing cell-type-specific enhancer-gene interactions and performing in-silico perturbation.
+3. Predicting enhancer activity and identifying sequence motifs that drive it.
+
+The framework is described in Nature Communications:
 [EPInformer: scalable and integrative prediction of gene expression from promoter-enhancer
 sequences with multimodal epigenomic profiles](https://doi.org/10.1038/s41467-026-70535-8).
 
-This repository can be used to run EPInformer to predict gene expression (for example, CAGE-seq
-and RNA-seq) and prioritize enhancer-gene interactions from input DNA sequences and epigenomic
-signals (for example, DNase, H3K27ac, and Hi-C). It also provides instructions for training
-different EPInformer variants with DNA sequence, epigenomic signals, and chromatin contacts.
+This repository provides the code and reproducible recipes for training and evaluating EPInformer
+variants on RNA-seq and CAGE-seq expression data.
 
 <p align="center">
   <img height="560" src="images/EPInformer.png">
 </p>
 
-# EPInformer — pipeline (enhancer activity + gene expression from DNA sequence)
+## Reproducible pipeline
 
-A clean, self-contained pipeline to run **EPInformer**, built around the model in
-[`EPInformer/models.py`](EPInformer/models.py) (`EPInformer_v2` + the 256 bp
-`enhancer_predictor_256bp`). It trains **two models, in order**, end-to-end from raw ENCODE data
-across **6 cell lines** (K562, GM12878, H1, HepG2, HUVEC, NHEK):
+This self-contained pipeline trains two models, in order, from raw ENCODE data across six cell
+lines (K562, GM12878, H1, HepG2, HUVEC, and NHEK). It is built around
+[`EPInformer/models.py`](EPInformer/models.py):
 
 1. **Enhancer-activity encoder** — predicts 256 bp enhancer activity (H3K27ac·DNase) from sequence.
 2. **Gene-expression model** (`EPInformer_v2`) — predicts RNA / CAGE from a gene's promoter plus
    its ABC-nominated enhancers, reusing the pretrained encoder (frozen) as the sequence backbone.
 
-Do **Part 1 (encoder) first**, then **Part 2 (expression)** — the expression model loads the
-encoder.
+Run **Part 1** before **Part 2**: the expression model uses the frozen encoder trained in Part 1.
 
-## Results (12-fold leave-chromosome-out, pooled out-of-fold Pearson R)
+## Reproduction results
+
+All metrics are pooled out-of-fold Pearson R from 12-fold leave-chromosome-out evaluation.
 
 **Part 1 — enhancer encoder** (log2 activity):
 
@@ -51,25 +52,22 @@ encoder.
 | **RNA** | 0.856 | 0.860 | 0.845 | 0.839 | 0.828 | 0.781 |
 | **CAGE** | 0.867 | 0.890 | — | — | — | — |
 
-CAGE labels exist only for K562/GM12878, so the other four are **RNA-only**. The
-H1/HepG2/HUVEC/NHEK expression numbers are **new** (upstream EPInformer reports expression for
-K562/GM12878 only).
+CAGE labels are available only for K562 and GM12878; the other four cell lines are RNA-only.
+The H1, HepG2, HUVEC, and NHEK expression results are newly evaluated in this pipeline.
 
 <p align="center">
   <img height="330" src="images/rna_expression_scatter.png">
 </p>
 
-> **What `f3` means** (used throughout): the shipped expression model = `--n_enh_feats 3`
-> (distance + activity + Hi-C contact) **+ `--use_prm_signal`** (promoter activity), with the
-> pretrained encoder **frozen**. In the feature ablation, activity dominates, Hi-C is ~inert, and
-> the promoter signal adds up to +0.03 (cell-dependent) — so it is bundled into `f3` by default.
+> **Shipped expression configuration (`f3`):** three enhancer features (distance, activity, and
+> Hi-C contact) plus promoter activity, with the pretrained encoder frozen.
 
 ---
 
 ## Datasets
 
-All inputs are public: chromatin & Hi-C from **ENCODE**, expression labels from Xpresso/FANTOM
-(Zenodo), genome **hg38**.
+All inputs are public: chromatin and Hi-C data are from **ENCODE**, expression labels are from
+Xpresso/FANTOM (Zenodo), and the reference genome is **hg38**.
 
 ### ENCODE accessions (per cell)
 
@@ -193,9 +191,8 @@ python train_EPInformer.py --model_type EPInformer-v2 --cell K562 --expr_type RN
 #   feature ablation:      USE_PRM_SIGNAL=0 N_ENH_FEATS=1|2|3 ...   (f1=dist, f2=+activity, f3=+Hi-C)
 ```
 
-`--n_enh_feats 3 --use_prm_signal` **is `f3`** (the shipped config). The encoder is frozen by
-default; `--no_freeze_encoder` (slurm `NO_FREEZE=1`) fine-tunes it end-to-end (optional, doesn't
-reliably help).
+`--n_enh_feats 3 --use_prm_signal` selects the shipped `f3` configuration described above. The
+encoder is frozen by default; `--no_freeze_encoder` (slurm `NO_FREEZE=1`) fine-tunes it end-to-end.
 
 ### 2c. Evaluate (target RNA ~0.86 / CAGE ~0.88)
 
