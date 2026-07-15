@@ -16,14 +16,14 @@ The framework is described in Nature Communications:
 [EPInformer: scalable and integrative prediction of gene expression from promoter-enhancer
 sequences with multimodal epigenomic profiles](https://doi.org/10.1038/s41467-026-70535-8).
 
-This repository provides the code and reproducible recipes for training and evaluating EPInformer
+This repository provides the code and training recipes for evaluating EPInformer
 variants on RNA-seq and CAGE-seq expression data.
 
 <p align="center">
   <img height="560" src="images/EPInformer.png">
 </p>
 
-## Reproducible pipeline
+## Pipeline
 
 This self-contained pipeline trains two models, in order, from raw ENCODE data across six cell
 lines (K562, GM12878, H1, HepG2, HUVEC, and NHEK). It is built around
