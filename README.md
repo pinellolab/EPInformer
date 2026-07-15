@@ -125,9 +125,11 @@ bash scripts/download_abc_reference.sh data/reference/hg38          # ABC refere
 # then: place hg38.fa at data/reference/hg38/hg38.fa, and unzip Zenodo expression_data.zip into data/
 ```
 
-**Pretrained checkpoints (optional):** to skip encoder training, download the pretrained enhancer
-encoders (6 cell lines × 12 leave-chromosome-out folds) from Hugging Face —
-[`JiecongLin/EPInformer-pipeline`](https://huggingface.co/JiecongLin/EPInformer-pipeline):
+**Pretrained checkpoints (optional):**
+[`JiecongLin/EPInformer-pipeline`](https://huggingface.co/JiecongLin/EPInformer-pipeline)
+provides 12-fold enhancer encoders for six cell lines, plus validated `f3` gene-expression
+checkpoints for K562 and GM12878 (RNA and CAGE). Gene-expression checkpoints are organized under
+`expression_models/{cell}/{RNA,CAGE}/`.
 
 ```python
 from huggingface_hub import hf_hub_download
