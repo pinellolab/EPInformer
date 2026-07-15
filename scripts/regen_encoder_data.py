@@ -3,9 +3,9 @@
 H3K27ac narrowPeak, without redoing ABC Steps 1-3.
 
 Uses ``encoder_peaks_file`` from config/samples.tsv (the ENCODE H3K27ac
-narrowPeak) as the peak/summit source and the current 3-window / 100bp-overlap
-settings in preprocessing/abc/encoder_pretrain_data.py. Writes
-``batch_output/{cell}/links/{cell}_peak_3bins_around_summit_activity_sequence.csv``.
+narrowPeak) as the peak/summit source and the current default 5-window /
+64bp-overlap settings in preprocessing/abc/encoder_pretrain_data.py. Writes
+``batch_output/{cell}/links/{cell}_peak_5bins_around_summit_activity_sequence.csv``.
 
 Usage (from repo root):
     python scripts/regen_encoder_data.py --cell K562 --n-threads 12

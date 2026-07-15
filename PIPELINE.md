@@ -156,8 +156,9 @@ PRETRAINED_DIR=results/seqencoder/HepG2/checkpoints sbatch slurm/train_epinforme
 **Average Hi-C — exact provenance.** The contact feature above uses a precomputed avg-Hi-C. To
 rebuild contact from scratch with the canonical hg38 ABC average Hi-C (ENCODE `ENCFF134PUN`, 5 kb,
 58 GB, annotation `ENCSR382HAW`): download it, split once —
-`python scripts/split_avg_hic.py --in ENCFF134PUN.bed.gz --out data/reference/abc_avg_hic/by_chrom` —
-and point `hic_file` (config) / `--hic` at that directory. `predict_abc` auto-detects the
+`python scripts/split_avg_hic.py --in ENCFF134PUN.bed.gz --out data/reference/abc_avg_hic/by_chrom`.
+The pipeline selects this default directory automatically when a cell-specific `.hic` file is absent
+or unavailable; a valid cell-specific map takes precedence. `predict_abc` auto-detects the
 average-Hi-C loader (`AverageHiCContactMap`, alongside the juicebox `.hic` path). Hi-C is inert for
 expression here, so this does not change the numbers; `scripts/test_avg_hic.py` self-tests the loader.
 For H1/NHEK note there is **no cell-specific Hi-C in ENCODE** (H1: 5C/ChIA-PET only; NHEK: in-situ
