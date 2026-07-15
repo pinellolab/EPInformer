@@ -100,8 +100,15 @@ DNase (accessibility) + H3K27ac (activity; 2 filtered bio-reps where available) 
   - `leave_chrom_out_crossvalidation_split_18377genes.csv` — the fold assignment.
 - **ABC average Hi-C** (hg38; used automatically when a cell-specific `.hic` is absent or
   unavailable): ENCODE **`ENCFF134PUN`** (annotation `ENCSR382HAW`, 5 kb). Split it into
-  `data/reference/abc_avg_hic/by_chrom` with `scripts/split_avg_hic.py`. This is the default
-  `reference.average_hic_dir` in `config/config.yaml`; a valid cell-specific `.hic` always takes
+  `data/reference/abc_avg_hic/by_chrom` before running the pipeline:
+
+  ```bash
+  python scripts/split_avg_hic.py --in /path/to/ENCFF134PUN.bed.gz \
+    --out data/reference/abc_avg_hic/by_chrom
+  ```
+
+  This is the default `reference.average_hic_dir` in `config/config.yaml`. The pipeline uses it
+  automatically when the sample has no usable Hi-C file; a valid cell-specific `.hic` always takes
   precedence.
 
 ## Setup
