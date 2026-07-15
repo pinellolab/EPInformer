@@ -20,7 +20,7 @@ This repository provides the code and training recipes for evaluating EPInformer
 variants on RNA-seq and CAGE-seq expression data.
 
 For a guided interactive walkthrough, start with the
-[`predict_enhancer_and_expression.ipynb`](predict_enhancer_and_expression.ipynb) Jupyter notebook;
+[`K562_walkthrough.ipynb`](K562_walkthrough.ipynb) Jupyter notebook;
 the [notebook guide](https://github.com/pinellolab/EPInformer/wiki/Notebooks) describes the
 available demonstrations and required kernel.
 
