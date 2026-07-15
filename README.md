@@ -131,8 +131,7 @@ provides 12-fold enhancer encoders and validated gene-expression checkpoints for
 cell lines: RNA models for K562, GM12878, H1, HepG2, HUVEC, and NHEK, plus CAGE models for K562
 and GM12878. `f1`, `f2`, and `f3` feature configurations are available. Gene-expression checkpoints
 are organized under
-`expression_models/{cell}/{RNA,CAGE}/`: `f3` files are in the assay directory, while `f1` and `f2`
-are in its `f1/` and `f2/` subdirectories.
+`expression_models/{cell}/{RNA,CAGE}/{f1,f2,f3}/`.
 
 ```python
 from huggingface_hub import hf_hub_download
