@@ -19,10 +19,18 @@ sequences with multimodal epigenomic profiles](https://doi.org/10.1038/s41467-02
 This repository provides the code and training recipes for evaluating EPInformer
 variants on RNA-seq and CAGE-seq expression data.
 
-For a guided interactive walkthrough, start with the
-[`K562_walkthrough.ipynb`](K562_walkthrough.ipynb) Jupyter notebook;
-the [notebook guide](https://github.com/pinellolab/EPInformer/wiki/Notebooks) describes the
-available demonstrations and required kernel.
+For a guided end-to-end run, start with
+[`K562_walkthrough.ipynb`](K562_walkthrough.ipynb). Two additional, executable demonstrations are
+included:
+
+- [`github_enhancer_activity_demo.ipynb`](github_enhancer_activity_demo.ipynb) reproduces the
+  published KLF1 enhancer-activity and in-silico mutagenesis example.
+- [`predict_enhancer_and_expression.ipynb`](predict_enhancer_and_expression.ipynb) downloads the
+  pinned Hugging Face checkpoints when needed and reproduces the reported K562 encoder, RNA, and
+  CAGE performance.
+
+The [notebook guide](https://github.com/pinellolab/EPInformer/wiki/Notebooks) describes their data
+requirements and kernel setup.
 
 <p align="center">
   <img height="560" src="images/EPInformer.png">
@@ -30,8 +38,10 @@ available demonstrations and required kernel.
 
 ## Pipeline
 
-This self-contained pipeline trains two models, in order, from raw ENCODE data across six cell
-lines (K562, GM12878, H1, HepG2, HUVEC, and NHEK). It is built around
+This pipeline supports six cell lines (K562, GM12878, H1, HepG2, HUVEC, and NHEK). K562 and
+GM12878 can be reproduced from raw ENCODE inputs with the config-driven pipeline. The other four
+cell lines use the supplied activity tables and precomputed ABC links before entering the same
+encoder and expression-training stages. The models are defined in
 [`EPInformer/models.py`](EPInformer/models.py):
 
 1. **Enhancer-activity encoder** — predicts 256 bp enhancer activity (H3K27ac·DNase) from sequence.
@@ -42,7 +52,9 @@ Run **Part 1** before **Part 2**: the expression model uses the frozen encoder t
 
 ## Reproduction results
 
-All metrics are pooled out-of-fold Pearson R from 12-fold leave-chromosome-out evaluation.
+All metrics are pooled out-of-fold Pearson R from 12-fold leave-chromosome-out evaluation. Encoder
+numbers use forward/reverse-complement-averaged inference; expression numbers use the shipped `f3`
+configuration.
 
 **Part 1 — enhancer encoder** (log2 activity):
 
@@ -125,6 +137,25 @@ bash scripts/download_abc_reference.sh data/reference/hg38          # ABC refere
 # then: place hg38.fa at data/reference/hg38/hg38.fa, and unzip Zenodo expression_data.zip into data/
 ```
 
+Run commands from the repository root. Before downloading data or submitting training jobs, check
+the configuration and environment with:
+
+```bash
+python run_pipeline.py --config config/config.yaml --samples K562 --stages links --dry-run
+python -m unittest -q tests.test_pipeline_regressions
+```
+
+### Compute and storage requirements
+
+- The ABC links and HDF5 encoding stages are CPU/memory-heavy; the supplied SLURM job requests
+  12 CPUs, 128 GiB RAM, and up to 48 hours.
+- A 12-fold encoder run is a 12-task GPU array. Each task requests 32 GiB host RAM and one GPU.
+- A full expression-training task loads the 18,377-gene HDF5 into memory. Use the supplied 64 GiB
+  SLURM allocation and a GPU with at least about 20 GiB memory; measured host usage is roughly
+  40–43 GiB.
+- Checkpoints alone are small, but raw BAM/Hi-C files and generated HDF5/activity data can require
+  substantial shared storage. Review the download plan with `--dry-run` first.
+
 **Pretrained checkpoints (optional):**
 [`JiecongLin/EPInformer-pipeline`](https://huggingface.co/JiecongLin/EPInformer-pipeline)
 provides 12-fold enhancer encoders and validated gene-expression checkpoints for all six supported
@@ -135,7 +166,12 @@ are organized under
 
 ```python
 from huggingface_hub import hf_hub_download
-ckpt = hf_hub_download("JiecongLin/EPInformer-pipeline", "enhancer_encoders/K562/fold_8.pt")
+
+ckpt = hf_hub_download(
+    repo_id="JiecongLin/EPInformer-pipeline",
+    filename="enhancer_encoders/K562/fold_8.pt",
+    revision="667a74e6a1358bee35fd1951570839bdeb5dec24",
+)
 ```
 
 See the [project wiki](https://github.com/pinellolab/EPInformer/wiki) for the full guide.
@@ -173,11 +209,25 @@ python train_seqEncoder.py --cell K562 \
 # HPC, all 12 folds:   CELL=K562 sbatch slurm/train_seqencoder_12fold.slurm
 ```
 
-### 1c. Evaluate (target ~0.71–0.74 log2-activity Pearson)
+### 1c. Evaluate
+
+The training job writes single-reverse-strand test predictions (K562 pooled Pearson R is about
+0.734). The headline 0.740 result averages forward and reverse-complement predictions. On SLURM,
+regenerate those predictions from the 12 saved checkpoints and then pool them:
 
 ```bash
-python evaluate.py encoder --pred_dir results/seqencoder/K562
+CELL=K562 \
+  DATA_CSV=batch_output/K562/links/K562_peak_5bins_around_summit_activity_sequence.csv \
+  CKPT_DIR=results/seqencoder/K562/checkpoints \
+  OUTPUT_DIR=results/seqencoder/K562_fwdRC \
+  sbatch slurm/eval_seqencoder_fwdrc.slurm
+
+# Run after the forward+RC job completes:
+python evaluate.py encoder --pred_dir results/seqencoder/K562_fwdRC
 ```
+
+For a quick check of the training job's default single-strand outputs, evaluate
+`results/seqencoder/K562` directly.
 
 ---
 
@@ -252,6 +302,11 @@ scripts/                   download_encode_data, download_abc_reference,
                            build_gene_h5_for_cell, split_avg_hic (+ test_avg_hic), ...
 config/                    config.yaml, samples.tsv, *_bams.json, encoder_narrowpeaks.json
 slurm/                     12-fold array jobs (encoder / expression / build-H5) — gpu33 first
+K562_walkthrough.ipynb     guided one-fold K562 training walkthrough
+github_enhancer_activity_demo.ipynb
+                           published enhancer-activity + ISM demonstration
+predict_enhancer_and_expression.ipynb
+                           Hugging Face checkpoint performance reproduction
 PIPELINE.md      detailed findings, recipe provenance, per-cell BAM/Hi-C notes
 ```
 
