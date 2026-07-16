@@ -8,6 +8,20 @@ README_files/
 
 # runtime outputs (regenerated on the cluster)
 slurm/logs/
+log_cpu/
+log_gpu/
+hpc_test_logs/
+hpc_test_outputs/
 batch_output/
 results/
 EPInformer_models/
+
+# downloaded model artifacts (kept on persistent HPC storage, never in Git)
+checkpoints/
+
+# local/HPC data links and downloaded reference tracks
+data/GM12878
+data/K562
+data/reference
+data/*.csv
+reference/*.narrowPeak

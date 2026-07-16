@@ -8,6 +8,7 @@
 #   bash slurm/submit_pipeline.sh                 # CELL=K562, CONDA_ENV=epinformer_repro
 #   CELL=GM12878 CONDA_ENV=EPInformer_env bash slurm/submit_pipeline.sh
 #   N_ENH_FEATS=2 bash slurm/submit_pipeline.sh   # activity-only (no Hi-C)
+#   GPU_PARTITION=gpu2 bash slurm/submit_pipeline.sh
 set -euo pipefail
 cd "$(dirname "$0")/.."          # repo root
 mkdir -p log_cpu log_gpu
@@ -15,19 +16,22 @@ mkdir -p log_cpu log_gpu
 CELL="${CELL:-K562}"
 CONDA_ENV="${CONDA_ENV:-epinformer_repro}"
 N_ENH_FEATS="${N_ENH_FEATS:-3}"
-EXP="--export=ALL,CONDA_ENV=${CONDA_ENV},CELL=${CELL},N_ENH_FEATS=${N_ENH_FEATS}"
+CPU_PARTITION="${CPU_PARTITION:-cpu1}"
+GPU_PARTITION="${GPU_PARTITION:-gpu33}"
+REPO_ROOT="$PWD"
+EXP="--export=ALL,REPO_ROOT=${REPO_ROOT},CONDA_ENV=${CONDA_ENV},CELL=${CELL},N_ENH_FEATS=${N_ENH_FEATS}"
 
-JOB_LINKS=$(sbatch --parsable --export=ALL,CONDA_ENV=${CONDA_ENV},SAMPLES=${CELL},STAGES=links slurm/run_pipeline_cpu.slurm)
-echo "links    = $JOB_LINKS  (cpu1, Stage 1 ABC nomination)"
+JOB_LINKS=$(sbatch --parsable --partition="$CPU_PARTITION" --export=ALL,REPO_ROOT=${REPO_ROOT},CONDA_ENV=${CONDA_ENV},SAMPLES=${CELL},STAGES=links slurm/run_pipeline_cpu.slurm)
+echo "links    = $JOB_LINKS  ($CPU_PARTITION, Stage 1 ABC nomination)"
 
-JOB_ENCODE=$(sbatch --parsable --dependency=afterok:$JOB_LINKS --export=ALL,CONDA_ENV=${CONDA_ENV},SAMPLES=${CELL},STAGES=encoding slurm/run_pipeline_cpu.slurm)
-echo "encode   = $JOB_ENCODE  (cpu1, Stage 2 HDF5, after links)"
+JOB_ENCODE=$(sbatch --parsable --partition="$CPU_PARTITION" --dependency=afterok:$JOB_LINKS --export=ALL,REPO_ROOT=${REPO_ROOT},CONDA_ENV=${CONDA_ENV},SAMPLES=${CELL},STAGES=encoding slurm/run_pipeline_cpu.slurm)
+echo "encode   = $JOB_ENCODE  ($CPU_PARTITION, Stage 2 HDF5, after links)"
 
-JOB_PRE=$(sbatch --parsable --dependency=afterok:$JOB_LINKS $EXP slurm/train_seqencoder_12fold.slurm)
-echo "pretrain = $JOB_PRE  (gpu33 array 1-12, after links)"
+JOB_PRE=$(sbatch --parsable --partition="$GPU_PARTITION" --dependency=afterok:$JOB_LINKS $EXP slurm/train_seqencoder_12fold.slurm)
+echo "pretrain = $JOB_PRE  ($GPU_PARTITION array 1-12, after links)"
 
-JOB_TRAIN=$(sbatch --parsable --dependency=aftercorr:$JOB_PRE,afterok:$JOB_ENCODE $EXP slurm/train_epinformer_12fold.slurm)
-echo "train    = $JOB_TRAIN  (gpu33 array 1-12, per-fold aftercorr pretrain + afterok encode)"
+JOB_TRAIN=$(sbatch --parsable --partition="$GPU_PARTITION" --dependency=aftercorr:$JOB_PRE,afterok:$JOB_ENCODE $EXP slurm/train_epinformer_12fold.slurm)
+echo "train    = $JOB_TRAIN  ($GPU_PARTITION array 1-12, per-fold aftercorr pretrain + afterok encode)"
 
 echo
 echo "Submitted chain for ${CELL}. Watch: squeue -u \$USER | grep epi_repro"

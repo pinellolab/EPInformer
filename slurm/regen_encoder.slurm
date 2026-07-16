@@ -16,7 +16,7 @@
 #SBATCH --time=4:00:00
 
 set -euo pipefail
-REPO_ROOT="${REPO_ROOT:-/path/to/EPInformer/pipeline}"
+REPO_ROOT="${REPO_ROOT:-${SLURM_SUBMIT_DIR:-$PWD}}"
 cd "$REPO_ROOT"
 mkdir -p log_cpu
 CELL="${CELL:-K562}"

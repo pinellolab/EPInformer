@@ -29,12 +29,12 @@
 #SBATCH --cpus-per-task=4
 #SBATCH --gres=gpu:1
 #SBATCH -p gpu33
-#SBATCH --mem=96G
+#SBATCH --mem=64G
 #SBATCH --time=6:00:00
-# --mem=96G: the dataset preloads all pe_ohe (~18k genes x 61 x 2000 x 4 f32 ~= 36 GB) into RAM.
+# --mem=64G: measured peak RSS is about 43 GiB for the full 18,377-gene dataset.
 
 set -euo pipefail
-REPO_ROOT="${REPO_ROOT:-/path/to/EPInformer/pipeline}"
+REPO_ROOT="${REPO_ROOT:-${SLURM_SUBMIT_DIR:-$PWD}}"
 cd "$REPO_ROOT"
 mkdir -p log_gpu
 
