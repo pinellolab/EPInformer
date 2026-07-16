@@ -157,7 +157,7 @@ python -m unittest -q tests.test_pipeline_regressions
   substantial shared storage. Review the download plan with `--dry-run` first.
 
 **Pretrained checkpoints (optional):**
-[`JiecongLin/EPInformer-pipeline`](https://huggingface.co/JiecongLin/EPInformer-pipeline)
+[`JiecongLin/EPInformer`](https://huggingface.co/JiecongLin/EPInformer)
 provides 12-fold enhancer encoders and validated gene-expression checkpoints for all six supported
 cell lines: RNA models for K562, GM12878, H1, HepG2, HUVEC, and NHEK, plus CAGE models for K562
 and GM12878. `f1`, `f2`, and `f3` feature configurations are available. Gene-expression checkpoints
@@ -168,7 +168,7 @@ are organized under
 from huggingface_hub import hf_hub_download
 
 ckpt = hf_hub_download(
-    repo_id="JiecongLin/EPInformer-pipeline",
+    repo_id="JiecongLin/EPInformer",
     filename="enhancer_encoders/K562/fold_8.pt",
     revision="667a74e6a1358bee35fd1951570839bdeb5dec24",
 )

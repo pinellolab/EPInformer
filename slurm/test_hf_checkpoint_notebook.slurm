@@ -22,7 +22,7 @@ set -euo pipefail
 REPO_ROOT="${REPO_ROOT:-${SLURM_SUBMIT_DIR:-$PWD}}"
 NOTEBOOK="${NOTEBOOK:-predict_enhancer_and_expression.ipynb}"
 OUTPUT_DIR="${OUTPUT_DIR:-${REPO_ROOT}/hpc_test_outputs/hf_checkpoint_notebook}"
-HF_CHECKPOINT_ROOT="${HF_CHECKPOINT_ROOT:-${REPO_ROOT}/checkpoints/EPInformer-pipeline-hf}"
+HF_CHECKPOINT_ROOT="${HF_CHECKPOINT_ROOT:-${REPO_ROOT}/checkpoints/EPInformer-hf}"
 
 cd "$REPO_ROOT"
 mkdir -p log_gpu "$OUTPUT_DIR"

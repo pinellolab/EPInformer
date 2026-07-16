@@ -40,3 +40,4 @@ dependencies:
       - pyranges            # interval ops in the ABC pipeline
       - hic-straw           # Hi-C .hic contact extraction (hicstraw)
       - pyBigWig            # optional BigWig signal tracks
+      - huggingface_hub     # download validated pretrained checkpoints
