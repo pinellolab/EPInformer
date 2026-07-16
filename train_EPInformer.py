@@ -896,6 +896,9 @@ if __name__ == '__main__':
     parser.add_argument('--seed', type=int, default=66,
                         help='global RNG seed for reproducibility (default: 66)')
     args = parser.parse_args()
+    # CUDA reads this variable when it is first initialized.  Seeding CUDA
+    # before setting it can make --cuda_id ineffective in multi-GPU jobs.
+    os.environ["CUDA_VISIBLE_DEVICES"] = str(args.cuda_id)
     set_global_seed(args.seed)
     print(f'Global seed: {args.seed}')
     if args.early_stop_patience < 0:
@@ -903,7 +906,7 @@ if __name__ == '__main__':
     if args.use_prm_signal and args.gene_list is None:
         raise SystemExit('--gene_list is required when --use_prm_signal is set')
     # Fail fast on flags inherited from the multi-variant trainer that this trimmed
-    # EPInformer-v2 does NOT implement (they belong to models_abc) — so a
+    # EPInformer-v2 reproduction does NOT implement (they belong to models_abc) — so a
     # run can't be silently mislabeled or a no-op loss silently ignored.
     _unsupported = []
     if args.legnet_ckpt_dir is not None: _unsupported.append('--legnet_ckpt_dir')
@@ -918,7 +921,7 @@ if __name__ == '__main__':
     if getattr(args, 'aux_activity_lambda', 0) and args.aux_activity_lambda > 0: _unsupported.append('--aux_activity_lambda')
     if _unsupported:
         parser.error('these flags are not supported by this EPInformer-v2 (models.py) '
-                     'unsupported by EPInformer-v2: ' + ', '.join(_unsupported))
+                     'reproduction: ' + ', '.join(_unsupported))
 
     # Load promoter activity from GeneList.txt (for --use_prm_signal)
     promoter_activity_df = None
@@ -954,7 +957,6 @@ if __name__ == '__main__':
         if not (1 <= fi <= 12):
             raise SystemExit('each fold index must be between 1 and 12')
 
-    os.environ["CUDA_VISIBLE_DEVICES"] = str(args.cuda_id)
     if args.device is not None:
         device = args.device
     else:

@@ -24,6 +24,7 @@ from .hdf5 import (
     create_pe_arrays_h5,
     write_enhancer,
     write_gene_sample,
+    write_pe_sample,
 )
 from .encode import one_hot_encode
 
@@ -31,6 +32,18 @@ _DEFAULT_GENE_EXPR_CSV = "../2020_06_Pred_Gene_expression/EPInformerV2_20230209/
 _DEFAULT_FASTA_PINELLO = (
     "/data/pinello/PROJECTS/2020_06_Pred_Gene_expression/EPInformerV2_20230209/hg38.fa"
 )
+
+
+def _retired_hardcoded_driver(name: str) -> None:
+    """Fail fast for historical drivers whose inputs were never configurable."""
+    raise RuntimeError(
+        f"{name} is a retired hard-coded driver and references paths from the original "
+        "Pinello lab filesystem. Use obtain_PE_withSignals(fname=[predictions, "
+        "enhancer_list], cell_type=..., gene_expression_csv=..., fasta_path=..., "
+        "output_dir=...) or run_preprocessing.py instead."
+    )
+
+
 _DEFAULT_K562_H3_PREDICTIONS = (
     "../2020_06_Pred_Gene_expression/EPInformerV2_20230209/K562_data/"
     "DNase_ENCFF257HEE_overlapH3K27acENCFF544LXB_noCutOff_hic_1MB_predictions//"
@@ -539,6 +552,7 @@ def obtain_K562_H3K27ac_PE(
 
 
 def obtain_GM12878_PE(max_distance=150_000, add_flank=False, n_enhancer=60, max_seq_len=2000):
+    _retired_hardcoded_driver("obtain_GM12878_PE")
     promoter_enhancer_df = pd.read_csv(
         "../2020_06_Pred_Gene_expression/EPInformerV2_20230209/GM12878_data/DNase_ENCFF729UYK_hichip_noCutOff_1MB_predictions/EnhancerPredictionsAllPutative.txt.gz",
         sep="\t",
@@ -693,6 +707,7 @@ def obtain_GM12878_PE(max_distance=150_000, add_flank=False, n_enhancer=60, max_
 
 
 def obtain_GM12878_H3K27ac_PE():
+    _retired_hardcoded_driver("obtain_GM12878_H3K27ac_PE")
     promoter_enhancer_df = pd.read_csv(
         "../2020_06_Pred_Gene_expression/EPInformerV2_20230209/GM12878_data/DNase_ENCFF729UYK_overlapH3K27acENCFF023LTU_hichip_noCutOff_1MB_predictions//EnhancerPredictionsAllPutative.txt.gz",
         sep="\t",
@@ -1533,6 +1548,7 @@ def obtain_K562_PE_withSignals(
 def obtain_GM12878_PE_withSignals(
     max_distance=150_000, add_flank=True, max_seq_len=1000
 ):
+    _retired_hardcoded_driver("obtain_GM12878_PE_withSignals")
     promoter_enhancer_df = pd.read_csv(
         "../2020_06_Pred_Gene_expression/EPInformerV2_20230209/GM12878_data/DNase_ENCFF257HEE_noCutOff_hic_1MB_predictions/EnhancerPredictionsAllPutative.txt.gz",
         sep="\t",

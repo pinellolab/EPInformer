@@ -36,9 +36,9 @@ def _gzip_opts(level: int = 4) -> dict:
 def create_pe_arrays_h5(
     path: str,
     n_samples: int,
-    n_enhancers: int,
-    max_n_enhancer: int,
-    max_seq_len: int,
+    n_enhancers: Optional[int] = None,
+    max_n_enhancer: Optional[int] = None,
+    max_seq_len: Optional[int] = None,
     n_signal_tracks: int = 0,
     compression: str = "gzip",
     compression_opts: int = 4,
@@ -60,6 +60,14 @@ def create_pe_arrays_h5(
     n_signal_tracks : int
         Number of BigWig signal tracks (0 = omit signal datasets).
     """
+    if max_n_enhancer is None or max_seq_len is None:
+        raise TypeError("max_n_enhancer and max_seq_len are required")
+    if n_enhancers is None:
+        # Legacy preprocessing passed one promoter+enhancer tensor per gene and
+        # had no global enhancer-name table. Reserve deterministic per-gene
+        # slots; write_pe_sample only materializes the slots that are populated.
+        n_enhancers = n_samples * max_n_enhancer
+
     kw = {}
     if compression == "gzip":
         kw = _gzip_opts(compression_opts)
@@ -176,6 +184,102 @@ def write_gene_sample(
     f["contact"][gene_index] = contact.astype(np.float32, copy=False)
     if promoter_signal is not None and "promoter_signal" in f:
         f["promoter_signal"][gene_index] = promoter_signal.astype(np.float32, copy=False)
+
+
+def write_pe_sample(
+    f: h5py.File,
+    gene_index: int,
+    ensid: str,
+    seq_code,
+    activity,
+    dhs,
+    distance,
+    contact,
+    seq_signal=None,
+    n_signal_tracks: int = 0,
+) -> None:
+    """Write a legacy promoter+enhancer tensor into the factored schema.
+
+    Legacy extractors return ``seq_code`` with the promoter in slot 0 and up to
+    ``max_n_enhancer`` enhancer sequences after it, but do not return a stable
+    global enhancer-name mapping. Each populated enhancer therefore receives a
+    deterministic per-gene index and synthetic name. Supported modern builders
+    should continue to use :func:`write_enhancer` and :func:`write_gene_sample`
+    so shared enhancers are stored only once.
+    """
+    seq = np.asarray(seq_code, dtype=np.float32)
+    if seq.ndim != 3 or seq.shape[-1] != 4 or seq.shape[0] < 1:
+        raise ValueError(
+            "legacy seq_code must have shape (1+n_enhancers, sequence_length, 4)"
+        )
+
+    max_n_enhancer = int(f.attrs["max_n_enhancer"])
+    max_seq_len = int(f.attrs["max_seq_len"])
+    if seq.shape[1:] != (max_seq_len, 4):
+        raise ValueError(
+            f"legacy seq_code has sequence shape {seq.shape[1:]}; "
+            f"expected ({max_seq_len}, 4)"
+        )
+
+    def _padded(values) -> np.ndarray:
+        out = np.zeros(max_n_enhancer, dtype=np.float32)
+        arr = np.asarray(values, dtype=np.float32).reshape(-1)
+        out[: min(len(arr), max_n_enhancer)] = arr[:max_n_enhancer]
+        return out
+
+    act_arr = _padded(activity)
+    dhs_arr = _padded(dhs)
+    dist_arr = _padded(distance)
+    contact_arr = _padded(contact)
+    enh_indices = np.full(max_n_enhancer, -1, dtype=np.int32)
+
+    signals = None
+    if seq_signal is not None and n_signal_tracks > 0:
+        signals = normalize_seq_signal(seq_signal, n_signal_tracks)
+        if signals.ndim != 3 or signals.shape[1:] != (max_seq_len, n_signal_tracks):
+            raise ValueError(
+                "legacy seq_signal must have shape "
+                f"(1+n_enhancers, {max_seq_len}, {n_signal_tracks})"
+            )
+
+    n_slots = min(max_n_enhancer, seq.shape[0] - 1)
+    for slot in range(n_slots):
+        enh_seq = seq[slot + 1]
+        populated = bool(
+            np.any(enh_seq)
+            or act_arr[slot] != 0
+            or dhs_arr[slot] != 0
+            or dist_arr[slot] != 0
+            or contact_arr[slot] != 0
+        )
+        if not populated:
+            continue
+        enh_index = gene_index * max_n_enhancer + slot
+        if enh_index >= f["enhancer_seq"].shape[0]:
+            raise IndexError("legacy enhancer slot exceeds reserved HDF5 capacity")
+        enh_signal = signals[slot + 1] if signals is not None else None
+        write_enhancer(
+            f,
+            enh_index,
+            f"{ensid}:legacy_slot_{slot}",
+            enh_seq,
+            signal=enh_signal,
+        )
+        enh_indices[slot] = enh_index
+
+    promoter_signal = signals[0] if signals is not None else None
+    write_gene_sample(
+        f,
+        gene_index,
+        ensid,
+        seq[0],
+        enh_indices,
+        act_arr,
+        dhs_arr,
+        dist_arr,
+        contact_arr,
+        promoter_signal=promoter_signal,
+    )
 
 
 # ---------------------------------------------------------------------------

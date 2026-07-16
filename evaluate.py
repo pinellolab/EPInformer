@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Evaluate EPInformer pipeline results (12-fold leave-chromosome-out).
+"""Evaluate EPInformer reproduction results (12-fold leave-chromosome-out).
 
 Two modes:
 
@@ -53,6 +53,26 @@ def _fold_from_name(path):
     return int(m.group(1)) if m else -1
 
 
+def _validate_fold_values(folds, mode, allow_partial=False):
+    """Validate that a prediction set covers each expected fold exactly once."""
+    folds = sorted({int(f) for f in folds if int(f) >= 0})
+    if set(folds) == set(range(1, 13)):
+        return
+    missing = sorted(set(range(1, 13)) - set(folds))
+    extra = sorted(set(folds) - set(range(1, 13)))
+    detail = (f"fold coverage {folds} (expected 1..12"
+              + (f"; missing {missing}" if missing else "")
+              + (f"; unexpected {extra}" if extra else "") + ")")
+    if allow_partial:
+        print(f"  [warn] {detail} — pooled R is over these folds only (--allow-partial)")
+    else:
+        sys.exit(
+            f"[{mode}] {detail}. A 12-fold cross-validation is incomplete, so the "
+            f"'OVERALL (out-of-fold pooled)' summary would be misleading. Wait for all "
+            f"folds, or pass --allow-partial to evaluate the folds present so far."
+        )
+
+
 def _validate_fold_files(files, mode, allow_partial=False):
     """Guard against pooling multiple prediction sets for the same fold.
 
@@ -75,21 +95,7 @@ def _validate_fold_files(files, mode, allow_partial=False):
             f"would double-count held-out rows. Point --pred_dir at a clean/separate dir per run "
             f"(or delete stale files):\n{detail}"
         )
-    folds = sorted(k for k in by_fold if k >= 0)
-    if set(folds) != set(range(1, 13)):
-        missing = sorted(set(range(1, 13)) - set(folds))
-        extra = sorted(set(folds) - set(range(1, 13)))
-        detail = (f"fold coverage {folds} (expected 1..12"
-                  + (f"; missing {missing}" if missing else "")
-                  + (f"; unexpected {extra}" if extra else "") + ")")
-        if allow_partial:
-            print(f"  [warn] {detail} — pooled R is over these folds only (--allow-partial)")
-        else:
-            sys.exit(
-                f"[{mode}] {detail}. A 12-fold cross-validation is incomplete, so the "
-                f"'OVERALL (out-of-fold pooled)' summary would be misleading. Wait for all "
-                f"folds, or pass --allow-partial to evaluate the folds present so far."
-            )
+    _validate_fold_values(by_fold, mode, allow_partial=allow_partial)
 
 
 def _load_expression(pred_dir, allow_partial=False):
@@ -113,11 +119,31 @@ def _load_expression(pred_dir, allow_partial=False):
         return pd.concat(frames, ignore_index=True), f"{len(files)} per-fold prediction files"
     results = sorted(glob.glob(os.path.join(pred_dir, "*_results.csv")))
     if results:
+        if len(results) != 1:
+            names = [os.path.basename(p) for p in results]
+            sys.exit(
+                "[expression] Multiple aggregate *_results.csv files found and no per-fold "
+                "prediction files are available. Cannot determine whether their folds overlap: "
+                f"{names}"
+            )
         df = pd.read_csv(results[0])
         pred_col = "Pred" if "Pred" in df.columns else "pred"
         fold_col = "fold_idx" if "fold_idx" in df.columns else "fold"
+        if fold_col not in df.columns:
+            sys.exit(
+                f"[expression] Aggregate file {os.path.basename(results[0])} has no "
+                "fold_idx/fold column; 12-fold coverage cannot be verified."
+            )
+        fold_values = pd.to_numeric(df[fold_col], errors="coerce")
+        if fold_values.isna().any():
+            sys.exit(
+                f"[expression] Aggregate file {os.path.basename(results[0])} contains "
+                "missing or non-numeric fold values."
+            )
+        _validate_fold_values(fold_values.unique(), "expression",
+                              allow_partial=allow_partial)
         out = pd.DataFrame({"pred": df[pred_col], "actual": df["actual"],
-                            "fold": df[fold_col] if fold_col in df.columns else -1})
+                            "fold": fold_values.astype(int)})
         return out, os.path.basename(results[0]) + " (aggregate fallback)"
     sys.exit(f"No fold_*_predictions.csv or *_results.csv found in {pred_dir}")
 
@@ -154,16 +180,17 @@ def _plot(df, overall, out_png, label, xlabel, ylabel):
     except Exception as e:  # noqa: BLE001
         print(f"  (skipping plot: matplotlib unavailable — {e})")
         return
-    fig, ax = plt.subplots(figsize=(5, 5))
-    ax.scatter(df["actual"], df["pred"], s=6, alpha=0.35, edgecolors="none")
+    fig, ax = plt.subplots(figsize=(6, 6))
+    ax.scatter(df["actual"], df["pred"], s=8, alpha=0.35, edgecolors="none")
     lo = float(min(df["actual"].min(), df["pred"].min()))
     hi = float(max(df["actual"].max(), df["pred"].max()))
-    ax.plot([lo, hi], [lo, hi], "k--", lw=1, alpha=0.6)
-    ax.set_xlabel(xlabel)
-    ax.set_ylabel(ylabel)
-    ax.set_title(f"{label}\nPearson R = {overall['pearsonr']:.4f}  (n={overall['n']})")
+    ax.plot([lo, hi], [lo, hi], "k--", lw=1.2, alpha=0.6)
+    ax.set_xlabel(xlabel, fontsize=15)
+    ax.set_ylabel(ylabel, fontsize=15)
+    ax.set_title(f"{label}\nPearson R = {overall['pearsonr']:.4f}  (n={overall['n']})", fontsize=15)
+    ax.tick_params(axis="both", labelsize=13)
     fig.tight_layout()
-    fig.savefig(out_png, dpi=150)
+    fig.savefig(out_png, dpi=150, bbox_inches="tight")
     print(f"  scatter -> {out_png}")
 
 

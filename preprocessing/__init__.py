@@ -11,6 +11,7 @@ from .hdf5 import (
     create_pe_arrays_h5,
     write_enhancer,
     write_gene_sample,
+    write_pe_sample,
     normalize_seq_signal,
     read_pe_h5,
 )
@@ -25,6 +26,7 @@ __all__ = [
     "create_pe_arrays_h5",
     "write_enhancer",
     "write_gene_sample",
+    "write_pe_sample",
     "normalize_seq_signal",
     "read_pe_h5",
 ]

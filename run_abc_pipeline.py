@@ -80,7 +80,7 @@ def _add_shared(p: argparse.ArgumentParser) -> None:
     p.add_argument("--cell-type", default="K562", help="Cell type label. Default: K562.")
     p.add_argument(
         "--preset", default=None,
-        choices=["K562", "GM12878", "H1", "HUVEC", "NHEK"],
+        choices=["K562", "GM12878", "H1", "HUVEC", "NHEK", "HepG2"],
         help="Cell-type preset (auto-fills gene list, expression, chrom sizes, qnorm ref).",
     )
     p.add_argument("--gene-bed", default=None, help="Gene annotations BED (CollapsedGeneBounds.hg38.bed).")
@@ -111,6 +111,30 @@ def _add_shared(p: argparse.ArgumentParser) -> None:
     p.add_argument(
         "--preprocessing-output-dir", default=None,
         help="Output dir for EPInformer preprocessing (used with --chain-preprocessing).",
+    )
+    p.add_argument(
+        "--preprocessing-min-distance", type=int, default=0,
+        help="Minimum enhancer-to-TSS distance for chained preprocessing. Default: 0.",
+    )
+    p.add_argument(
+        "--preprocessing-max-distance", type=int, default=100_000,
+        help="Maximum enhancer-to-TSS distance for chained preprocessing. Default: 100kb.",
+    )
+    p.add_argument(
+        "--preprocessing-n-enhancer", type=int, default=60,
+        help="Maximum enhancers per gene for chained preprocessing. Default: 60.",
+    )
+    p.add_argument(
+        "--preprocessing-max-seq-len", type=int, default=2000,
+        help="Promoter/enhancer sequence length for chained preprocessing. Default: 2000.",
+    )
+    p.add_argument(
+        "--preprocessing-tss-column", default="TSS_xpresso",
+        help="TSS column in the expression CSV for chained preprocessing.",
+    )
+    p.add_argument(
+        "--preprocessing-include-self-promoter", action="store_true",
+        help="Include ABC self-promoter elements in chained preprocessing.",
     )
     p.add_argument(
         "--threads", type=int, default=4,
@@ -223,7 +247,9 @@ def _chain_preprocessing(args, outputs):
     print(f"  Output:       {prep_out}")
     print(f"{'=' * 80}")
 
-    from preprocessing.pipelines_legacy import obtain_PE
+    # Use the current factored-HDF5 builder.  The old obtain_PE path still uses
+    # the removed per-gene writer and is not compatible with preprocessing.hdf5.
+    from preprocessing.pipelines_legacy import obtain_PE_withSignals
 
     fasta = args.fasta
     if fasta is None:
@@ -236,19 +262,32 @@ def _chain_preprocessing(args, outputs):
         from preprocessing.abc import PRESETS
         gene_expr = PRESETS.get(args.preset, {}).get("expression")
 
-    obtain_PE(
+    if not fasta:
+        raise SystemExit(
+            "Cannot chain preprocessing without a FASTA. Pass --fasta or install "
+            "data/reference/hg38/hg38.fa."
+        )
+    if not gene_expr:
+        raise SystemExit(
+            "Cannot chain preprocessing without an expression CSV. Pass --expression "
+            "or select a preset that defines one."
+        )
+
+    obtain_PE_withSignals(
         [pred_path, enh_path],
-        [],  # no BigWig signals in chain mode
-        max_distance=args.max_distance,
+        min_distance=args.preprocessing_min_distance,
+        max_distance=args.preprocessing_max_distance,
         add_flank=False,
-        use_strand=False,
-        n_enhancer=60,
-        max_seq_len=2000,
-        pe_type="AllPutative",
+        n_enhancer=args.preprocessing_n_enhancer,
+        max_seq_len=args.preprocessing_max_seq_len,
         cell_type=args.cell_type,
         gene_expression_csv=gene_expr,
         fasta_path=fasta,
         output_dir=prep_out,
+        signal_files=[],  # sequence + ABC tabular features only
+        tss_column=args.preprocessing_tss_column,
+        include_self_promoter=args.preprocessing_include_self_promoter,
+        abc_all_putative=pred_path,
     )
     print(f"EPInformer preprocessing complete → {prep_out}")
 
