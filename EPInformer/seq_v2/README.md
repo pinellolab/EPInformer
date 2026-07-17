@@ -4,6 +4,35 @@ This directory contains the canonical training and data-processing workflow for
 EPInformer-seq-v2, the post-publication extension designed for Chorus. The final
 recipe is the Roadmap retrain used for the published per-cell checkpoints:
 
+EPInformer-seq-v2 is implemented once in
+[`EPInformer/epinformer_seq_v2.py`](../epinformer_seq_v2.py). The files in this
+directory reuse that model definition for data preparation and training; there
+is no separate compatibility implementation.
+
+## Model generations
+
+- **EPInformer-seq:** the original 256-bp sequence-to-scalar model from the
+  EPInformer publication. Run it with
+  [`predict_epinformer_seq.py`](../../predict_epinformer_seq.py).
+- **EPInformer-seq-v2:** a post-publication, per-cell model designed for Chorus.
+  It accepts 2,114 bp and predicts DNase and H3K27ac profiles over the central
+  1,024 bp. Run it with
+  [`predict_epinformer_seq_v2.py`](../../predict_epinformer_seq_v2.py).
+
+The stable v2 inference API is:
+
+```python
+from EPInformer.epinformer_seq_v2 import (
+    EPInformerSeqV2,
+    EPInformerSeqV2Bias,
+    load_models,
+    predict_profile,
+    predict_activity,
+)
+```
+
+## Training workflow
+
 1. Call or obtain Roadmap DNase-summit peaks.
 2. Convert DNase cut-site and optional H3K27ac BigWigs into `profile_data.h5` with
    [`build_profile_h5.py`](build_profile_h5.py).
