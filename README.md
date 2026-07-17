@@ -319,3 +319,11 @@ PIPELINE.md      detailed findings, recipe provenance, per-cell BAM/Hi-C notes
 - **Expression:** `EPInformer_v2` (SmoothL1 + AdamW, lr 1e-4, batch 50, 60 enhancers, frozen encoder).
 - On our HPC the conda env is `EPInformer_env` (torch 2.10); override with `CONDA_ENV=` in slurm.
 - Full provenance, ablations, and gotchas: **[`PIPELINE.md`](PIPELINE.md)**.
+
+## EPInformer-seq-v2
+
+**[EPInformer-seq-v2](EPInformer/seq_v2/README.md)** is a post-publication extension of
+EPInformer-seq developed for [Chorus](https://github.com/pinellolab/chorus). It generates
+cell-type-specific, base-resolution regulatory activity profiles, improving predictions of
+H3K27ac–DNase composite signals and enhancer variant effects. This model was not included in the
+original EPInformer publication.
